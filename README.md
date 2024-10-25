@@ -1,6 +1,6 @@
 # frontend
 
-Culinary Code Application
+Culinary Code Mobile Application
 
 ## Development
 You might want to use the preview function while developing. This is totally fine but be aware that when you want to build to an apk you need to change the following pieces of code:
