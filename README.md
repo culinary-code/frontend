@@ -1,6 +1,6 @@
 # frontend
 
-Culinary Code Application
+Culinary Code Mobile Application
 
 ## Getting Started
 
