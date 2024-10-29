@@ -1,4 +1,4 @@
-package com.cilinarycode.frontend;
+package com.culinarycode.frontend;
 
 import io.flutter.embedding.android.FlutterActivity;
 
