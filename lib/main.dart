@@ -7,6 +7,14 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
+  /*  --> USE WHEN RUNNING IN PREVIEW
+  runApp(DevicePreview(
+  enabled: !kReleaseMode,
+  builder: (context) => MyApp(),
+  )
+  );
+  */
+
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
