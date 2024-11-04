@@ -37,29 +37,50 @@ class _RecipeOverviewState extends State<RecipeOverview> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const TextField(
-          decoration: InputDecoration(
-              hintText: 'Aardappel',
-              //border: InputBorder.none,
-              suffixIcon: Icon(Icons.search)),
-        ),
-      ),
-      body: ListView.builder(
-        // TODO: als je echte recepten ophaald limiteren naar bv 4
-        itemCount: _recipes.length,
-        itemBuilder: (context, index) {
-          return RecipeCard(
-              recipeName: _recipes[index].recipeName,
-              score: _recipes[index].score,
-              isFavorited: _recipes[index].isFavorited,
-              onFavoriteToggle: () {
-                setState(() {
-                  _recipes[index].isFavorited = !_recipes[index].isFavorited;
-                });
-              });
-        },
-      ),
+      appBar: AppBar(title: const Text("Vind jouw recept!")),
+      body: Padding(
+          padding: const EdgeInsets.only(top: 8.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'What would you like?',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 4),
+              const TextField(
+                decoration: InputDecoration(
+                    hintText: 'Aardappel',
+                    isDense: true,
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(8.0))),
+                    suffixIcon: Icon(Icons.search)),
+              ),
+              const SizedBox(
+                height: 16.0,
+              ),
+              Expanded(
+                  child: ListView.builder(
+                itemCount: _recipes.length,
+                // TODO: als je echte recepten ophaald limiteren naar bv 4
+                itemBuilder: (context, index) {
+                  return RecipeCard(
+                      recipeName: _recipes[index].recipeName,
+                      score: _recipes[index].score,
+                      isFavorited: _recipes[index].isFavorited,
+                      onFavoriteToggle: () {
+                        setState(() {
+                          _recipes[index].isFavorited =
+                              !_recipes[index].isFavorited;
+                        });
+                      });
+                },
+              ))
+            ],
+          )),
     );
   }
 }
