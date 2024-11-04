@@ -4,14 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:frontend/navigation_menu.dart';
 
 void main() {
-  // runApp(const MyApp());
-
-
+   runApp(const MyApp());
+    /*
     runApp(DevicePreview(
     enabled: !kReleaseMode,
     builder: (context) => MyApp(),
   ));
-
+     */
 }
 
 class MyApp extends StatelessWidget {
