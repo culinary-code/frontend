@@ -27,24 +27,19 @@ class RecipeOverview extends StatefulWidget {
 }
 
 class _RecipeOverviewState extends State<RecipeOverview> {
-  final List<Recipe> _recipes = [
-    Recipe(recipeName: "Puree met spinazie", score: 5.0),
-    Recipe(recipeName: "Friet met stoofvlees", score: 4.6),
-    Recipe(recipeName: "Aardappelgratin met bechamelsaus", score: 4.1),
-    Recipe(recipeName: "Garnaalkroketten", score: 0.0, isFavorited: true)
-  ];
+  final List<Recipe> _recipes = Recipe.recipeList();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Vind jouw recept!")),
       body: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+          padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 8.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'What would you like?',
+                'Waar heb je trek in?',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -105,7 +100,7 @@ class RecipeCard extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            margin: const EdgeInsets.symmetric(horizontal: 10),
+            margin: const EdgeInsets.symmetric(horizontal: 4),
             width: 100,
             height: 100,
             color: Colors.blueGrey,
@@ -142,8 +137,7 @@ class RecipeCard extends StatelessWidget {
                   ElevatedButton(
                       onPressed: () {},
                       style: ElevatedButton.styleFrom(
-                          //backgroundColor: Colors.blueGrey
-                          ),
+                          backgroundColor: Colors.blueGrey[50]),
                       child: const Text("Open")),
                   const SizedBox(width: 8),
                   Row(
