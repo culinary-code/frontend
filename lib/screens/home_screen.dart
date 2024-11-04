@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/recipe.dart';
+import 'package:frontend/screens/detail_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -138,7 +139,9 @@ class RecipeCard extends StatelessWidget {
               Row(
                 children: [
                   ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => DetailScreen()));
+                      },
                       style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.blueGrey[50]),
                       child: const Text("Open")),
