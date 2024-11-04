@@ -15,7 +15,13 @@ class NavigationMenu extends StatefulWidget {
 class _NavigationMenuState extends State<NavigationMenu> {
   int _currentIndex = 0;
 
-  var screens = [HomeScreen(), MealplannerScreen(), GroceryScreen(), FavoriteScreen(), AccountScreen()];
+  var screens = [
+    const HomeScreen(),
+    const MealplannerScreen(),
+    const GroceryScreen(),
+    const FavoriteScreen(),
+    const AccountScreen()
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -24,13 +30,17 @@ class _NavigationMenuState extends State<NavigationMenu> {
         child: screens[_currentIndex],
       ),
       bottomNavigationBar: BottomNavigationBar(
-          items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.home), label: "Recepten"),
-            BottomNavigationBarItem(icon: Icon(Icons.restaurant), label: "Maaltijdplanner"),
-            BottomNavigationBarItem(icon: Icon(Icons.local_grocery_store), label: "Boodschappen"),
-            BottomNavigationBarItem(icon: Icon(Icons.favorite), label: "Favorieten"),
-            BottomNavigationBarItem(icon: Icon(Icons.manage_accounts), label: "Account")
-          ],
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.restaurant), label: "Maaltijdplanner"),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.local_grocery_store), label: "Boodschappen"),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.favorite), label: "Favorieten"),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.manage_accounts), label: "Account")
+        ],
         type: BottomNavigationBarType.fixed,
         currentIndex: _currentIndex,
         selectedItemColor: Colors.blue,

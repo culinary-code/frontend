@@ -5,10 +5,8 @@ class GroceryScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: Center(
-        child: Text("Grocery Screen"),
-      ),
+    return const Center(
+      child: Text("Grocery Screen"),
     );
   }
 }

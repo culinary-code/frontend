@@ -7,11 +7,9 @@ void main() {
   //runApp(const MyApp());
 
   runApp(DevicePreview(
-  enabled: !kReleaseMode,
-  builder: (context) => MyApp(),
-  )
-  );
-
+    enabled: !kReleaseMode,
+    builder: (context) => MyApp(),
+  ));
 }
 
 class MyApp extends StatelessWidget {
@@ -20,14 +18,14 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Culinary Code',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.cyan), // Theme of Project
-        useMaterial3: true,
-      ),
-      debugShowCheckedModeBanner: false,
-      home: const Main()
-    );
+        title: 'Culinary Code',
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.cyan),
+          // Theme of Project
+          useMaterial3: true,
+        ),
+        debugShowCheckedModeBanner: false,
+        home: const Main());
   }
 }
 

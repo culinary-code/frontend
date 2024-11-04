@@ -5,10 +5,8 @@ class MealplannerScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: Center(
-        child: Text("Mealplanner Screen"),
-      ),
+    return const Center(
+      child: Text("Mealplanner Screen"),
     );
   }
 }
