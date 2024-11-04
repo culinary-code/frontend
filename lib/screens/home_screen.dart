@@ -39,7 +39,7 @@ class _RecipeOverviewState extends State<RecipeOverview> {
     return Scaffold(
       appBar: AppBar(title: const Text("Vind jouw recept!")),
       body: Padding(
-          padding: const EdgeInsets.only(top: 8.0),
+          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
