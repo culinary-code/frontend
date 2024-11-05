@@ -112,35 +112,39 @@ class RecipeCard extends StatelessWidget {
               child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              FittedBox(
-                child: Row(
-                  children: [
-                    Text(
+              //FittedBox(
+              //child: Row(
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
                       recipeName,
                       style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14
-                      ),
+                          fontWeight: FontWeight.bold, fontSize: 14),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(width: 4),
-                    GestureDetector(
-                      onTap: onFavoriteToggle,
-                      child: Icon(
-                          isFavorited ? Icons.favorite : Icons.favorite_border,
-                          size: 18,
-                          color: isFavorited ? Colors.red : Colors.blueGrey),
-                    ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(width: 4),
+                  GestureDetector(
+                    onTap: onFavoriteToggle,
+                    child: Icon(
+                        isFavorited ? Icons.favorite : Icons.favorite_border,
+                        size: 18,
+                        color: isFavorited ? Colors.red : Colors.blueGrey),
+                  ),
+                ],
               ),
+              //),
               const SizedBox(height: 30),
               Row(
                 children: [
                   ElevatedButton(
                       onPressed: () {
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => DetailScreen()));
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const DetailScreen()));
                       },
                       style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.blueGrey[50]),
