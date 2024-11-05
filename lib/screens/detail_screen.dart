@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/screens/weekoverview_screen.dart';
+import 'package:input_quantity/input_quantity.dart';
 
 import '../models/ingredient.dart';
 import '../models/instruction.dart';
@@ -25,13 +26,13 @@ class DetailOverview extends StatefulWidget {
 
 class _DetailOverviewState extends State<DetailOverview> {
   late final List<String> _ingredients = [
-    "2 grote aardappelen",
-    "500g vlees",
-    "1 ui",
-    "1tl zout",
-    "1tl peper",
-    "2 el olijfolie",
-    "220 ml druivensap"
+    "2:grote aardappelen",
+    "500g:vlees",
+    "1:ui",
+    "1 tl:zout",
+    "1 tl:peper",
+    "2 el:olijfolie",
+    "220 ml:druivensap"
   ];
   late final List<Instruction> _instructionSteps =
       Instruction.instructionList();
@@ -49,15 +50,17 @@ class _DetailOverviewState extends State<DetailOverview> {
     return Scaffold(
         body: SingleChildScrollView(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 16.0),
+        padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 8.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             RecipeHeader(
                 isFavorited: isFavorited, onFavoriteToggle: toggleFavorite),
             const SizedBox(height: 16),
+            const InformationOverview(),
+            const SizedBox(height: 16),
             IngredientsOverview(ingredientList: _ingredients),
-            const SizedBox(height: 20.0),
+            const SizedBox(height: 16.0),
             InstructionsOverview(instructionsSteps: _instructionSteps),
             const SizedBox(height: 16.0),
             Padding(
@@ -134,6 +137,7 @@ class _RecipeHeaderState extends State<RecipeHeader> {
   }
 }
 
+/*
 class IngredientsOverview extends StatelessWidget {
   final List<String> ingredientList;
 
@@ -142,38 +146,112 @@ class IngredientsOverview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 50),
-        child: Container(
-          padding: const EdgeInsets.all(30),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.blueGrey),
-            borderRadius: BorderRadius.circular(15),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.5),
-                spreadRadius: 5,
-                blurRadius: 7,
-                offset: const Offset(0, 3), // changes position of shadow
-              ),
-            ],
+      padding: const EdgeInsets.symmetric(horizontal: 50),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            "Ingrediënten",
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          const SizedBox(height: 10),
+          //...ingredientList.map((ingredient) => Text(ingredient))
+          ...ingredientList.asMap().entries.map((entry) {
+            String ingredient = entry.value;
+            return Text(
+              "• $ingredient",
+              style: const TextStyle(fontSize: 16),
+            );
+          })
+        ],
+      ),
+    );
+  }
+}*/
+
+class IngredientsOverview extends StatelessWidget {
+  final List<String> ingredientList;
+
+  const IngredientsOverview({super.key, required this.ingredientList});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 2),
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Table(
+            border: TableBorder.all(color: Colors.black),
+            defaultVerticalAlignment: TableCellVerticalAlignment.middle,
             children: [
-              const Text(
-                "Ingrediënten",
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 10),
-              //...ingredientList.map((ingredient) => Text(ingredient))
-              ...ingredientList.asMap().entries.map((entry) {
-                String ingredient = entry.value;
-                return Text(
-                  "• $ingredient",
-                  style: const TextStyle(fontSize: 16),
+              const TableRow(
+                  decoration: BoxDecoration(
+                    color: Colors.redAccent,
+                  ),
+                  children: [
+                    TableCell(
+                      verticalAlignment: TableCellVerticalAlignment.middle,
+                      child: Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: Align(
+                          alignment: Alignment.center,
+                          child: Text(
+                            'Ingrediênt',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 18),
+                          ),
+                        ),
+                      ),
+                    ),
+                    TableCell(
+                      verticalAlignment: TableCellVerticalAlignment.middle,
+                      child: Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: Align(
+                          alignment: Alignment.center,
+                          child: Text('Hoeveelheid',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 18)),
+                        ),
+                      ),
+                    ),
+                  ]),
+              ...ingredientList.map((ingredient) {
+                final split = ingredient.split(":");
+                final ingredientName = split[0];
+                final quantity = split.length > 1 ? split[1] : '';
+
+                return TableRow(
+                  children: [
+                    TableCell(
+                      verticalAlignment: TableCellVerticalAlignment.middle,
+                      child: Padding(
+                          padding: const EdgeInsets.all(8),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              quantity,
+                              style: const TextStyle(fontSize: 18),
+                            ),
+                          )),
+                    ),
+                    TableCell(
+                      verticalAlignment: TableCellVerticalAlignment.middle,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: Align(
+                          alignment: Alignment.centerRight,
+                          child: Text(
+                            ingredientName,
+                            style: const TextStyle(fontSize: 18),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 );
               })
             ],
@@ -190,7 +268,7 @@ class InstructionsOverview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 50),
+      padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -207,9 +285,51 @@ class InstructionsOverview extends StatelessWidget {
             Instruction step = entry.value;
             return Text(
               "${index + 1}. ${step.step}",
-              style: TextStyle(fontSize: 16),
+              style: const TextStyle(fontSize: 18),
             );
           }),
+        ],
+      ),
+    );
+  }
+}
+
+class InformationOverview extends StatefulWidget {
+  const InformationOverview({super.key});
+
+  @override
+  State<InformationOverview> createState() => _InformationOverviewState();
+}
+
+class _InformationOverviewState extends State<InformationOverview> {
+  @override
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.all(8),
+      child: Row(
+        children: [
+          Icon(Icons.person),
+          Text("Serves"),
+          Center(
+            child: Padding(
+              padding: EdgeInsets.all(20.0),
+              child: InputQty(
+                initVal: 0, // aanpassen naar ingesteld aantal personen
+                minVal: 0,
+                maxVal: 100,
+                steps: 1,
+                qtyFormProps: QtyFormProps(enableTyping: true),
+                decoration: QtyDecorationProps(
+                  isBordered: true,
+                  contentPadding: EdgeInsets.only(left: 15, right: 15, top: 5, bottom: 5),
+                  isDense: true,
+                  width: 10,
+                  minusBtn: Icon(Icons.remove, color: Colors.blue),
+                  plusBtn: Icon(Icons.add, color: Colors.blue),
+                ),
+              ),
+            ),
+          )
         ],
       ),
     );
