@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/screens/weekoverview_screen.dart';
 
 import '../models/ingredient.dart';
 import '../models/instruction.dart';
@@ -57,7 +58,21 @@ class _DetailOverviewState extends State<DetailOverview> {
             IngredientsOverview(ingredientList: _ingredients),
             const SizedBox(height: 16.0),
             InstructionsOverview(instructionsSteps: _instructionSteps),
-            const SizedBox(height: 16.0)
+            const SizedBox(height: 16.0),
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 45.0, vertical: 8.0),
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const WeekoverviewScreen()));
+                },
+                child: const Text('+ Weekoverzicht'),
+              ),
+            ),
+            const SizedBox(height: 16.0),
           ],
         ),
       ),
@@ -80,13 +95,15 @@ class _RecipeHeaderState extends State<RecipeHeader> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 30),
+      padding: const EdgeInsets.symmetric(horizontal: 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Row(
             children: [
               const Expanded(
+                  child: Align(
+                alignment: Alignment.center,
                 child: Text(
                   "Friet met stoofvlees",
                   style: TextStyle(
@@ -94,7 +111,7 @@ class _RecipeHeaderState extends State<RecipeHeader> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-              ),
+              )),
               const SizedBox(width: 1),
               GestureDetector(
                 onTap: widget.onFavoriteToggle,
