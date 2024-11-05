@@ -148,7 +148,7 @@ class RecipeCard extends StatelessWidget {
                       },
                       style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.blueGrey[50]),
-                      child: const Text("Open")),
+                      child: const Text("Open")), //geef id recept mee ofzo
                   const SizedBox(width: 8),
                   Row(
                     children: [
