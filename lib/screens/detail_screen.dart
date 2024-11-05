@@ -24,7 +24,7 @@ class DetailOverview extends StatefulWidget {
 
 class _DetailOverviewState extends State<DetailOverview> {
   late final List<Ingredient> _ingredients;
-  late final List<Instruction> _instructionSteps;
+  late final List<Instruction> _instructionSteps = Instruction.instructionList();
 
   bool isFavorited = false;
 
@@ -33,11 +33,6 @@ class _DetailOverviewState extends State<DetailOverview> {
       isFavorited = !isFavorited;
     });
   }
-
-  final List<String> _instructionSteps2 = [
-    "Schil de aardappelen",
-    "Snij de aardappelen in frietvorm"
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +48,7 @@ class _DetailOverviewState extends State<DetailOverview> {
                     itemCount: (1),
                     itemBuilder: (BuildContext context, int index) {
                       return InstructionsOverview(
-                          instructionsSteps: _instructionSteps2);
+                          instructionsSteps: _instructionSteps);
                     }))
           ],
         ));
@@ -134,7 +129,7 @@ class IngredientsOverview extends StatelessWidget {
 }
 
 class InstructionsOverview extends StatelessWidget {
-  final List<String> instructionsSteps;
+  final List<Instruction> instructionsSteps;
 
   const InstructionsOverview({super.key, required this.instructionsSteps});
 
@@ -158,8 +153,8 @@ class InstructionsOverview extends StatelessWidget {
               .entries
               .map((entry) {
             int index = entry.key;
-            String step = entry.value;
-            return Text("${index + 1}. $step");
+            Instruction step = entry.value;
+            return Text("${index + 1}. ${step.step}");
           }),
         ],
       ),
