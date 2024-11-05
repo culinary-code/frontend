@@ -23,8 +23,17 @@ class DetailOverview extends StatefulWidget {
 }
 
 class _DetailOverviewState extends State<DetailOverview> {
-  late final List<Ingredient> _ingredients;
-  late final List<Instruction> _instructionSteps = Instruction.instructionList();
+  late final List<String> _ingredients = [
+    "2 grote aardappelen",
+    "500g vlees",
+    "1 ui",
+    "1tl zout",
+    "1tl peper",
+    "2 el olijfolie",
+    "220 ml druivensap"
+  ];
+  late final List<Instruction> _instructionSteps =
+      Instruction.instructionList();
 
   bool isFavorited = false;
 
@@ -37,21 +46,22 @@ class _DetailOverviewState extends State<DetailOverview> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: Column(
+        body: SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 8.0),
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            RecipeHeader(isFavorited: isFavorited, onFavoriteToggle: toggleFavorite),
-            const IngredientsOverview(),
-            Expanded(
-                child: ListView.builder(
-                    padding: const EdgeInsets.all(8),
-                    itemCount: (1),
-                    itemBuilder: (BuildContext context, int index) {
-                      return InstructionsOverview(
-                          instructionsSteps: _instructionSteps);
-                    }))
+            RecipeHeader(
+                isFavorited: isFavorited, onFavoriteToggle: toggleFavorite),
+            IngredientsOverview(ingredientList: _ingredients),
+            const SizedBox(height: 16.0),
+            InstructionsOverview(instructionsSteps: _instructionSteps),
+            const SizedBox(height: 16.0)
           ],
-        ));
+        ),
+      ),
+    ));
   }
 }
 
@@ -59,10 +69,8 @@ class RecipeHeader extends StatefulWidget {
   final bool isFavorited;
   final VoidCallback onFavoriteToggle;
 
-  const RecipeHeader({
-    super.key,
-    required this.isFavorited,
-    required this.onFavoriteToggle});
+  const RecipeHeader(
+      {super.key, required this.isFavorited, required this.onFavoriteToggle});
 
   @override
   State<RecipeHeader> createState() => _RecipeHeaderState();
@@ -89,11 +97,11 @@ class _RecipeHeaderState extends State<RecipeHeader> {
               ),
               const SizedBox(width: 1),
               GestureDetector(
-                  onTap: widget.onFavoriteToggle,
-                  child: Icon(
-                      widget.isFavorited ? Icons.favorite : Icons.favorite_border,
-                      size: 30,
-                      color: widget.isFavorited ? Colors.red : Colors.blueGrey),
+                onTap: widget.onFavoriteToggle,
+                child: Icon(
+                    widget.isFavorited ? Icons.favorite : Icons.favorite_border,
+                    size: 30,
+                    color: widget.isFavorited ? Colors.red : Colors.blueGrey),
               ),
             ],
           ),
@@ -105,23 +113,30 @@ class _RecipeHeaderState extends State<RecipeHeader> {
 }
 
 class IngredientsOverview extends StatelessWidget {
-  const IngredientsOverview({super.key});
+  final List<String> ingredientList;
+
+  const IngredientsOverview({super.key, required this.ingredientList});
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.symmetric(horizontal: 50),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 50),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          const Text(
             "Ingrediënten",
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
           ),
-          SizedBox(height: 15),
+          const SizedBox(height: 10),
+          //...ingredientList.map((ingredient) => Text(ingredient))
+          ...ingredientList.asMap().entries.map((entry) {
+            String ingredient = entry.value;
+            return Text("• $ingredient");
+          })
         ],
       ),
     );
@@ -148,10 +163,7 @@ class InstructionsOverview extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
-          ...instructionsSteps
-              .asMap()
-              .entries
-              .map((entry) {
+          ...instructionsSteps.asMap().entries.map((entry) {
             int index = entry.key;
             Instruction step = entry.value;
             return Text("${index + 1}. ${step.step}");
