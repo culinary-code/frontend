@@ -26,6 +26,14 @@ class _DetailOverviewState extends State<DetailOverview> {
   late final List<Ingredient> _ingredients;
   late final List<Instruction> _instructionSteps;
 
+  bool isFavorited = false;
+
+  void toggleFavorite() {
+    setState(() {
+      isFavorited = !isFavorited;
+    });
+  }
+
   final List<String> _instructionSteps2 = [
     "Schil de aardappelen",
     "Snij de aardappelen in frietvorm"
@@ -35,25 +43,31 @@ class _DetailOverviewState extends State<DetailOverview> {
   Widget build(BuildContext context) {
     return Scaffold(
         body: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const RecipeHeader(),
-        const IngredientsOverview(),
-        Expanded(
-            child: ListView.builder(
-                padding: const EdgeInsets.all(8),
-                itemCount: (1),
-                itemBuilder: (BuildContext context, int index) {
-                  return InstructionsOverview(
-                      instructionsSteps: _instructionSteps2);
-                }))
-      ],
-    ));
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            RecipeHeader(isFavorited: isFavorited, onFavoriteToggle: toggleFavorite),
+            const IngredientsOverview(),
+            Expanded(
+                child: ListView.builder(
+                    padding: const EdgeInsets.all(8),
+                    itemCount: (1),
+                    itemBuilder: (BuildContext context, int index) {
+                      return InstructionsOverview(
+                          instructionsSteps: _instructionSteps2);
+                    }))
+          ],
+        ));
   }
 }
 
 class RecipeHeader extends StatefulWidget {
-  const RecipeHeader({super.key});
+  final bool isFavorited;
+  final VoidCallback onFavoriteToggle;
+
+  const RecipeHeader({
+    super.key,
+    required this.isFavorited,
+    required this.onFavoriteToggle});
 
   @override
   State<RecipeHeader> createState() => _RecipeHeaderState();
@@ -63,16 +77,30 @@ class _RecipeHeaderState extends State<RecipeHeader> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(),
+      padding: const EdgeInsets.symmetric(horizontal: 30),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const Text(
-            "Friet met stoofvlees",
-            style: TextStyle(
-              fontSize: 26,
-              fontWeight: FontWeight.bold,
-            ),
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  "Friet met stoofvlees",
+                  style: TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 1),
+              GestureDetector(
+                  onTap: widget.onFavoriteToggle,
+                  child: Icon(
+                      widget.isFavorited ? Icons.favorite : Icons.favorite_border,
+                      size: 30,
+                      color: widget.isFavorited ? Colors.red : Colors.blueGrey),
+              ),
+            ],
           ),
           Image.asset('images/default_image.png'),
         ],
@@ -124,8 +152,15 @@ class InstructionsOverview extends StatelessWidget {
               fontWeight: FontWeight.bold,
             ),
           ),
-          ...instructionsSteps.map((step) => Text(step)),
-          //Text(instructionsSteps[1])
+          const SizedBox(height: 10),
+          ...instructionsSteps
+              .asMap()
+              .entries
+              .map((entry) {
+            int index = entry.key;
+            String step = entry.value;
+            return Text("${index + 1}. $step");
+          }),
         ],
       ),
     );
