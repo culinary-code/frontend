@@ -49,14 +49,15 @@ class _DetailOverviewState extends State<DetailOverview> {
     return Scaffold(
         body: SingleChildScrollView(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 8.0),
+        padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             RecipeHeader(
                 isFavorited: isFavorited, onFavoriteToggle: toggleFavorite),
+            const SizedBox(height: 16),
             IngredientsOverview(ingredientList: _ingredients),
-            const SizedBox(height: 16.0),
+            const SizedBox(height: 20.0),
             InstructionsOverview(instructionsSteps: _instructionSteps),
             const SizedBox(height: 16.0),
             Padding(
@@ -95,10 +96,15 @@ class _RecipeHeaderState extends State<RecipeHeader> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 0),
+      padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          Image.asset(
+            'images/default.jpg',
+            fit: BoxFit.cover,
+          ),
+          const SizedBox(height: 16),
           Row(
             children: [
               const Expanded(
@@ -122,7 +128,6 @@ class _RecipeHeaderState extends State<RecipeHeader> {
               ),
             ],
           ),
-          Image.asset('images/default_image.png'),
         ],
       ),
     );
@@ -137,26 +142,43 @@ class IngredientsOverview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 50),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            "Ingrediënten",
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
+        padding: const EdgeInsets.symmetric(horizontal: 50),
+        child: Container(
+          padding: const EdgeInsets.all(30),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.blueGrey),
+            borderRadius: BorderRadius.circular(15),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.5),
+                spreadRadius: 5,
+                blurRadius: 7,
+                offset: const Offset(0, 3), // changes position of shadow
+              ),
+            ],
           ),
-          const SizedBox(height: 10),
-          //...ingredientList.map((ingredient) => Text(ingredient))
-          ...ingredientList.asMap().entries.map((entry) {
-            String ingredient = entry.value;
-            return Text("• $ingredient");
-          })
-        ],
-      ),
-    );
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                "Ingrediënten",
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 10),
+              //...ingredientList.map((ingredient) => Text(ingredient))
+              ...ingredientList.asMap().entries.map((entry) {
+                String ingredient = entry.value;
+                return Text(
+                  "• $ingredient",
+                  style: const TextStyle(fontSize: 16),
+                );
+              })
+            ],
+          ),
+        ));
   }
 }
 
@@ -175,7 +197,7 @@ class InstructionsOverview extends StatelessWidget {
           const Text(
             "Bereidingswijze",
             style: TextStyle(
-              fontSize: 16,
+              fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -183,7 +205,10 @@ class InstructionsOverview extends StatelessWidget {
           ...instructionsSteps.asMap().entries.map((entry) {
             int index = entry.key;
             Instruction step = entry.value;
-            return Text("${index + 1}. ${step.step}");
+            return Text(
+              "${index + 1}. ${step.step}",
+              style: TextStyle(fontSize: 16),
+            );
           }),
         ],
       ),
