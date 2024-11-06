@@ -42,6 +42,9 @@ class GroceryList extends StatefulWidget {
 }
 
 class _GroceryListState extends State<GroceryList> {
+  bool isDeleting = false;
+  bool isUndoPressed = false;
+
   late final List<String> groceryList = [
     "1 stuk savooi",
     "500g gehakt",
@@ -57,6 +60,7 @@ class _GroceryListState extends State<GroceryList> {
   void _deleteItem(String item) {
     setState(() {
       groceryList.remove(item);
+      isDeleting = true;
     });
   }
 
@@ -107,7 +111,17 @@ class _GroceryListState extends State<GroceryList> {
                               ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                       content:
-                                          Text('$groceryItem verwijderd')));
+                                          Text('$groceryItem is verwijderd'),
+                                    action: SnackBarAction(
+                                        label: "Ongedaan maken",
+                                        onPressed: () {
+                                          isUndoPressed = true;
+                                          setState(() {
+                                            isDeleting = false;
+                                            groceryList.add(groceryItem);
+                                          });
+                                    }),
+                                  ));
                             },
                             child: Align(
                               alignment: Alignment.centerLeft,
@@ -127,15 +141,55 @@ class _GroceryListState extends State<GroceryList> {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 10),
               child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.add),
+                    icon: const Icon(Icons.add, size: 50),
                     onPressed: () {
                       showDialog(
                           context: context,
                           builder: (context) {
                             return DialogInputGrocery(onAdd: (newItem) {
-                              _addItem(newItem);
+                              if (groceryList.contains(newItem)) {
+                                Future.delayed(Duration.zero, () {
+                                  if (!context.mounted) return;
+                                  showDialog(
+                                      context: context,
+                                      builder: (context) {
+                                        return AlertDialog(
+                                          title: const Text(
+                                              'Dit staat al op jouw lijstje, wil je dit aanpassen?'),
+                                          actions: [
+                                            TextButton(
+                                                onPressed: () {
+                                                  Navigator.pop(context);
+                                                  showEditDialog(
+                                                    context: context,
+                                                    currentItem: newItem,
+                                                    groceryList: groceryList,
+                                                    onItemUpdated: (updatedItem) {
+                                                      setState(() {
+                                                        int index = groceryList.indexOf(newItem);
+                                                        if (index != -1) {
+                                                          groceryList[index] = updatedItem;
+                                                        }
+                                                      });
+                                                    }
+                                                  );
+                                                },
+                                                child: const Text('Ja')),
+                                            TextButton(
+                                                onPressed: () {
+                                                  Navigator.pop(context);
+                                                },
+                                                child: const Text('Nee')),
+                                          ],
+                                        );
+                                      });
+                                });
+                              } else {
+                                _addItem(newItem);
+                              }
                             });
                           });
                     },
@@ -188,4 +242,45 @@ class _DialogInputGroceryState extends State<DialogInputGrocery> {
       ],
     );
   }
+}
+
+Future<void> showEditDialog({
+  required BuildContext context,
+  required String currentItem,
+  required List<String> groceryList,
+  required Function(String) onItemUpdated,
+}) async {
+  TextEditingController controller = TextEditingController(text: currentItem);
+
+  showDialog(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: const Text('Pas aan'),
+        content: TextField(
+          controller: controller,
+          decoration:
+          const InputDecoration(hintText: "Wat wil je aanpassen?"),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: const Text('Annuleren'),
+          ),
+          TextButton(
+            onPressed: () {
+              String updatedItem = controller.text.trim();
+              if (updatedItem.isNotEmpty && updatedItem != currentItem) {
+                onItemUpdated(updatedItem);
+              }
+              Navigator.pop(context);
+            },
+            child: const Text('Opslaan'),
+          ),
+        ],
+      );
+    },
+  );
 }
