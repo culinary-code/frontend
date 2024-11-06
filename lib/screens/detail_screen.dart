@@ -22,7 +22,6 @@ class DetailOverview extends StatefulWidget {
   State<DetailOverview> createState() => _DetailOverviewState();
 }
 
-
 // Deze klasse combineert alle individueel aangemaakte klassen.
 class _DetailOverviewState extends State<DetailOverview> {
   late final List<String> _ingredients = [
@@ -388,7 +387,6 @@ class IngredientsOverview extends StatelessWidget {
         ));
   }
 }
-
 
 // Hierin zorg je dat de de bereidingswijze stapsgewijs aan de gebruiker getoond worden.
 class InstructionsOverview extends StatelessWidget {

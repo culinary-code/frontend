@@ -42,12 +42,13 @@ class _RecipeOverviewState extends State<RecipeOverview> {
               const Text(
                 'Waar heb je trek in?',
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 22,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 6),
               const TextField(
+                style: TextStyle(fontSize: 20),
                 decoration: InputDecoration(
                     hintText: 'Aardappel',
                     isDense: true,
@@ -102,8 +103,8 @@ class RecipeCard extends StatelessWidget {
         children: [
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 4),
-            width: 100,
-            height: 100,
+            width: 130,
+            height: 130,
             color: Colors.blueGrey,
             child: const Icon(Icons.image, color: Colors.blueGrey),
           ),
@@ -120,7 +121,7 @@ class RecipeCard extends StatelessWidget {
                     child: Text(
                       recipeName,
                       style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 14),
+                          fontWeight: FontWeight.bold, fontSize: 20),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -130,7 +131,7 @@ class RecipeCard extends StatelessWidget {
                     onTap: onFavoriteToggle,
                     child: Icon(
                         isFavorited ? Icons.favorite : Icons.favorite_border,
-                        size: 18,
+                        size: 25,
                         color: isFavorited ? Colors.red : Colors.blueGrey),
                   ),
                 ],
@@ -148,17 +149,24 @@ class RecipeCard extends StatelessWidget {
                       },
                       style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.blueGrey[50]),
-                      child: const Text("Open")), //geef id recept mee ofzo
+                      child: const Text(
+                        "Open",
+                        style: TextStyle(fontSize: 18),
+                      )),
+                  //geef id recept mee ofzo
                   const SizedBox(width: 8),
                   Row(
                     children: [
-                      Text(score.toStringAsFixed(1)),
+                      Text(
+                        score.toStringAsFixed(1),
+                        style: const TextStyle(fontSize: 18),
+                      ),
                       if (score > 0 && score < 5)
-                        const Icon(Icons.star_half, size: 16)
+                        const Icon(Icons.star_half, size: 22)
                       else if (score == 0)
-                        const Icon(Icons.star_outline, size: 16)
+                        const Icon(Icons.star_outline, size: 22)
                       else if (score == 5)
-                        const Icon(Icons.star, size: 16)
+                        const Icon(Icons.star, size: 22)
                     ],
                   )
                 ],
