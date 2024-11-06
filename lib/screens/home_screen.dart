@@ -12,7 +12,6 @@ class HomeScreen extends StatelessWidget {
       title: 'Culinary Code',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.cyan),
-        // Theme of Project
         useMaterial3: true,
       ),
       debugShowCheckedModeBanner: false,
@@ -99,81 +98,84 @@ class RecipeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 15.0),
-      child: Row(
-        children: [
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 4),
-            width: 130,
-            height: 130,
-            color: Colors.blueGrey,
-            child: const Icon(Icons.image, color: Colors.blueGrey),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-              child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              //FittedBox(
-              //child: Row(
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      recipeName,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 20),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  GestureDetector(
-                    onTap: onFavoriteToggle,
-                    child: Icon(
-                        isFavorited ? Icons.favorite : Icons.favorite_border,
-                        size: 25,
-                        color: isFavorited ? Colors.red : Colors.blueGrey),
-                  ),
-                ],
-              ),
-              //),
-              const SizedBox(height: 30),
-              Row(
-                children: [
-                  ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const DetailScreen()));
-                      },
-                      style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blueGrey[50]),
-                      child: const Text(
-                        "Open",
-                        style: TextStyle(fontSize: 18),
-                      )),
-                  //geef id recept mee ofzo
-                  const SizedBox(width: 8),
-                  Row(
-                    children: [
-                      Text(
-                        score.toStringAsFixed(1),
-                        style: const TextStyle(fontSize: 18),
+      child: GestureDetector(
+        onTap: () {
+          Navigator.push(context,
+              MaterialPageRoute(builder: (context) => const DetailScreen()));
+        },
+        child: Row(
+          children: [
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              width: 130,
+              height: 130,
+              color: Colors.blueGrey,
+              child: const Icon(Icons.image, color: Colors.blueGrey),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+                child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        recipeName,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 20),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      if (score > 0 && score < 5)
-                        const Icon(Icons.star_half, size: 22)
-                      else if (score == 0)
-                        const Icon(Icons.star_outline, size: 22)
-                      else if (score == 5)
-                        const Icon(Icons.star, size: 22)
-                    ],
-                  )
-                ],
-              )
-            ],
-          ))
-        ],
+                    ),
+                    const SizedBox(width: 4),
+                    GestureDetector(
+                      onTap: onFavoriteToggle,
+                      child: Icon(
+                          isFavorited ? Icons.favorite : Icons.favorite_border,
+                          size: 25,
+                          color: isFavorited ? Colors.red : Colors.blueGrey),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 30),
+                Row(
+                  children: [
+                    ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const DetailScreen()));
+                        },
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blueGrey[50]),
+                        child: const Text(
+                          "Open",
+                          style: TextStyle(fontSize: 18),
+                        )),
+                    //geef id recept mee ofzo
+                    const SizedBox(width: 8),
+                    Row(
+                      children: [
+                        Text(
+                          score.toStringAsFixed(1),
+                          style: const TextStyle(fontSize: 18),
+                        ),
+                        if (score > 0 && score < 5)
+                          const Icon(Icons.star_half, size: 22)
+                        else if (score == 0)
+                          const Icon(Icons.star_outline, size: 22)
+                        else if (score == 5)
+                          const Icon(Icons.star, size: 22)
+                      ],
+                    )
+                  ],
+                )
+              ],
+            ))
+          ],
+        ),
       ),
     );
   }
