@@ -51,13 +51,13 @@ class _GroceryListState extends State<GroceryList> {
     "600g aardappelen"
   ];
 
-  void _addItem(String newItem) {
+  void addItem(String newItem) {
     setState(() {
       groceryList.add(newItem);
     });
   }
 
-  void _deleteItem(String item) {
+  void deleteItem(String item) {
     setState(() {
       groceryList.remove(item);
       isDeleting = true;
@@ -102,33 +102,49 @@ class _GroceryListState extends State<GroceryList> {
                       TableCell(
                         verticalAlignment: TableCellVerticalAlignment.middle,
                         child: Padding(
-                          padding: const EdgeInsets.all(8.0),
+                          padding: const EdgeInsets.all(0.0),
                           child: Dismissible(
+                            background: Container(
+                              color: Colors.red,
+                            ),
                             key: Key(groceryItem),
                             direction: DismissDirection.endToStart,
                             onDismissed: (direction) {
-                              _deleteItem(groceryItem);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                      content:
-                                          Text('$groceryItem is verwijderd'),
-                                    action: SnackBarAction(
-                                        label: "Ongedaan maken",
-                                        onPressed: () {
-                                          isUndoPressed = true;
-                                          setState(() {
-                                            isDeleting = false;
-                                            groceryList.add(groceryItem);
-                                          });
+                              deleteItem(groceryItem);
+                              ScaffoldMessenger.of(context)
+                                  .showSnackBar(SnackBar(
+                                content: Text('$groceryItem is verwijderd'),
+                                action: SnackBarAction(
+                                    label: "Ongedaan maken",
+                                    onPressed: () {
+                                      isUndoPressed = true;
+                                      setState(() {
+                                        isDeleting = false;
+                                        groceryList.add(groceryItem);
+                                      });
                                     }),
-                                  ));
+                              ));
                             },
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                groceryItem,
-                                style: const TextStyle(fontSize: 22),
-                              ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    groceryItem,
+                                    style: const TextStyle(fontSize: 22),
+                                  ),
+                                ),
+                                Container(
+                                  color: Colors.red,
+                                  child: const Row(
+                                    children: [
+                                      Icon(Icons.keyboard_arrow_left, size: 30,),
+                                      Icon(Icons.delete, color: Colors.black, size: 30,)
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
@@ -164,18 +180,22 @@ class _GroceryListState extends State<GroceryList> {
                                                 onPressed: () {
                                                   Navigator.pop(context);
                                                   showEditDialog(
-                                                    context: context,
-                                                    currentItem: newItem,
-                                                    groceryList: groceryList,
-                                                    onItemUpdated: (updatedItem) {
-                                                      setState(() {
-                                                        int index = groceryList.indexOf(newItem);
-                                                        if (index != -1) {
-                                                          groceryList[index] = updatedItem;
-                                                        }
+                                                      context: context,
+                                                      currentItem: newItem,
+                                                      groceryList: groceryList,
+                                                      onItemUpdated:
+                                                          (updatedItem) {
+                                                        setState(() {
+                                                          int index =
+                                                              groceryList
+                                                                  .indexOf(
+                                                                      newItem);
+                                                          if (index != -1) {
+                                                            groceryList[index] =
+                                                                updatedItem;
+                                                          }
+                                                        });
                                                       });
-                                                    }
-                                                  );
                                                 },
                                                 child: const Text('Ja')),
                                             TextButton(
@@ -188,7 +208,7 @@ class _GroceryListState extends State<GroceryList> {
                                       });
                                 });
                               } else {
-                                _addItem(newItem);
+                                addItem(newItem);
                               }
                             });
                           });
@@ -214,14 +234,14 @@ class DialogInputGrocery extends StatefulWidget {
 }
 
 class _DialogInputGroceryState extends State<DialogInputGrocery> {
-  final TextEditingController _controller = TextEditingController();
+  final TextEditingController controller = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text('Wat wil je toevoegen?'),
       content: TextField(
-        controller: _controller,
+        controller: controller,
       ),
       actions: [
         TextButton(
@@ -232,7 +252,7 @@ class _DialogInputGroceryState extends State<DialogInputGrocery> {
         ),
         TextButton(
             onPressed: () {
-              final String newItem = _controller.text.trim();
+              final String newItem = controller.text.trim();
               if (newItem.isNotEmpty) {
                 widget.onAdd(newItem);
               }
@@ -259,8 +279,8 @@ Future<void> showEditDialog({
         title: const Text('Pas aan'),
         content: TextField(
           controller: controller,
-          decoration:
-          const InputDecoration(hintText: "Wat wil je aanpassen?"),
+          /*decoration:
+          const InputDecoration(hintText: "Wat wil je aanpassen?"),*/
         ),
         actions: [
           TextButton(
