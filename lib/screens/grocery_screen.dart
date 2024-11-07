@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../models/groceryListItem.dart';
+
 class GroceryScreen extends StatelessWidget {
   const GroceryScreen({super.key});
 
@@ -20,12 +22,6 @@ class GroceryHeader extends StatelessWidget {
     return const Padding(
         padding: EdgeInsets.symmetric(vertical: 16, horizontal: 16),
         child: Column(children: [
-          Text(
-            "Boodschappenlijst",
-            style: TextStyle(
-              fontSize: 25,
-            ),
-          ),
           SizedBox(
             height: 16,
           ),
@@ -48,7 +44,16 @@ class _GroceryListState extends State<GroceryList> {
   late final List<String> groceryList = [
     "1 stuk savooi",
     "500g gehakt",
-    "600g aardappelen"
+    "600g aardappelen",
+    "1kg appels",
+    "500g wortels",
+  ];
+
+  late final List<GroceryListItem> groceryList2 = [
+    GroceryListItem(productName: "savooi", quantity: 1, measurement: "stuk"),
+    GroceryListItem(productName: "gehakt", quantity: 500, measurement: "g"),
+    GroceryListItem(
+        productName: "aardappelen", quantity: 600, measurement: "g"),
   ];
 
   void addItem(String newItem) {
@@ -85,14 +90,22 @@ class _GroceryListState extends State<GroceryList> {
                         verticalAlignment: TableCellVerticalAlignment.middle,
                         child: Padding(
                           padding: EdgeInsets.all(8.0),
-                          child: Align(
-                            alignment: Alignment.center,
-                            child: Text(
-                              'Boodschappenlijst',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 25),
-                            ),
-                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Align(
+                                alignment: Alignment.center,
+                                child: Text(
+                                  'Boodschappenlijst',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold, fontSize: 25),
+                                ),
+                              ),
+                              Icon(Icons.shopping_cart, size: 30,)
+                            ],
+                          )
+
+                          ,
                         ),
                       ),
                     ]),
@@ -102,7 +115,7 @@ class _GroceryListState extends State<GroceryList> {
                       TableCell(
                         verticalAlignment: TableCellVerticalAlignment.middle,
                         child: Padding(
-                          padding: const EdgeInsets.all(0.0),
+                          padding: const EdgeInsets.only(left: 8.0),
                           child: Dismissible(
                             background: Container(
                               color: Colors.red,
@@ -160,7 +173,7 @@ class _GroceryListState extends State<GroceryList> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.add, size: 50),
+                    icon: const Icon(Icons.add_box, size: 50),
                     onPressed: () {
                       showDialog(
                           context: context,
@@ -187,9 +200,9 @@ class _GroceryListState extends State<GroceryList> {
                                                           (updatedItem) {
                                                         setState(() {
                                                           int index =
-                                                              groceryList
-                                                                  .indexOf(
-                                                                      newItem);
+                                                          groceryList
+                                                              .indexOf(
+                                                              newItem);
                                                           if (index != -1) {
                                                             groceryList[index] =
                                                                 updatedItem;
