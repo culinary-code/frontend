@@ -49,6 +49,7 @@ dependencies:
   input_quantity: ^2.4.1
   input_dialog: ^0.1.1
   flutter_settings_screens: ^0.3.4
+  multi_dropdown: ^3.0.1
 
 dev_dependencies:
   flutter_test:
