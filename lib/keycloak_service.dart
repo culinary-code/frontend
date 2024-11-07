@@ -4,12 +4,20 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class KeycloakService {
+
   final FlutterSecureStorage storage = const FlutterSecureStorage();
 
-  String get idpBaseUrl => dotenv.env['KEYCLOAK_BASE_URL'] ?? 'default_value';
-  String get clientId => dotenv.env['KEYCLOAK_CLIENT_ID'] ?? 'default_value';
-  String get realm => dotenv.env['KEYCLOAK_REALM'] ?? 'default_value';
-  String get backendUrl => dotenv.env['BACKEND_BASE_URL'] ?? 'default_value';
+  String get idpBaseUrl => dotenv.env['KEYCLOAK_BASE_URL'] ??
+      (throw Exception('Environment variable KEYCLOAK_BASE_URL not found'));
+
+  String get clientId => dotenv.env['KEYCLOAK_CLIENT_ID'] ??
+      (throw Exception('Environment variable KEYCLOAK_CLIENT_ID not found'));
+
+  String get realm => dotenv.env['KEYCLOAK_REALM'] ??
+      (throw Exception('Environment variable KEYCLOAK_REALM not found'));
+
+  String get backendUrl => dotenv.env['BACKEND_BASE_URL'] ??
+      (throw Exception('Environment variable BACKEND_BASE_URL not found'));
 
   // Step 2: Create new user in Keycloak
   Future<void> createUser({
@@ -36,10 +44,8 @@ class KeycloakService {
       }),
     );
 
-    if (response.statusCode == 201) {
-      print('User created successfully');
-    } else {
-      print('Failed to create user: ${response.body}');
+    if (response.statusCode != 200) {
+      throw Exception('Failed to create user: ${response.body}');
     }
   }
 

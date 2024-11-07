@@ -43,7 +43,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('User Registration'),
+        title: const Text('User Registration'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -52,41 +52,41 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           children: [
             TextField(
               controller: _usernameController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Username',
               ),
             ),
             TextField(
               controller: _firstNameController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'First Name',
               ),
             ),
             TextField(
               controller: _lastNameController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Last Name',
               ),
             ),
             TextField(
               controller: _emailController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Email',
               ),
             ),
             TextField(
               controller: _passwordController,
               obscureText: true,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Password',
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             ElevatedButton(
               onPressed: _registerUser,
-              child: Text('Register'),
+              child: const Text('Register'),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Text(
               _statusMessage,
               style: TextStyle(
