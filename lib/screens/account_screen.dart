@@ -2,9 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:multi_dropdown/multi_dropdown.dart';
-import 'package:dropdown_textfield/dropdown_textfield.dart';
-
-import '../models/user.dart';
 
 class AccountScreen extends StatelessWidget {
   const AccountScreen({super.key});
@@ -28,8 +25,14 @@ class AccountOverview extends StatefulWidget {
 class _AccountOverviewState extends State<AccountOverview> {
   @override
   Widget build(BuildContext context) {
-    return PreferencesSettings();
-    //AccountSettings();
+    return Column(
+      children: [
+        AccountSettings(),
+        Expanded(
+          child: PreferencesSettings(),
+        ),
+      ],
+    );
   }
 }
 
@@ -109,9 +112,13 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
     if (newPreference.isNotEmpty &&
         !preferences.any((item) => item.value == newPreference)) {
       setState(() {
-        preferences.add(DropdownItem(label: newPreference, value: newPreference));
-        controller.addItems([DropdownItem(label: newPreference, value: newPreference)]);
-        controller.selectedItems.add(DropdownItem(label: newPreference, value: newPreference));
+        selectedValue = newPreference;
+        preferences
+            .add(DropdownItem(label: newPreference, value: newPreference));
+        controller.addItems(
+            [DropdownItem(label: newPreference, value: newPreference)]);
+        controller.selectedItems
+            .add(DropdownItem(label: newPreference, value: newPreference));
       });
       Navigator.pop(context);
     } else {
@@ -122,123 +129,111 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: Colors.white24,
-        body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              child: SizedBox(
-                width: double.infinity,
-                height: MediaQuery.of(context).size.height,
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.max,
-                      children: [
-                        const SizedBox(
-                          height: 4,
-                        ),
-                        MultiDropdown<String>(
-                          items: preferences,
-                          controller: controller,
-                          enabled: true,
-                          searchEnabled: true,
-                          chipDecoration: const ChipDecoration(
-                              backgroundColor: Colors.yellow,
-                              wrap: true,
-                              runSpacing: 2,
-                              spacing: 10),
-                          fieldDecoration: FieldDecoration(
-                            hintText: 'Preferences',
-                            hintStyle: const TextStyle(color: Colors.black),
-                            prefixIcon: const Icon(CupertinoIcons.flag),
-                            showClearIcon: false,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: Colors.grey),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                color: Colors.black,
-                              ),
-                            ),
-                          ),
-                          dropdownItemDecoration: const DropdownItemDecoration(
-                            selectedIcon:
-                                Icon(Icons.check_box, color: Colors.green),
-                            disabledIcon: Icon(Icons.lock, color: Colors.grey),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Select a preference';
-                            }
-                            return null;
-                          },
-                          onSelectionChange: (selectedPreferences) {
-                            debugPrint(
-                                'OnSelectionChange: $selectedPreferences');
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        Wrap(spacing: 8, children: [
-                          ElevatedButton(
-                            onPressed: () {
-                              if (_formKey.currentState?.validate() ?? false) {
-                                final selectedItems = controller.selectedItems;
-                                debugPrint(selectedItems.toString());
-                              }
-                            },
-                            child: const Text('Submit'),
-                          ),
-                          ElevatedButton(
-                            onPressed: () {
-                              controller.selectAll();
-                            },
-                            child: const Text('Select All'),
-                          ),
-                          ElevatedButton(
-                            onPressed: () {
-                              controller.clearAll();
-                            },
-                            child: const Text('Unselect All'),
-                          ),
-                          ElevatedButton(
-                            onPressed: () {
-                              showDialog(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title: const Text('Add Custom Preference'),
-                                  content: TextField(
-                                    controller: customPreferenceController,
-                                    decoration: const InputDecoration(
-                                        labelText: "Custom Preference"),
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () {
-                                        Navigator.pop(context);
-                                      },
-                                      child: const Text('Cancel'),
-                                    ),
-                                    ElevatedButton(
-                                      onPressed:_addPreferenceToDropdown,
-                                      child: const Text('Add'),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                            child: const Text('Add Preferences'),
-                          ),
-                        ]),
-                      ]),
+      backgroundColor: Colors.white24,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Form(
+            key: _formKey,
+            child: ListView(
+              children: [
+                MultiDropdown<String>(
+                  items: preferences,
+                  controller: controller,
+                  enabled: true,
+                  searchEnabled: true,
+                  chipDecoration: const ChipDecoration(
+                      backgroundColor: Colors.yellow,
+                      wrap: true,
+                      runSpacing: 2,
+                      spacing: 10),
+                  fieldDecoration: FieldDecoration(
+                    hintText: 'Preferences',
+                    hintStyle: const TextStyle(color: Colors.black),
+                    prefixIcon: const Icon(CupertinoIcons.flag),
+                    showClearIcon: false,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Colors.grey),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+                  dropdownItemDecoration: const DropdownItemDecoration(
+                    selectedIcon: Icon(Icons.check_box, color: Colors.green),
+                    disabledIcon: Icon(Icons.lock, color: Colors.grey),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Select a preference';
+                    }
+                    return null;
+                  },
+                  onSelectionChange: (selectedPreferences) {
+                    debugPrint('OnSelectionChange: $selectedPreferences');
+                  },
                 ),
-              ),
+                const SizedBox(height: 12),
+                Wrap(spacing: 8, children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      if (_formKey.currentState?.validate() ?? false) {
+                        final selectedItems = controller.selectedItems;
+                        debugPrint(selectedItems.toString());
+                      }
+                    },
+                    child: const Text('Submit'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      controller.selectAll();
+                    },
+                    child: const Text('Select All'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      controller.clearAll();
+                    },
+                    child: const Text('Unselect All'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text('Add Custom Preference'),
+                          content: TextField(
+                            controller: customPreferenceController,
+                            decoration: const InputDecoration(
+                                labelText: "Custom Preference"),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
+                              child: const Text('Cancel'),
+                            ),
+                            ElevatedButton(
+                              onPressed: _addPreferenceToDropdown,
+                              child: const Text('Add'),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                    child: const Text('Add Preferences'),
+                  ),
+                ]),
+              ],
             ),
           ),
-        ));
+        ),
+      ),
+    );
   }
 }
