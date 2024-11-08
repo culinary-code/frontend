@@ -137,6 +137,10 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
             key: _formKey,
             child: ListView(
               children: [
+                const Text(
+                  'Voorkeuren',
+                  style: TextStyle(fontSize: 30),
+                ),
                 MultiDropdown<String>(
                   items: preferences,
                   controller: controller,
@@ -148,7 +152,7 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
                       runSpacing: 2,
                       spacing: 10),
                   fieldDecoration: FieldDecoration(
-                    hintText: 'Preferences',
+                    hintText: 'Voorkeuren',
                     hintStyle: const TextStyle(color: Colors.black),
                     prefixIcon: const Icon(CupertinoIcons.flag),
                     showClearIcon: false,
@@ -169,7 +173,7 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Select a preference';
+                      return 'Kies een voorkeur';
                     }
                     return null;
                   },
@@ -186,47 +190,47 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
                         debugPrint(selectedItems.toString());
                       }
                     },
-                    child: const Text('Submit'),
+                    child: const Text('Opslaan'),
                   ),
                   ElevatedButton(
                     onPressed: () {
                       controller.selectAll();
                     },
-                    child: const Text('Select All'),
+                    child: const Text('Selecteer alles'),
                   ),
                   ElevatedButton(
                     onPressed: () {
                       controller.clearAll();
                     },
-                    child: const Text('Unselect All'),
+                    child: const Text('Verwijder alles'),
                   ),
                   ElevatedButton(
                     onPressed: () {
                       showDialog(
                         context: context,
                         builder: (context) => AlertDialog(
-                          title: const Text('Add Custom Preference'),
+                          title: const Text('Voeg een eigen voorkeur toe'),
                           content: TextField(
                             controller: customPreferenceController,
                             decoration: const InputDecoration(
-                                labelText: "Custom Preference"),
+                                labelText: "Eigen voorkeur"),
                           ),
                           actions: [
                             TextButton(
                               onPressed: () {
                                 Navigator.pop(context);
                               },
-                              child: const Text('Cancel'),
+                              child: const Text('Annuleer'),
                             ),
                             ElevatedButton(
                               onPressed: _addPreferenceToDropdown,
-                              child: const Text('Add'),
+                              child: const Text('Voeg toe'),
                             ),
                           ],
                         ),
                       );
                     },
-                    child: const Text('Add Preferences'),
+                    child: const Text('Andere..'),
                   ),
                 ]),
               ],
