@@ -2,6 +2,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:multi_dropdown/multi_dropdown.dart';
+import 'package:dropdown_textfield/dropdown_textfield.dart';
+
+import '../models/user.dart';
 
 class AccountScreen extends StatelessWidget {
   const AccountScreen({super.key});
@@ -25,13 +28,8 @@ class AccountOverview extends StatefulWidget {
 class _AccountOverviewState extends State<AccountOverview> {
   @override
   Widget build(BuildContext context) {
-    return const Column(
-      children: [
-        AccountSettings(),
-        SizedBox(height: 16),
-        //PreferencesSettings()
-      ],
-    );
+    return PreferencesSettings();
+    //AccountSettings();
   }
 }
 
@@ -85,128 +83,111 @@ class _AccountSettingsState extends State<AccountSettings> {
   }
 }
 
-/*class PreferencesSettings extends StatefulWidget {
+class PreferencesSettings extends StatefulWidget {
   const PreferencesSettings({super.key});
 
   @override
   State<PreferencesSettings> createState() => _PreferencesSettingsState();
 }
 
-class User {
-  final String name;
-  final int id;
-
-  User({required this.name, required this.id});
-
-  @override
-  String toString() {
-    return 'User(name: $name, id: $id)';
-  }
-}
-
 class _PreferencesSettingsState extends State<PreferencesSettings> {
   final _formKey = GlobalKey<FormState>();
+  final controller = MultiSelectController<String>();
+  final TextEditingController customPreferenceController =
+      TextEditingController();
+  String? selectedValue;
 
-  final controller = MultiSelectController<User>();
+  List<DropdownItem<String>> preferences = [
+    DropdownItem(label: 'Vegan', value: 'Vegan'),
+    DropdownItem(label: 'Vegetarian', value: 'Vegetarian'),
+    DropdownItem(label: 'Nut Allergy', value: 'Nut Allergy'),
+    DropdownItem(label: 'Lactose Intolerant', value: 'Lactose Intolerant'),
+  ];
+
+  void _addPreferenceToDropdown() {
+    String newPreference = customPreferenceController.text.trim();
+    if (newPreference.isNotEmpty &&
+        !preferences.any((item) => item.value == newPreference)) {
+      setState(() {
+        preferences.add(DropdownItem(label: newPreference, value: newPreference));
+        controller.addItems([DropdownItem(label: newPreference, value: newPreference)]);
+        controller.selectedItems.add(DropdownItem(label: newPreference, value: newPreference));
+      });
+      Navigator.pop(context);
+    } else {
+      debugPrint("Preference was empty or already exists.");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    var items = [
-      DropdownItem(label: 'Nepal', value: User(name: 'Nepal', id: 1)),
-      DropdownItem(label: 'Australia', value: User(name: 'Australia', id: 6)),
-      DropdownItem(label: 'India', value: User(name: 'India', id: 2)),
-      DropdownItem(label: 'China', value: User(name: 'China', id: 3)),
-      DropdownItem(label: 'USA', value: User(name: 'USA', id: 4)),
-      DropdownItem(label: 'UK', value: User(name: 'UK', id: 5)),
-      DropdownItem(label: 'Germany', value: User(name: 'Germany', id: 7)),
-      DropdownItem(label: 'France', value: User(name: 'France', id: 8)),
-    ];
     return Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.white24,
         body: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               child: SizedBox(
-                //width: double.infinity,
-                //ht: MediaQuery.of(context).size.height,
+                width: double.infinity,
+                height: MediaQuery.of(context).size.height,
                 child: Form(
                   key: _formKey,
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.max,
-                    children: [
-                      const SizedBox(
-                        height: 4,
-                      ),
-                      MultiDropdown<User>(
-                        items: items,
-                        controller: controller,
-                        enabled: true,
-                        searchEnabled: true,
-                        chipDecoration: const ChipDecoration(
-                          backgroundColor: Colors.yellow,
-                          wrap: true,
-                          runSpacing: 2,
-                          spacing: 10,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.max,
+                      children: [
+                        const SizedBox(
+                          height: 4,
                         ),
-                        fieldDecoration: FieldDecoration(
-                          hintText: 'Countries',
-                          hintStyle: const TextStyle(color: Colors.black87),
-                          prefixIcon: const Icon(CupertinoIcons.flag),
-                          showClearIcon: false,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: Colors.grey),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                              color: Colors.black87,
+                        MultiDropdown<String>(
+                          items: preferences,
+                          controller: controller,
+                          enabled: true,
+                          searchEnabled: true,
+                          chipDecoration: const ChipDecoration(
+                              backgroundColor: Colors.yellow,
+                              wrap: true,
+                              runSpacing: 2,
+                              spacing: 10),
+                          fieldDecoration: FieldDecoration(
+                            hintText: 'Preferences',
+                            hintStyle: const TextStyle(color: Colors.black),
+                            prefixIcon: const Icon(CupertinoIcons.flag),
+                            showClearIcon: false,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: Colors.grey),
                             ),
-                          ),
-                        ),
-                        dropdownDecoration: const DropdownDecoration(
-                          marginTop: 2,
-                          maxHeight: 500,
-                          header: Padding(
-                            padding: EdgeInsets.all(8),
-                            child: Text(
-                              'Select countries from the list',
-                              textAlign: TextAlign.start,
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(
+                                color: Colors.black,
                               ),
                             ),
                           ),
+                          dropdownItemDecoration: const DropdownItemDecoration(
+                            selectedIcon:
+                                Icon(Icons.check_box, color: Colors.green),
+                            disabledIcon: Icon(Icons.lock, color: Colors.grey),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Select a preference';
+                            }
+                            return null;
+                          },
+                          onSelectionChange: (selectedPreferences) {
+                            debugPrint(
+                                'OnSelectionChange: $selectedPreferences');
+                          },
                         ),
-                        dropdownItemDecoration: DropdownItemDecoration(
-                          selectedIcon:
-                          const Icon(Icons.check_box, color: Colors.green),
-                          disabledIcon:
-                          Icon(Icons.lock, color: Colors.grey.shade300),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please select a country';
-                          }
-                          return null;
-                        },
-                        onSelectionChange: (selectedItems) {
-                          debugPrint("OnSelectionChange: $selectedItems");
-                        },
-                      ),
-                      const SizedBox(height: 12),
-                      Wrap(
-                        spacing: 8,
-                        children: [
+                        const SizedBox(height: 12),
+                        Wrap(spacing: 8, children: [
                           ElevatedButton(
                             onPressed: () {
                               if (_formKey.currentState?.validate() ?? false) {
                                 final selectedItems = controller.selectedItems;
-
                                 debugPrint(selectedItems.toString());
                               }
                             },
@@ -226,39 +207,34 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
                           ),
                           ElevatedButton(
                             onPressed: () {
-                              controller.addItems([
-                                DropdownItem(
-                                    label: 'France',
-                                    value: User(name: 'France', id: 8)),
-                              ]);
+                              showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: const Text('Add Custom Preference'),
+                                  content: TextField(
+                                    controller: customPreferenceController,
+                                    decoration: const InputDecoration(
+                                        labelText: "Custom Preference"),
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.pop(context);
+                                      },
+                                      child: const Text('Cancel'),
+                                    ),
+                                    ElevatedButton(
+                                      onPressed:_addPreferenceToDropdown,
+                                      child: const Text('Add'),
+                                    ),
+                                  ],
+                                ),
+                              );
                             },
-                            child: const Text('Add Items'),
+                            child: const Text('Add Preferences'),
                           ),
-                          ElevatedButton(
-                            onPressed: () {
-                              controller.selectWhere((element) =>
-                              element.value.id == 1 ||
-                                  element.value.id == 2 ||
-                                  element.value.id == 3);
-                            },
-                            child: const Text('Select Where'),
-                          ),
-                          ElevatedButton(
-                            onPressed: () {
-                              controller.selectAtIndex(0);
-                            },
-                            child: const Text('Select At Index'),
-                          ),
-                          ElevatedButton(
-                            onPressed: () {
-                              controller.openDropdown();
-                            },
-                            child: const Text('Open/Close dropdown'),
-                          ),
-                        ],
-                      )
-                    ],
-                  ),
+                        ]),
+                      ]),
                 ),
               ),
             ),
@@ -266,4 +242,3 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
         ));
   }
 }
-*/

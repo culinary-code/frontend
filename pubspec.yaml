@@ -38,7 +38,7 @@ dependencies:
   http: ^0.13.3
 
   # Lets you securely store tokens
-  flutter_secure_storage: ^5.0.2
+  flutter_secure_storage: ^9.2.2
 
   # Adds support for environment variables
   flutter_dotenv: ^5.1.0
@@ -50,6 +50,7 @@ dependencies:
   input_dialog: ^0.1.1
   flutter_settings_screens: ^0.3.4
   multi_dropdown: ^3.0.1
+  dropdown_textfield: ^1.0.0
 
 dev_dependencies:
   flutter_test:
