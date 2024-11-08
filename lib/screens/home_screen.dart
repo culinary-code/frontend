@@ -2,20 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:frontend/models/recipe.dart';
 import 'package:frontend/screens/detail_screen.dart';
 
-import '../theme/theme_loader.dart';
-
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    Brightness brightness = MediaQuery.of(context).platformBrightness;
-
-    ThemeData theme = ThemeLoader.loadTheme(brightness);
     return MaterialApp(
       home: const RecipeOverview(),
       title: 'Culinary Code',
-      theme: theme,
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.cyan),
+        useMaterial3: true,
+      ),
       debugShowCheckedModeBanner: false,
     );
   }
@@ -151,8 +149,7 @@ class RecipeCard extends StatelessWidget {
                                   builder: (context) => const DetailScreen()));
                         },
                         style: ElevatedButton.styleFrom(
-                            //backgroundColor: Colors.blueGrey[50]
-                          ),
+                            backgroundColor: Colors.blueGrey[50]),
                         child: const Text(
                           "Open",
                           style: TextStyle(fontSize: 18),

@@ -6,10 +6,8 @@ import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:frontend/navigation_menu.dart';
 import 'package:frontend/theme/theme_loader.dart';
 import 'package:frontend/screens/keycloak/login_screen.dart';
-import 'package:frontend/screens/keycloak/registration_screen.dart';
 
 void main() async {
-  await dotenv.load(fileName: ".env");
   await dotenv.load(fileName: ".env");
   await Settings.init(cacheProvider: SharePreferenceCache());
   // runApp(const MyApp());
@@ -42,6 +40,7 @@ class Main extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const LoginPage();
+    //return const LoginPage();
+    return const NavigationMenu();
   }
 }
