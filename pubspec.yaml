@@ -34,10 +34,10 @@ dependencies:
     sdk: flutter
 
   # Lets you make http requests
-  http: ^0.13.3
+  http: ^1.2.2
 
   # Lets you securely store tokens
-  flutter_secure_storage: ^5.0.2
+  flutter_secure_storage: ^9.2.2
 
   # Adds support for environment variables
   flutter_dotenv: ^5.1.0
@@ -57,7 +57,7 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^4.0.0
+  flutter_lints: ^5.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
