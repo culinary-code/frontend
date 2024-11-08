@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/keycloak_service.dart';
+import 'package:frontend/Services/keycloak_service.dart';
 
 // RegistrationScreen Page
 class RegistrationScreen extends StatefulWidget {
@@ -32,7 +32,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       setState(() {
         _statusMessage = 'User created successfully!';
       });
-    } catch (e) {
+    } on FormatException catch (e) {
       setState(() {
         _statusMessage = 'Error: $e';
       });
@@ -90,7 +90,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             Text(
               _statusMessage,
               style: TextStyle(
-                color: _statusMessage.startsWith('Error') ? Colors.red : Colors.green,
+                color: _statusMessage.startsWith('Error')
+                    ? Colors.red
+                    : Colors.green,
                 fontWeight: FontWeight.bold,
               ),
             ),
