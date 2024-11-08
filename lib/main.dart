@@ -5,6 +5,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:frontend/navigation_menu.dart';
 import 'package:frontend/registrationScreen.dart';
+import 'package:frontend/theme/theme_loader.dart';
 
 void main() async {
    await dotenv.load(fileName: ".env");
@@ -23,13 +24,13 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Brightness brightness = MediaQuery.of(context).platformBrightness;
+
+    ThemeData theme = ThemeLoader.loadTheme(brightness);
+
     return MaterialApp(
         title: 'Culinary Code',
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.cyan),
-          // Theme of Project
-          useMaterial3: true,
-        ),
+        theme: theme,
         debugShowCheckedModeBanner: false,
         home: const Main());
   }

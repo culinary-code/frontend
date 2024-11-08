@@ -28,6 +28,7 @@ class _AccountOverviewState extends State<AccountOverview> {
     return Column(
       children: [
         AccountSettings(),
+        SizedBox(height: 16,),
         Expanded(
           child: PreferencesSettings(),
         ),
@@ -147,7 +148,6 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
                   enabled: true,
                   searchEnabled: true,
                   chipDecoration: const ChipDecoration(
-                      backgroundColor: Colors.yellow,
                       wrap: true,
                       runSpacing: 2,
                       spacing: 10),
@@ -212,6 +212,7 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
                           title: const Text('Voeg een eigen voorkeur toe'),
                           content: TextField(
                             controller: customPreferenceController,
+                            maxLength: 25,
                             decoration: const InputDecoration(
                                 labelText: "Eigen voorkeur"),
                           ),
