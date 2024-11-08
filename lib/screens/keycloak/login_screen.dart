@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/screens/keycloak/registration_screen.dart';
 import '../../Services/keycloak_service.dart';
 import '../../navigation_menu.dart';
 
@@ -154,7 +155,10 @@ class _LoginPageState extends State<LoginPage> {
                       child: ElevatedButton(
                         onPressed: () {
                           // Handle register logic
-                          print('Register button pressed');
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(builder: (context) => const RegistrationScreen()),
+                          );
                         },
                         child: Text(
                           'Registreer',
