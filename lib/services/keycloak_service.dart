@@ -25,8 +25,6 @@ class KeycloakService {
   // Step 2: Create new user in Keycloak
   Future<void> createUser({
     required String username,
-    required String firstName,
-    required String lastName,
     required String email,
     required String password,
   }) async {
@@ -35,8 +33,6 @@ class KeycloakService {
       headers: {'Content-Type': 'application/json', 'Accept': '*/*'},
       body: json.encode({
         'username': username,
-        'firstName': firstName,
-        'lastName': lastName,
         'email': email,
         'password': password,
       }),
