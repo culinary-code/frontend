@@ -3,17 +3,17 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:frontend/navigation_menu.dart';
-import 'package:frontend/registrationScreen.dart';
+import 'package:frontend/screens/keycloak/login_screen.dart';
+import 'package:frontend/screens/keycloak/registration_screen.dart';
 
 void main() async {
-   await dotenv.load(fileName: ".env");
-   runApp(const MyApp());
-    /*
-    runApp(DevicePreview(
+  await dotenv.load(fileName: ".env");
+  // runApp(const MyApp());
+
+  runApp(DevicePreview(
     enabled: !kReleaseMode,
     builder: (context) => MyApp(),
   ));
-     */
 }
 
 class MyApp extends StatelessWidget {
@@ -38,6 +38,6 @@ class Main extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const NavigationMenu();
+    return const LoginPage();
   }
 }
