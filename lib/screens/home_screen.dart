@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/models/recipe.dart';
+import 'package:frontend/models/recipes/recipe.dart';
 import 'package:frontend/screens/detail_screen.dart';
+import 'package:frontend/services/recipe_service.dart';
+import 'package:http/http.dart' as http;
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -27,56 +29,82 @@ class RecipeOverview extends StatefulWidget {
 }
 
 class _RecipeOverviewState extends State<RecipeOverview> {
-  final List<Recipe> _recipes = Recipe.recipeList();
+  // TODO: call service to get recipes
+  //final List<Recipe> _recipes = Recipe.recipeList();
+  // final List<Recipe> _recipes = RecipeService().getRecipes() as List<Recipe>;
+  late Future<List<Recipe>> _recipesFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _recipesFuture = RecipeService().getRecipes();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Vind jouw recept!")),
       body: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Waar heb je trek in?',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                ),
+        padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 8.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Waar heb je trek in?',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
               ),
-              const SizedBox(height: 6),
-              const TextField(
-                style: TextStyle(fontSize: 20),
-                decoration: InputDecoration(
-                    hintText: 'Aardappel',
-                    isDense: true,
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(8.0))),
-                    suffixIcon: Icon(Icons.search)),
-              ),
-              const SizedBox(
-                height: 16.0,
-              ),
-              Expanded(
-                  child: ListView.builder(
-                itemCount: _recipes.length,
-                // TODO: als je echte recepten ophaald limiteren naar bv 4
-                itemBuilder: (context, index) {
-                  return RecipeCard(
-                      recipeName: _recipes[index].recipeName,
-                      score: _recipes[index].score,
-                      isFavorited: _recipes[index].isFavorited,
-                      onFavoriteToggle: () {
-                        setState(() {
-                          _recipes[index].isFavorited =
-                              !_recipes[index].isFavorited;
-                        });
-                      });
+            ),
+            const SizedBox(height: 6),
+            const TextField(
+              style: TextStyle(fontSize: 20),
+              decoration: InputDecoration(
+                  hintText: 'Aardappel',
+                  isDense: true,
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(8.0))),
+                  suffixIcon: Icon(Icons.search)),
+            ),
+            const SizedBox(
+              height: 16.0,
+            ),
+            Expanded(
+              child: FutureBuilder<List<Recipe>>(
+                future: _recipesFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError) {
+                    return Center(child: Text('Error: ${snapshot.error}'));
+                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return const Center(child: Text('No recipes found'));
+                  } else {
+                    final recipes = snapshot.data!;
+                    return ListView.builder(
+                      itemCount: recipes.length,
+                      itemBuilder: (context, index) {
+                        return RecipeCard(
+                          recipeName: recipes[index].recipeName,
+                          score: recipes[index].score,
+                          isFavorited: recipes[index].isFavorited,
+                          imageUrl: recipes[index].imagePath,
+                          onFavoriteToggle: () {
+                            setState(() {
+                              recipes[index].isFavorited =
+                                  !recipes[index].isFavorited;
+                            });
+                          },
+                        );
+                      },
+                    );
+                  }
                 },
-              ))
-            ],
-          )),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -86,13 +114,27 @@ class RecipeCard extends StatelessWidget {
   final double score;
   final bool isFavorited;
   final VoidCallback onFavoriteToggle;
+  final String imageUrl;
 
   const RecipeCard(
       {super.key,
       required this.recipeName,
       required this.score,
       required this.isFavorited,
-      required this.onFavoriteToggle});
+      required this.onFavoriteToggle,
+      required this.imageUrl});
+
+  Future<bool> _checkImageUrl(String url) async {
+    try {
+      //final response = await http.head(Uri.parse(url));
+      // get request instead of head request
+      final response = await http.get(Uri.parse(url));
+      return response.statusCode == 200;
+    } catch (e) {
+      print('Error checking image URL: $e');
+      return false;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -110,7 +152,26 @@ class RecipeCard extends StatelessWidget {
               width: 130,
               height: 130,
               color: Colors.blueGrey,
-              child: const Icon(Icons.image, color: Colors.blueGrey),
+              child: FutureBuilder<bool>(
+                future: _checkImageUrl(imageUrl),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError || !snapshot.data!) {
+                    return const Center(
+                      child: Icon(
+                        Icons.broken_image,
+                        size: 50,
+                        color: Colors.grey,
+                      ),
+                    );
+                  } else {
+                    return Image.network(
+                      imageUrl,
+                    );
+                  }
+                },
+              ),
             ),
             const SizedBox(width: 10),
             Expanded(

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/screens/weekoverview_screen.dart';
 
-import '../models/instruction.dart';
+import '../models/recipes/instruction.dart';
 
 class DetailScreen extends StatelessWidget {
   const DetailScreen({super.key});
@@ -116,7 +116,7 @@ class _RecipeHeaderState extends State<RecipeHeader> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Image.asset(
-            'images/default.jpg',
+            'assets/images/default.jpg',
             fit: BoxFit.cover,
           ),
           const SizedBox(height: 16),
