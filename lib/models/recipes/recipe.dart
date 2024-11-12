@@ -52,7 +52,7 @@ class Recipe {
     return [
       Recipe(
         recipeName: "Puree met spinazie",
-        imagePath: "https://picsum.photos/200/300",
+        imagePath: "https://picsum.photos/300/300",
         score: 5.0,
         isFavorited: false,
         recipeId: "1",
@@ -64,8 +64,8 @@ class Recipe {
         createdAt: DateTime.now(),
       ),
       Recipe(
-        recipeName: "Friet met stoofvlees",
-        imagePath: "https://picsum.photos/200/300",
+        recipeName: "Friet met stoofvlees, frietjes en een hartig witloofslaatje met mosterddressing",
+        imagePath: "https://picsum.photos/300/300",
         score: 4.6,
         isFavorited: true,
         recipeId: "2",
@@ -78,7 +78,7 @@ class Recipe {
       ),
       Recipe(
         recipeName: "Aardappelgratin met bechamelsaus",
-        imagePath: "https://picsum.photos/200/300",
+        imagePath: "https://picsum.photos/300/300",
         score: 4.1,
         recipeId: "3",
         recipeType: RecipeType.dinner,
@@ -90,7 +90,7 @@ class Recipe {
       ),
       Recipe(
         recipeName: "Garnaalkroketten",
-        imagePath: "https://picsum.photos/200/300",
+        imagePath: "https://picsum.photos/300/300",
         score: 0.0,
         isFavorited: true,
         recipeId: "4",

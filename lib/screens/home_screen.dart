@@ -210,7 +210,6 @@ class RecipeCard extends StatelessWidget {
                           "Open",
                           style: TextStyle(fontSize: 18),
                         )),
-                    //geef id recept mee ofzo
                     const SizedBox(width: 8),
                     Row(
                       children: [
