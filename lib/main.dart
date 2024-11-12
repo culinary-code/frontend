@@ -38,6 +38,6 @@ class Main extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const LoginPage();
+    return const NavigationMenu();
   }
 }
