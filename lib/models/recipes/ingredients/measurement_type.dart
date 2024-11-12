@@ -43,3 +43,32 @@ MeasurementType intToMeasurementType(int value) {
       throw ArgumentError('Invalid integer value for MeasurementType');
   }
 }
+
+String measurementTypeToStringNl(MeasurementType type) {
+  switch (type) {
+    case MeasurementType.kilogram:
+      return 'kg';
+    case MeasurementType.litre:
+      return 'l';
+    case MeasurementType.pound:
+      return 'pond';
+    case MeasurementType.ounce:
+      return 'ounce';
+    case MeasurementType.teaspoon:
+      return 'tl';
+    case MeasurementType.tablespoon:
+      return 'el';
+    case MeasurementType.piece:
+      return 'stuk';
+    case MeasurementType.millilitre:
+      return 'ml';
+    case MeasurementType.gram:
+      return 'g';
+    case MeasurementType.pinch:
+      return 'snufje';
+    case MeasurementType.toTaste:
+      return 'naar smaak';
+    case MeasurementType.clove:
+      return 'teentje';
+  }
+}

@@ -7,15 +7,16 @@ class IngredientQuantity {
   final String ingredientQuantityId;
   final double quantity;
   final Ingredient ingredient;
-  final Recipe recipe;
-  final GroceryList groceryList;
-  final PlannedMeal plannedMeal;
+  Recipe? recipe;
+  GroceryList? groceryList;
+  PlannedMeal? plannedMeal;
 
-  IngredientQuantity(this.plannedMeal, {
+  IngredientQuantity({
     required this.ingredientQuantityId,
     required this.quantity,
     required this.ingredient,
-    required this.recipe,
-    required this.groceryList,
+    this.recipe,
+    this.groceryList,
+    this.plannedMeal
   });
 }

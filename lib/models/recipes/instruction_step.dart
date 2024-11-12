@@ -4,12 +4,12 @@ class InstructionStep {
   final String instructionStepId;
   final int stepNumber;
   final String instruction;
-  final Recipe recipe;
+  Recipe? recipe;
 
   InstructionStep({
     required this.instructionStepId,
     required this.stepNumber,
     required this.instruction,
-    required this.recipe,
+    this.recipe,
   });
 }

@@ -1,22 +1,43 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/models/recipes/difficulty.dart';
+import 'package:frontend/models/recipes/ingredients/ingredient_quantity.dart';
+import 'package:frontend/models/recipes/ingredients/measurement_type.dart';
+import 'package:frontend/models/recipes/instruction_step.dart';
+import 'package:frontend/models/recipes/recipe.dart';
+import 'package:frontend/models/recipes/recipe_type.dart';
 import 'package:frontend/screens/weekoverview_screen.dart';
-
-import '../models/recipes/instruction.dart';
+import 'package:frontend/services/recipe_service.dart';
 
 class DetailScreen extends StatelessWidget {
-  const DetailScreen({super.key});
+  final String recipeId;
+
+  const DetailScreen({super.key, required this.recipeId});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Laten we koken!")),
-      body: const DetailOverview(),
+      body: FutureBuilder<Recipe>(
+        future: RecipeService().getRecipeById(recipeId),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          } else {
+            final recipe = snapshot.data;
+            return DetailOverview(recipe: recipe!);
+          }
+        },
+      ),
     );
   }
 }
 
 class DetailOverview extends StatefulWidget {
-  const DetailOverview({super.key});
+  final Recipe recipe;
+
+  const DetailOverview({super.key, required this.recipe});
 
   @override
   State<DetailOverview> createState() => _DetailOverviewState();
@@ -24,17 +45,12 @@ class DetailOverview extends StatefulWidget {
 
 // Deze klasse combineert alle individueel aangemaakte klassen.
 class _DetailOverviewState extends State<DetailOverview> {
-  late final List<String> _ingredients = [
-    "2:grote aardappelen",
-    "500g:vlees",
-    "1:ui",
-    "1 tl:zout",
-    "1 tl:peper",
-    "2 el:olijfolie",
-    "220 ml:druivensap"
-  ];
-  late final List<Instruction> _instructionSteps =
-  Instruction.instructionList();
+  late final Recipe recipe = widget.recipe;
+  late final List<IngredientQuantity> _ingredients = recipe.ingredients;
+  late final List<InstructionStep> _instructionSteps = recipe.instructions;
+  late final int cookingTime = recipe.cookingTime;
+  late final RecipeType recipeType = recipe.recipeType;
+  late final Difficulty difficulty = recipe.difficulty;
 
   bool isFavorited = false;
 
@@ -48,50 +64,51 @@ class _DetailOverviewState extends State<DetailOverview> {
   Widget build(BuildContext context) {
     return Scaffold(
         body: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-                horizontal: 16.0, vertical: 8.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                RecipeHeader(
-                    isFavorited: isFavorited, onFavoriteToggle: toggleFavorite),
-                const SizedBox(height: 16),
-                const RecipeDetailsGrid(),
-                const SizedBox(height: 16),
-                const Padding(
-                  padding: EdgeInsets.all(16.0),
-                  child: Text(
-                      'Stoofvlees is een gerecht van langzaam gegaard rundvlees in een rijke saus op basis van bier of bouillon. '
-                          'Het vlees wordt boterzacht en vol van smaak, ideaal comfortfood voor koude dagen.',
-                      textAlign: TextAlign.justify,
-                      style: TextStyle(fontSize: 18)),
-                ),
-                const PortionSelector(),
-                const SizedBox(height: 16.0),
-                IngredientsOverview(ingredientList: _ingredients),
-                const SizedBox(height: 16.0),
-                InstructionsOverview(instructionsSteps: _instructionSteps),
-                const SizedBox(height: 16.0),
-                Padding(
-                  padding:
-                  const EdgeInsets.symmetric(horizontal: 45.0, vertical: 8.0),
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (
-                                  context) => const WeekoverviewScreen()));
-                    },
-                    child: const Text('+ Weekoverzicht'),
-                  ),
-                ),
-                const SizedBox(height: 16.0),
-              ],
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            RecipeHeader(
+                recipe: recipe,
+                isFavorited: isFavorited,
+                onFavoriteToggle: toggleFavorite),
+            const SizedBox(height: 16),
+            RecipeDetailsGrid(
+                cookingTime: cookingTime,
+                recipeType: recipeType,
+                difficulty: difficulty),
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(widget.recipe.description,
+                  textAlign: TextAlign.justify,
+                  style: const TextStyle(fontSize: 18)),
             ),
-          ),
-        ));
+            const PortionSelector(),
+            const SizedBox(height: 16.0),
+            IngredientsOverview(ingredientList: _ingredients),
+            const SizedBox(height: 16.0),
+            InstructionsOverview(instructionsSteps: _instructionSteps),
+            const SizedBox(height: 16.0),
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 45.0, vertical: 8.0),
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const WeekoverviewScreen()));
+                },
+                child: const Text('+ Weekoverzicht'),
+              ),
+            ),
+            const SizedBox(height: 16.0),
+          ],
+        ),
+      ),
+    ));
   }
 }
 
@@ -99,9 +116,13 @@ class _DetailOverviewState extends State<DetailOverview> {
 class RecipeHeader extends StatefulWidget {
   final bool isFavorited;
   final VoidCallback onFavoriteToggle;
+  final Recipe recipe;
 
   const RecipeHeader(
-      {super.key, required this.isFavorited, required this.onFavoriteToggle});
+      {super.key,
+      required this.isFavorited,
+      required this.onFavoriteToggle,
+      required this.recipe});
 
   @override
   State<RecipeHeader> createState() => _RecipeHeaderState();
@@ -115,24 +136,31 @@ class _RecipeHeaderState extends State<RecipeHeader> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          Image.network(
+            widget.recipe.imagePath,
+            fit: BoxFit.cover,
+          ),
+          /*
           Image.asset(
             'assets/images/default.jpg',
             fit: BoxFit.cover,
           ),
+
+           */
           const SizedBox(height: 16),
           Row(
             children: [
-              const Expanded(
+              Expanded(
                   child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      "Friet met stoofvlees",
-                      style: TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  )),
+                alignment: Alignment.center,
+                child: Text(
+                  widget.recipe.recipeName,
+                  style: const TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              )),
               const SizedBox(width: 1),
               GestureDetector(
                 onTap: widget.onFavoriteToggle,
@@ -151,7 +179,15 @@ class _RecipeHeaderState extends State<RecipeHeader> {
 
 // Dit is een Grid die enkele kenmerken van het gerecht tonen.
 class RecipeDetailsGrid extends StatelessWidget {
-  const RecipeDetailsGrid({super.key});
+  final int cookingTime;
+  final RecipeType recipeType;
+  final Difficulty difficulty;
+
+  const RecipeDetailsGrid(
+      {super.key,
+      required this.cookingTime,
+      required this.recipeType,
+      required this.difficulty});
 
   @override
   Widget build(BuildContext context) {
@@ -166,14 +202,14 @@ class RecipeDetailsGrid extends StatelessWidget {
                 blurRadius: 8,
                 offset: const Offset(0, 5))
           ]),
-      child: const Padding(
+      child: Padding(
         padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            GridItem(icon: Icons.timer, label: '30 min'),
-            GridItem(icon: Icons.dinner_dining, label: 'Avondeten'),
-            GridItem(icon: Icons.thermostat, label: 'Gemiddeld')
+            GridItem(icon: Icons.timer, label: '$cookingTime min'),
+            GridItem(icon: Icons.dinner_dining, label: recipeTypeToStringNl(recipeType)),
+            GridItem(icon: Icons.thermostat, label: difficultyToStringNl(difficulty)),
           ],
         ),
       ),
@@ -301,7 +337,7 @@ class _PortionSelectorState extends State<PortionSelector> {
 
 // Je toont hier in een tabel een mooi overzicht van de ingrediënten en hoeveelheden
 class IngredientsOverview extends StatelessWidget {
-  final List<String> ingredientList;
+  final List<IngredientQuantity> ingredientList;
 
   const IngredientsOverview({super.key, required this.ingredientList});
 
@@ -327,7 +363,7 @@ class IngredientsOverview extends StatelessWidget {
                         child: Align(
                           alignment: Alignment.center,
                           child: Text(
-                            'Ingrediênt',
+                            'Ingrediënt',
                             style: TextStyle(
                                 fontWeight: FontWeight.bold, fontSize: 18),
                           ),
@@ -348,9 +384,9 @@ class IngredientsOverview extends StatelessWidget {
                     ),
                   ]),
               ...ingredientList.map((ingredient) {
-                final split = ingredient.split(":");
-                final ingredientName = split[0];
-                final quantity = split.length > 1 ? split[1] : '';
+                final ingredientName = ingredient.ingredient.ingredientName;
+                final quantity =
+                    '${ingredient.quantity} ${measurementTypeToStringNl(ingredient.ingredient.measurement)}';
 
                 return TableRow(
                   children: [
@@ -361,7 +397,7 @@ class IngredientsOverview extends StatelessWidget {
                           child: Align(
                             alignment: Alignment.centerLeft,
                             child: Text(
-                              quantity,
+                              ingredientName,
                               style: const TextStyle(fontSize: 18),
                             ),
                           )),
@@ -373,7 +409,7 @@ class IngredientsOverview extends StatelessWidget {
                         child: Align(
                           alignment: Alignment.centerRight,
                           child: Text(
-                            ingredientName,
+                            quantity,
                             style: const TextStyle(fontSize: 18),
                           ),
                         ),
@@ -390,12 +426,15 @@ class IngredientsOverview extends StatelessWidget {
 
 // Hierin zorg je dat de de bereidingswijze stapsgewijs aan de gebruiker getoond worden.
 class InstructionsOverview extends StatelessWidget {
-  final List<Instruction> instructionsSteps;
+  final List<InstructionStep> instructionsSteps;
 
   const InstructionsOverview({super.key, required this.instructionsSteps});
 
   @override
   Widget build(BuildContext context) {
+    final sortedInstructions = List<InstructionStep>.from(instructionsSteps)
+      ..sort((a, b) => a.stepNumber.compareTo(b.stepNumber));
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Column(
@@ -409,14 +448,11 @@ class InstructionsOverview extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
-          ...instructionsSteps
-              .asMap()
-              .entries
-              .map((entry) {
+          ...sortedInstructions.asMap().entries.map((entry) {
             int index = entry.key;
-            Instruction step = entry.value;
+            InstructionStep step = entry.value;
             return Text(
-              "${index + 1}. ${step.step}",
+              "${step.stepNumber}. ${step.instruction}",
               style: const TextStyle(fontSize: 18),
             );
           }),

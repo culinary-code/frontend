@@ -22,3 +22,20 @@ RecipeType intToRecipeType(int value) {
       throw ArgumentError('Invalid integer value for RecipeType');
   }
 }
+
+String recipeTypeToStringNl(RecipeType type) {
+  switch (type) {
+    case RecipeType.breakfast:
+      return 'Ontbijt';
+    case RecipeType.lunch:
+      return 'Lunch';
+    case RecipeType.dinner:
+      return 'Avondeten';
+    case RecipeType.dessert:
+      return 'Dessert';
+    case RecipeType.snack:
+      return 'Snack';
+    default:
+      throw ArgumentError('Invalid RecipeType');
+  }
+}
