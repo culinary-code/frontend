@@ -2,14 +2,13 @@ import 'dart:convert';
 import 'package:frontend/models/recipes/difficulty.dart';
 import 'package:frontend/models/recipes/ingredients/ingredient.dart';
 import 'package:frontend/models/recipes/ingredients/ingredient_quantity.dart';
+import 'package:frontend/models/recipes/ingredients/measurement_type.dart';
 import 'package:frontend/models/recipes/instruction_step.dart';
 import 'package:frontend/models/recipes/recipe.dart';
 import 'package:frontend/models/recipes/recipe_type.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-
-import '../models/recipes/ingredients/measurement_type.dart';
 
 class RecipeService {
   String get backendUrl =>
