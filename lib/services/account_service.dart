@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:frontend/models/accounts/account.dart';
 import 'package:http/http.dart' as http;
-import '../models/user.dart';
 
 class AccountService {
   String get backendUrl =>

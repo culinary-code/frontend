@@ -6,7 +6,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:multi_dropdown/multi_dropdown.dart';
 import 'package:http/http.dart' as http;
 
-import '../models/user.dart';
+import '../models/accounts/account.dart';
 import '../services/account_service.dart';
 
 class AccountScreen extends StatelessWidget {
@@ -34,7 +34,9 @@ class _AccountOverviewState extends State<AccountOverview> {
     return Column(
       children: [
         AccountSettings(),
-        SizedBox(height: 16,),
+        SizedBox(
+          height: 16,
+        ),
         Expanded(
           child: PreferencesSettings(),
         ),
@@ -42,52 +44,6 @@ class _AccountOverviewState extends State<AccountOverview> {
     );
   }
 }
-
-
-class TextInputSettingsTile extends StatelessWidget {
-  final String title;
-  final String? initialValue;
-  final TextStyle titleTextStyle;
-  final String? Function(String?)? validator;
-  final TextStyle subtitleTextStyle;
-  final Color borderColor;
-  final Color errorColor;
-  final TextEditingController? controller;
-  final ValueChanged<String>? onChanged;
-  final String? settingKey;
-
-  const TextInputSettingsTile({
-    Key? key,
-    required this.title,
-    this.initialValue,
-    required this.titleTextStyle,
-    this.validator,
-    required this.subtitleTextStyle,
-    required this.borderColor,
-    required this.errorColor,
-    this.controller,
-    this.onChanged,
-    this.settingKey,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return TextField(
-      controller: controller,
-      onChanged: onChanged,
-      decoration: InputDecoration(
-        labelText: title,
-        labelStyle: titleTextStyle,
-        errorText: validator != null ? validator!(controller?.text) : null,
-        border: OutlineInputBorder(
-          borderSide: BorderSide(color: borderColor),
-        ),
-      ),
-    );
-  }
-}
-
-
 
 class AccountSettings extends StatefulWidget {
   const AccountSettings({super.key});
@@ -97,7 +53,7 @@ class AccountSettings extends StatefulWidget {
 }
 
 class _AccountSettingsState extends State<AccountSettings> {
-  String _currentUsername = 'nisrine';
+  String _currentUsername = '';
   final TextEditingController _usernameController = TextEditingController();
   late String userId;
   final storage = FlutterSecureStorage();
@@ -120,7 +76,7 @@ class _AccountSettingsState extends State<AccountSettings> {
       if (accessToken != null) {
         Map<String, dynamic> payload = _decodeJwt(accessToken);
         setState(() {
-          userId = payload['sub']; // Ensure 'sub' matches your JWT structure
+          userId = payload['sub'];
         });
         print('Loaded userId: $userId');
       } else {
@@ -131,16 +87,14 @@ class _AccountSettingsState extends State<AccountSettings> {
     }
   }
 
-
-
   Map<String, dynamic> _decodeJwt(String token) {
     final parts = token.split('.');
     if (parts.length != 3) {
       throw Exception('Invalid token');
     }
 
-    // Decode the payload (second part of the JWT)
-    final payload = utf8.decode(base64Url.decode(base64Url.normalize(parts[1])));
+    final payload =
+        utf8.decode(base64Url.decode(base64Url.normalize(parts[1])));
     return jsonDecode(payload);
   }
 
@@ -148,14 +102,14 @@ class _AccountSettingsState extends State<AccountSettings> {
     if (userId.isEmpty) {
       print('Error: userId is null or empty.');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Unable to fetch account details.')),
+        SnackBar(content: Text('Unable to get username.')),
       );
       return;
     }
     try {
       Account user = await AccountService().fetchUser(userId);
       setState(() {
-        _currentUsername = user.userName;
+        _currentUsername = user.username;
         _usernameController.text = _currentUsername;
       });
     } catch (e) {
@@ -166,14 +120,8 @@ class _AccountSettingsState extends State<AccountSettings> {
     }
   }
 
-
-
-
-  Future<void> _updateUsername() async {
+  Future<void> _updateUsername(String newUsername) async {
     try {
-      //final userId = 'a75e963c-6943-4a9c-8f79-4a4c6f954427';
-      final newUserName = _usernameController.text;
-
       final url = Uri.parse('https://localhost:7098/updateAccount/$userId');
 
       final response = await http.put(
@@ -181,27 +129,28 @@ class _AccountSettingsState extends State<AccountSettings> {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'AccountId': userId,
-          'Name': newUserName,
+          'Name': newUsername,
         }),
       );
 
       if (response.statusCode == 200) {
-        Account updatedUser = await AccountService().fetchUser(userId);
-        setState(() {
-          _currentUsername = updatedUser.userName;
-          _usernameController.text = _currentUsername;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Username updated successfully!')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Username updated successfully!')),
+        );
       } else {
-        print('Error updating username: ${response.statusCode}, ${response.body}');
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to update username.')));
+        print(
+            'Error updating username: ${response.statusCode}, ${response.body}');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update username.')),
+        );
       }
     } catch (e) {
       print('Error updating username: $e');
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error updating username')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error updating username.')),
+      );
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -217,76 +166,30 @@ class _AccountSettingsState extends State<AccountSettings> {
               decoration: BoxDecoration(
                 border: Border.all(color: Colors.black, width: 2),
               ),
-              child: TextInputSettingsTile(
-                title: 'Gebruikersnaam',
-                titleTextStyle: const TextStyle(fontSize: 20),
-                settingKey: 'key-user-name',
-                initialValue: _currentUsername,
-                subtitleTextStyle: const TextStyle(fontSize: 18),
-                validator: (username) {
-                  if (username != null && username.isNotEmpty) {
-                    return null;
-                  }
-                  return "Gebruikersnaam kan niet leeg zijn!";
-                },
-                borderColor: Colors.blueGrey,
-                errorColor: Colors.red,
+              child: TextField(
                 controller: _usernameController,
-                onChanged: (value) {
-                  setState(() {
-                    _currentUsername = value;
-                  });
-                },
+                decoration: InputDecoration(
+                    labelText: 'Gebruikersnaam',
+                    floatingLabelBehavior: FloatingLabelBehavior.never,
+                    border: OutlineInputBorder(),
+                    suffixIcon: IconButton(
+                      icon: Icon(Icons.save),
+                      onPressed: () async {
+                        String newUsername = _usernameController.text;
+                        if (newUsername.length >= 3) {
+                          await _updateUsername(newUsername);
+                          setState(() {
+                            _currentUsername = newUsername;
+                          });
+                        }
+                        print("Gebruikersnaam moet minstens 3 karakters lang zijn.");
+                      },
+                    )),
               ),
-            ),
-            ElevatedButton(
-              onPressed: _updateUsername,
-              child: Text('Update Username'),
             ),
           ],
         ));
   }
-
-  /*@override
-  Widget build(BuildContext context) {
-    return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const SizedBox(
-              height: 16,
-            ),
-            const Text(
-              'Account instellingen',
-              style: TextStyle(fontSize: 30),
-            ),
-            const SizedBox(
-              height: 16,
-            ),
-            Container(
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.black, width: 2),
-              ),
-              child: TextInputSettingsTile(
-                title: 'Gebruikersnaam',
-                titleTextStyle: const TextStyle(fontSize: 20),
-                settingKey: 'key-user-name',
-                initialValue: 'admin',
-                subtitleTextStyle: const TextStyle(fontSize: 18),
-                validator: (username) {
-                  if (username != null && username.isNotEmpty) {
-                    return null;
-                  }
-                  return "Gebruikersnaam kan niet leeg zijn!";
-                },
-                borderColor: Colors.blueGrey,
-                errorColor: Colors.red,
-              ),
-            ),
-          ],
-        ));
-  } */
 }
 
 class PreferencesSettings extends StatefulWidget {
@@ -300,7 +203,7 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
   final _formKey = GlobalKey<FormState>();
   final controller = MultiSelectController<String>();
   final TextEditingController customPreferenceController =
-  TextEditingController();
+      TextEditingController();
   String? selectedValue;
 
   List<DropdownItem<String>> preferences = [
@@ -350,9 +253,7 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
                   enabled: true,
                   searchEnabled: true,
                   chipDecoration: const ChipDecoration(
-                      wrap: true,
-                      runSpacing: 2,
-                      spacing: 10),
+                      wrap: true, runSpacing: 2, spacing: 10),
                   fieldDecoration: FieldDecoration(
                     hintText: 'Voorkeuren',
                     hintStyle: const TextStyle(color: Colors.black),
