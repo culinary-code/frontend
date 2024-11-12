@@ -20,3 +20,18 @@ Difficulty intToDifficulty(int difficulty) {
   }
 }
 
+String difficultyToStringNl(Difficulty difficulty) {
+  switch (difficulty) {
+    case Difficulty.notAvailable:
+      return 'Niet beschikbaar';
+    case Difficulty.easy:
+      return 'Makkelijk';
+    case Difficulty.intermediate:
+      return 'Gemiddeld';
+    case Difficulty.difficult:
+      return 'Moeilijk';
+    default:
+      return 'Niet beschikbaar';
+  }
+}
+

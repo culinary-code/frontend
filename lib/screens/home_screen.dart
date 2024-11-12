@@ -82,6 +82,7 @@ class _RecipeOverviewState extends State<RecipeOverview> {
                       itemCount: recipes.length,
                       itemBuilder: (context, index) {
                         return RecipeCard(
+                          recipeId: recipes[index].recipeId,
                           recipeName: recipes[index].recipeName,
                           score: recipes[index].score,
                           isFavorited: recipes[index].isFavorited,
@@ -107,6 +108,7 @@ class _RecipeOverviewState extends State<RecipeOverview> {
 }
 
 class RecipeCard extends StatelessWidget {
+  final String recipeId;
   final String recipeName;
   final double score;
   final bool isFavorited;
@@ -115,6 +117,7 @@ class RecipeCard extends StatelessWidget {
 
   const RecipeCard(
       {super.key,
+      required this.recipeId,
       required this.recipeName,
       required this.score,
       required this.isFavorited,
@@ -137,8 +140,12 @@ class RecipeCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 15.0),
       child: GestureDetector(
         onTap: () {
-          Navigator.push(context,
-              MaterialPageRoute(builder: (context) => const DetailScreen()));
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => DetailScreen(
+                        recipeId: recipeId,
+                      )));
         },
         child: Row(
           children: [
@@ -202,7 +209,9 @@ class RecipeCard extends StatelessWidget {
                           Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) => const DetailScreen()));
+                                  builder: (context) => DetailScreen(
+                                        recipeId: recipeId,
+                                      )));
                         },
                         style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.blueGrey[50]),
