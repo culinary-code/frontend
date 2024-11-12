@@ -1,6 +1,13 @@
-class User {
-  int userId;
-  String userName;
+class Account {
+  final String userId;
+  final String userName;
 
-  User({required this.userId, required this.userName});
+  Account({required this.userId, required this.userName});
+
+  factory Account.fromJson(Map<String, dynamic> json) {
+    return Account(
+      userId: json['accountId'],
+      userName: json['name'],
+    );
+  }
 }
