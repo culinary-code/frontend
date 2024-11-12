@@ -29,9 +29,6 @@ class RecipeOverview extends StatefulWidget {
 }
 
 class _RecipeOverviewState extends State<RecipeOverview> {
-  // TODO: call service to get recipes
-  //final List<Recipe> _recipes = Recipe.recipeList();
-  // final List<Recipe> _recipes = RecipeService().getRecipes() as List<Recipe>;
   late Future<List<Recipe>> _recipesFuture;
 
   @override
