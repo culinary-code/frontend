@@ -1,10 +1,7 @@
-import 'dart:convert';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:multi_dropdown/multi_dropdown.dart';
-import 'package:http/http.dart' as http;
 
 import '../models/accounts/account.dart';
 import '../services/account_service.dart';
@@ -53,142 +50,93 @@ class AccountSettings extends StatefulWidget {
 }
 
 class _AccountSettingsState extends State<AccountSettings> {
-  String _currentUsername = '';
   final TextEditingController _usernameController = TextEditingController();
+  final AccountService _accountService = AccountService();
+
+  String _currentUsername = '';
   late String userId;
+
   final storage = FlutterSecureStorage();
 
   @override
   void initState() {
     super.initState();
-    _loadUserId().then((_) {
-      if (userId.isNotEmpty) {
-        _loadCurrentUsername();
-      } else {
-        print('userId could not be loaded.');
-      }
-    });
+    _initialize();
   }
 
-  Future<void> _loadUserId() async {
+  Future<void> _initialize() async {
     try {
-      String? accessToken = await storage.read(key: 'access_token');
-      if (accessToken != null) {
-        Map<String, dynamic> payload = _decodeJwt(accessToken);
-        setState(() {
-          userId = payload['sub'];
-        });
-        print('Loaded userId: $userId');
-      } else {
-        throw Exception('Access token not found');
-      }
-    } catch (e) {
-      print('Error loading user ID: $e');
-    }
-  }
-
-  Map<String, dynamic> _decodeJwt(String token) {
-    final parts = token.split('.');
-    if (parts.length != 3) {
-      throw Exception('Invalid token');
-    }
-
-    final payload =
-        utf8.decode(base64Url.decode(base64Url.normalize(parts[1])));
-    return jsonDecode(payload);
-  }
-
-  Future<void> _loadCurrentUsername() async {
-    if (userId.isEmpty) {
-      print('Error: userId is null or empty.');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Unable to get username.')),
-      );
-      return;
-    }
-    try {
-      Account user = await AccountService().fetchUser(userId);
+      userId = await _accountService.getUserId();
+      Account user = await _accountService.fetchUser(userId);
       setState(() {
         _currentUsername = user.username;
         _usernameController.text = _currentUsername;
       });
     } catch (e) {
-      print('Error fetching current username: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to load username.')),
-      );
+      print('Error initializing account settings: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content:
+                  Text('Account instellingen konden niet geladen worden.')),
+        );
+      }
     }
   }
 
-  Future<void> _updateUsername(String newUsername) async {
-    try {
-      final url = Uri.parse('https://localhost:7098/updateAccount/$userId');
-
-      final response = await http.put(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'AccountId': userId,
-          'Name': newUsername,
-        }),
+  Future<void> _saveUsername() async {
+    final newUsername = _usernameController.text;
+    if (newUsername.length < 3) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text('Gebruikersnaam moet minstens 2 karakters zijn.')),
       );
+      return;
+    }
 
-      if (response.statusCode == 200) {
+    try {
+      await _accountService.updateUsername(userId, newUsername);
+      setState(() {
+        _currentUsername = newUsername;
+      });
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Username updated successfully!')),
-        );
-      } else {
-        print(
-            'Error updating username: ${response.statusCode}, ${response.body}');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update username.')),
+          SnackBar(content: Text('Gebruikernaam opgeslagen!')),
         );
       }
     } catch (e) {
       print('Error updating username: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error updating username.')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gebruikersnaam kon niet opgeslagen worden.')),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const SizedBox(height: 16),
-            const Text('Account instellingen', style: TextStyle(fontSize: 30)),
-            const SizedBox(height: 16),
-            Container(
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.black, width: 2),
-              ),
-              child: TextField(
-                controller: _usernameController,
-                decoration: InputDecoration(
-                    labelText: 'Gebruikersnaam',
-                    floatingLabelBehavior: FloatingLabelBehavior.never,
-                    border: OutlineInputBorder(),
-                    suffixIcon: IconButton(
-                      icon: Icon(Icons.save),
-                      onPressed: () async {
-                        String newUsername = _usernameController.text;
-                        if (newUsername.length >= 3) {
-                          await _updateUsername(newUsername);
-                          setState(() {
-                            _currentUsername = newUsername;
-                          });
-                        }
-                        print("Gebruikersnaam moet minstens 3 karakters lang zijn.");
-                      },
-                    )),
-              ),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.center, children: [
+        const SizedBox(height: 16),
+        const Text('Account instellingen', style: TextStyle(fontSize: 30)),
+        const SizedBox(height: 16),
+        Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.black, width: 2),
             ),
-          ],
-        ));
+            child: TextField(
+              controller: _usernameController,
+              decoration: InputDecoration(
+                  labelText: 'Gebruikersnaam',
+                  floatingLabelBehavior: FloatingLabelBehavior.never,
+                  border: OutlineInputBorder(),
+                  suffixIcon: IconButton(
+                      icon: Icon(Icons.save), onPressed: _saveUsername)),
+            )),
+      ]),
+    );
   }
 }
 
