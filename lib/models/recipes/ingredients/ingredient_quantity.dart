@@ -1,7 +1,7 @@
 import 'package:frontend/models/recipes/ingredients/ingredient.dart';
-import 'package:frontend/models/recipes/ingredients/meal_planning/PlannedMeal.dart';
 import 'package:frontend/models/recipes/recipe.dart';
 import 'package:frontend/screens/grocery_screen.dart';
+import 'package:frontend/models/meal_planning/PlannedMeal.dart';
 
 class IngredientQuantity {
   final String ingredientQuantityId;

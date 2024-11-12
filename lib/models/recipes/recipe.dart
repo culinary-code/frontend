@@ -1,12 +1,11 @@
 import 'package:frontend/models/accounts/preference.dart';
 import 'package:frontend/models/accounts/review.dart';
 import 'package:frontend/models/recipes/favorite_recipe.dart';
-import 'package:frontend/models/recipes/ingredients/ingredient.dart';
 import 'package:frontend/models/recipes/ingredients/ingredient_quantity.dart';
-import 'package:frontend/models/recipes/ingredients/meal_planning/PlannedMeal.dart';
 import 'package:frontend/models/recipes/instruction_step.dart';
 import 'package:frontend/models/recipes/recipe_type.dart';
 import 'package:frontend/models/recipes/difficulty.dart';
+import 'package:frontend/models/meal_planning/PlannedMeal.dart';
 
 class Recipe {
   final String recipeId;
@@ -53,6 +52,7 @@ class Recipe {
     return [
       Recipe(
         recipeName: "Puree met spinazie",
+        imagePath: "https://picsum.photos/200/300",
         score: 5.0,
         isFavorited: false,
         recipeId: "1",
@@ -65,6 +65,7 @@ class Recipe {
       ),
       Recipe(
         recipeName: "Friet met stoofvlees",
+        imagePath: "https://picsum.photos/200/300",
         score: 4.6,
         isFavorited: true,
         recipeId: "2",
@@ -77,6 +78,7 @@ class Recipe {
       ),
       Recipe(
         recipeName: "Aardappelgratin met bechamelsaus",
+        imagePath: "https://picsum.photos/200/300",
         score: 4.1,
         recipeId: "3",
         recipeType: RecipeType.dinner,
@@ -88,6 +90,7 @@ class Recipe {
       ),
       Recipe(
         recipeName: "Garnaalkroketten",
+        imagePath: "https://picsum.photos/200/300",
         score: 0.0,
         isFavorited: true,
         recipeId: "4",
