@@ -11,12 +11,11 @@ class IngredientQuantity {
   GroceryList? groceryList;
   PlannedMeal? plannedMeal;
 
-  IngredientQuantity({
-    required this.ingredientQuantityId,
-    required this.quantity,
-    required this.ingredient,
-    this.recipe,
-    this.groceryList,
-    this.plannedMeal
-  });
+  IngredientQuantity(
+      {required this.ingredientQuantityId,
+      required this.quantity,
+      required this.ingredient,
+      this.recipe,
+      this.groceryList,
+      this.plannedMeal});
 }

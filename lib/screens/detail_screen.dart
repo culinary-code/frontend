@@ -208,8 +208,12 @@ class RecipeDetailsGrid extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             GridItem(icon: Icons.timer, label: '$cookingTime min'),
-            GridItem(icon: Icons.dinner_dining, label: recipeTypeToStringNl(recipeType)),
-            GridItem(icon: Icons.thermostat, label: difficultyToStringNl(difficulty)),
+            GridItem(
+                icon: Icons.dinner_dining,
+                label: recipeTypeToStringNl(recipeType)),
+            GridItem(
+                icon: Icons.thermostat,
+                label: difficultyToStringNl(difficulty)),
           ],
         ),
       ),
@@ -449,7 +453,6 @@ class InstructionsOverview extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           ...sortedInstructions.asMap().entries.map((entry) {
-            int index = entry.key;
             InstructionStep step = entry.value;
             return Text(
               "${step.stepNumber}. ${step.instruction}",

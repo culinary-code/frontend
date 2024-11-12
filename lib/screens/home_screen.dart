@@ -140,8 +140,12 @@ class RecipeCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 15.0),
       child: GestureDetector(
         onTap: () {
-          Navigator.push(context,
-              MaterialPageRoute(builder: (context) => DetailScreen(recipeId: recipeId,)));
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => DetailScreen(
+                        recipeId: recipeId,
+                      )));
         },
         child: Row(
           children: [
@@ -205,7 +209,9 @@ class RecipeCard extends StatelessWidget {
                           Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) => DetailScreen(recipeId: recipeId,)));
+                                  builder: (context) => DetailScreen(
+                                        recipeId: recipeId,
+                                      )));
                         },
                         style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.blueGrey[50]),

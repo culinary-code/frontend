@@ -62,26 +62,26 @@ class RecipeService {
 
     final dynamic recipe = json.decode(response.body);
 
-    final List<InstructionStep> instructions = recipe['instructions']
-        .map<InstructionStep>((dynamic instruction) {
+    final List<InstructionStep> instructions =
+        recipe['instructions'].map<InstructionStep>((dynamic instruction) {
       return InstructionStep(
-        instructionStepId: instruction['instructionStepId'],
-        instruction: instruction['instruction'],
-        stepNumber: instruction['stepNumber']
-      );
+          instructionStepId: instruction['instructionStepId'],
+          instruction: instruction['instruction'],
+          stepNumber: instruction['stepNumber']);
     }).toList();
 
     final List<IngredientQuantity> ingredients = (recipe['ingredients'] as List)
         .map((ingredient) => IngredientQuantity(
-      ingredientQuantityId: ingredient['ingredientQuantityId'],
-      quantity: ingredient['quantity'],
-      ingredient: Ingredient(
-        ingredientId: ingredient['ingredient']['ingredientId'],
-        ingredientName: ingredient['ingredient']['ingredientName'],
-        measurement: intToMeasurementType(ingredient['ingredient']['measurement']),
-        ingredientQuantities: [], // Replace with actual data if available
-      ),
-    ))
+              ingredientQuantityId: ingredient['ingredientQuantityId'],
+              quantity: ingredient['quantity'],
+              ingredient: Ingredient(
+                ingredientId: ingredient['ingredient']['ingredientId'],
+                ingredientName: ingredient['ingredient']['ingredientName'],
+                measurement: intToMeasurementType(
+                    ingredient['ingredient']['measurement']),
+                ingredientQuantities: [], // Replace with actual data if available
+              ),
+            ))
         .toList();
 
     return Recipe(
