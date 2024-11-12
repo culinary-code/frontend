@@ -15,6 +15,7 @@ class RecipeService {
   Future<List<Recipe>> getRecipes() async {
 
     final response = await http.get(
+      // TODO: change endpoint once filtering is implemented
       Uri.parse('$backendUrl/Recipe/Collection/ByName/stoof'),
       headers: {'Content-Type': 'application/json', 'Accept': '*/*'},
     );
