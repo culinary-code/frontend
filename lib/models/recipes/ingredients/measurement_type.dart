@@ -9,7 +9,8 @@ enum MeasurementType {
   millilitre,
   gram,
   pinch,
-  toTaste
+  toTaste,
+  clove
 }
 
 MeasurementType intToMeasurementType(int value) {
@@ -36,6 +37,8 @@ MeasurementType intToMeasurementType(int value) {
       return MeasurementType.pinch;
     case 10:
       return MeasurementType.toTaste;
+    case 11:
+      return MeasurementType.clove;
     default:
       throw ArgumentError('Invalid integer value for MeasurementType');
   }
