@@ -126,8 +126,6 @@ class RecipeCard extends StatelessWidget {
 
   Future<bool> _checkImageUrl(String url) async {
     try {
-      //final response = await http.head(Uri.parse(url));
-      // get request instead of head request
       final response = await http.get(Uri.parse(url));
       return response.statusCode == 200;
     } catch (e) {
