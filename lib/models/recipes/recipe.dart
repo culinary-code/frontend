@@ -64,7 +64,7 @@ class Recipe {
         createdAt: DateTime.now(),
       ),
       Recipe(
-        recipeName: "Friet met stoofvlees, frietjes en een hartig witloofslaatje met mosterddressing",
+        recipeName: "Friet met stoofvlees, mayonaise en een hartig witloofslaatje met mosterddressing",
         imagePath: "https://picsum.photos/300/300",
         score: 4.6,
         isFavorited: true,

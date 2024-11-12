@@ -93,7 +93,7 @@ class WeekoverviewScreen extends StatelessWidget {
         padding: EdgeInsets.symmetric(vertical: 16),
         itemCount: 7, // Number of custom elements to display
         itemBuilder: (context, index) {
-          return CustomWidget(
+          return PlannedMealWidget(
             // weekday: daysOfWeek[DateTime.parse("2024-10-27").add(Duration(days: index)).weekday - 1],
             weekday: getWeekDay(index),
             numberOfPeople: index.toString(),
@@ -111,13 +111,13 @@ class WeekoverviewScreen extends StatelessWidget {
   }
 }
 
-class CustomWidget extends StatelessWidget {
+class PlannedMealWidget extends StatelessWidget {
   final String weekday;
   final String numberOfPeople;
   final PlannedMeal plannedMeal;
   final VoidCallback onButtonPressed;
 
-  const CustomWidget({
+  const PlannedMealWidget({
     super.key,
     required this.weekday,
     required this.numberOfPeople,
@@ -138,106 +138,102 @@ class CustomWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 15.0),
-      child: GestureDetector(
-        onTap: () {
-          Navigator.push(context,
-              MaterialPageRoute(builder: (context) => const DetailScreen()));
-        },
-        child: Column(
-          children: [
-            // Top Part
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      padding: const EdgeInsets.symmetric(horizontal: 15),
+      child: Column(
+        children: [
+          // Top Part
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                // Weekday String
+                Text(
+                  weekday,
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ),
+
+          // Bottom Part
+          ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: 130,
+            ),
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => DetailScreen(
+                            recipeId: plannedMeal.recipe.recipeId)));
+              },
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  // Weekday String
-                  Text(
-                    weekday,
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    width: 130,
+                    height: 130,
+                    color: Colors.blueGrey,
+                    child: FutureBuilder<bool>(
+                      future: _checkImageUrl(plannedMeal.recipe.imagePath),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                              child: CircularProgressIndicator());
+                        } else if (snapshot.hasError || !snapshot.data!) {
+                          return const Center(
+                            child: Icon(
+                              Icons.broken_image,
+                              size: 50,
+                              color: Colors.grey,
+                            ),
+                          );
+                        } else {
+                          return Image.network(
+                            plannedMeal.recipe.imagePath,
+                          );
+                        }
+                      },
+                    ),
+                  ),
+
+                  const SizedBox(width: 10),
+                  // Spacing between image and text/button column
+
+                  // Column containing a string and a button
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          plannedMeal.recipe.recipeName,
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 20),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 2,
+                        ),
+                        const SizedBox(height: 30),
+                        Row(
+                          children: [
+                            _buildLabel(numberOfPeople, Icons.people),
+                            const SizedBox(width: 8),
+                            // Spacing between labels
+                            _buildLabel("${plannedMeal.recipe.cookingTime}'",
+                                Icons.access_time),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
             ),
-
-            // Bottom Part
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(context).size.height * 0.13,
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 4),
-                      width: 130,
-                      height: 130,
-                      color: Colors.blueGrey,
-                      child: FutureBuilder<bool>(
-                        future: _checkImageUrl(plannedMeal.recipe.imagePath),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return const Center(
-                                child: CircularProgressIndicator());
-                          } else if (snapshot.hasError || !snapshot.data!) {
-                            return const Center(
-                              child: Icon(
-                                Icons.broken_image,
-                                size: 50,
-                                color: Colors.grey,
-                              ),
-                            );
-                          } else {
-                            return Image.network(
-                              plannedMeal.recipe.imagePath,
-                            );
-                          }
-                        },
-                      ),
-                    ),
-
-                    const SizedBox(width: 10),
-                    // Spacing between image and text/button column
-
-                    // Column containing a string and a button
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              plannedMeal.recipe.recipeName,
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 20
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 2,
-                            ),
-                          ),
-                          const SizedBox(height: 30),
-
-                          Row(
-                            children: [
-                              _buildLabel(numberOfPeople, Icons.people),
-                              const SizedBox(width: 8),
-                              // Spacing between labels
-                              _buildLabel("${plannedMeal.recipe.cookingTime}'",
-                                  Icons.access_time),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            )
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
