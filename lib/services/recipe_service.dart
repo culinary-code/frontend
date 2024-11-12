@@ -49,6 +49,45 @@ class RecipeService {
     return recipes;
   }
 
+  Future<List<Recipe>> getRecipesByName(String query) {
+    return http.get(
+      Uri.parse('$backendUrl/Recipe/Collection/ByName/$query'),
+      headers: {'Content-Type': 'application/json', 'Accept': '*/*'},
+    ).then((response) {
+      if (response.statusCode == 404) {
+        return [];
+      } else
+
+      if (response.statusCode != 200) {
+        throw FormatException('Failed to load recipes: ${response.body}');
+      }
+
+
+
+      final List<dynamic> dynamicRecipes = json.decode(response.body);
+
+      final List<Recipe> recipes = dynamicRecipes.map((dynamic recipe) {
+        return Recipe(
+          recipeId: recipe['recipeId'],
+          recipeName: recipe['recipeName'],
+          recipeType: intToRecipeType(recipe['recipeType']),
+          description: recipe['description'],
+          cookingTime: recipe['cookingTime'],
+          amountOfPeople: recipe['amountOfPeople'],
+          difficulty: intToDifficulty(recipe['difficulty']),
+          imagePath: recipe['imagePath'],
+          createdAt: DateTime.parse(recipe['createdAt']),
+          instructions: [],
+          reviews: [],
+          plannedMeals: [],
+          favoriteRecipes: [],
+        );
+      }).toList();
+
+      return recipes;
+    });
+  }
+
   Future<Recipe> getRecipeById(String id) async {
     final response = await http.get(
       Uri.parse('$backendUrl/Recipe/$id'),
@@ -96,5 +135,31 @@ class RecipeService {
       instructions: instructions,
       ingredients: ingredients,
     );
+  }
+
+  Future<String> createRecipe(String name) async {
+    final response = await http.post(
+      Uri.parse('$backendUrl/Recipe/Create'),
+      headers: {'Content-Type': 'application/json', 'Accept': '*/*'},
+      body: json.encode({
+        'name': name,
+      }),
+    );
+
+    if (response.statusCode == 400) {
+      return response.body;
+    }
+
+    if (response.statusCode != 200) {
+      throw FormatException('Failed to create recipe: ${response.body}');
+    }
+
+    if (response.statusCode == 200) {
+      final dynamic recipe = json.decode(response.body);
+
+      return recipe['recipeId'];
+    }
+
+    return '';
   }
 }
