@@ -182,8 +182,7 @@ class _WeekOverviewState extends State<WeekOverview> {
               );
             }
           },
-        )
-    );
+        ));
   }
 }
 
@@ -197,12 +196,13 @@ class EmptyPlannedMealWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // padding around the whole widget
     return Padding(
-        padding: const EdgeInsets.fromLTRB(15,0,15,16),
+        padding: const EdgeInsets.fromLTRB(15, 8, 15, 16),
         child: Column(children: [
-          // Top Part
+          // Title
           Padding(
-            padding: const EdgeInsets.fromLTRB(0, 16, 16, 8),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
@@ -214,15 +214,15 @@ class EmptyPlannedMealWidget extends StatelessWidget {
               ],
             ),
           ),
-          Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              // Optional for some left margin
-              children: [
-                Text(
-                  "Geen geselecteerde maaltijd.",
-                  style: TextStyle(fontSize: 16, color: Colors.grey),
-                ),
-              ])
+          Row(mainAxisAlignment: MainAxisAlignment.start, children: [
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              child: Text(
+                "Geen geselecteerde maaltijd.",
+                style: TextStyle(fontSize: 16, color: Colors.grey),
+              ),
+            )
+          ])
         ]));
   }
 }
@@ -251,6 +251,7 @@ class PlannedMealWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // padding around the whole widget
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 15),
       child: Column(
