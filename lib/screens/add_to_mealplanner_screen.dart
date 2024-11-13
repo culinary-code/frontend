@@ -32,14 +32,16 @@ class _AddToMealPlanner extends State<AddToMealPlanner> {
   bool isDeleting = false;
   bool isUndoPressed = false;
   late List<IngredientQuantity> ingredients;
-  int numberOfPeople = 2;
-  int initialPeopleCount = 2;
+  int numberOfPeople = 3;
+  int initialPeopleCount = 3;
   late Map<String, double> originalQuantities;
+  late Recipe recipe;
 
   void _incrementPeople() {
     setState(() {
       numberOfPeople++;
       _updateIngredientQuantities();
+      ingredients;
     });
   }
 
@@ -48,6 +50,7 @@ class _AddToMealPlanner extends State<AddToMealPlanner> {
       setState(() {
         numberOfPeople--;
         _updateIngredientQuantities();
+        ingredients;
       });
     }
   }
@@ -80,13 +83,30 @@ class _AddToMealPlanner extends State<AddToMealPlanner> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final recipe = widget.recipe;
-    ingredients = recipe.ingredients;
+  void initState() {
+    super.initState();
+    // Initialize ingredients and originalQuantities only once
+    recipe = widget.recipe;
 
+    ingredients = recipe.ingredients.map((ingredient) {
+      // Create a new IngredientQuantity object by copying the properties
+      return IngredientQuantity(
+        ingredientQuantityId: ingredient.ingredientQuantityId,
+        ingredient: ingredient.ingredient,
+        quantity: ingredient.quantity,  // Copy the quantity
+      );
+    }).toList();
+
+    // Store the original quantities for scaling purposes
     originalQuantities = {
-      for (var ingredient in widget.recipe.ingredients) ingredient.ingredientQuantityId: ingredient.quantity
+      for (var ingredient in ingredients)
+        ingredient.ingredientQuantityId: ingredient.quantity
     };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+
 
     return Padding(
       padding: const EdgeInsets.all(16.0),
@@ -146,10 +166,12 @@ class _AddToMealPlanner extends State<AddToMealPlanner> {
               border: TableBorder.all(color: Colors.blueGrey.shade200),
               defaultVerticalAlignment: TableCellVerticalAlignment.middle,
               children: [
-                ...recipe.ingredients.map((ingredient) {
+                ...ingredients.map((ingredient) {
                   final ingredientName = ingredient.ingredient.ingredientName;
                   final quantity =
-                      '${ingredient.quantity} ${(ingredient.quantity > 1) ? measurementTypeToStringMultipleNl(ingredient.ingredient.measurement) : measurementTypeToStringNl(ingredient.ingredient.measurement)}';
+                      '${ingredient.quantity == ingredient.quantity.toInt()
+                      ? '${ingredient.quantity.toInt()}'  // Display as integer if it's a whole number
+                      : ingredient.quantity.toStringAsFixed(2)} ${(ingredient.quantity > 1) ? measurementTypeToStringMultipleNl(ingredient.ingredient.measurement) : measurementTypeToStringNl(ingredient.ingredient.measurement)}';
 
                   return TableRow(
                     children: [
