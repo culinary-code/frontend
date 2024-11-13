@@ -264,10 +264,10 @@ class PlannedMealWidget extends StatelessWidget {
                         const SizedBox(height: 30),
                         Row(
                           children: [
-                            _buildLabel(plannedMeal.amountOfPeople.toString(), Icons.people),
+                            _buildLabel(context, plannedMeal.amountOfPeople.toString(), Icons.people),
                             const SizedBox(width: 8),
                             // Spacing between labels
-                            _buildLabel("${plannedMeal.recipe.cookingTime}'",
+                            _buildLabel(context, "${plannedMeal.recipe.cookingTime}'",
                                 Icons.access_time),
                           ],
                         ),
@@ -283,25 +283,33 @@ class PlannedMealWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildLabel(String text, IconData icon) {
+  Widget _buildLabel(BuildContext context, String text, IconData icon) {
+    // Access the current theme's color scheme
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      // Add padding inside the border
       decoration: BoxDecoration(
-        color: Colors.grey[200], // Background color of the label
-        borderRadius: BorderRadius.circular(12), // Rounded corners
-        border:
-            Border.all(color: Colors.grey, width: 1), // Border color and width
+        color: colorScheme.primary.withOpacity(0.1), // Lightened primary color
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: colorScheme.primary, width: 1), // Primary color border
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min, // Shrink to fit the content
+        mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             text,
-            style: TextStyle(fontSize: 14),
+            style: textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurface, // Use theme's onSurface for text color
+            ),
           ),
-          const SizedBox(width: 4), // Small spacing between icon and text
-          Icon(icon, size: 16),
+          const SizedBox(width: 4),
+          Icon(
+            icon,
+            size: 16,
+            color: colorScheme.primary, // Use primary color for the icon
+          ),
         ],
       ),
     );
