@@ -5,7 +5,7 @@ import 'package:frontend/models/recipes/ingredients/measurement_type.dart';
 import 'package:frontend/models/recipes/instruction_step.dart';
 import 'package:frontend/models/recipes/recipe.dart';
 import 'package:frontend/models/recipes/recipe_type.dart';
-import 'package:frontend/screens/weekoverview_screen.dart';
+import 'package:frontend/screens/add_to_mealplanner_screen.dart';
 import 'package:frontend/services/recipe_service.dart';
 
 class DetailScreen extends StatelessWidget {
@@ -91,18 +91,17 @@ class _DetailOverviewState extends State<DetailOverview> {
             const SizedBox(height: 16.0),
             InstructionsOverview(instructionsSteps: _instructionSteps),
             const SizedBox(height: 16.0),
-            Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 45.0, vertical: 8.0),
-              child: ElevatedButton(
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [ElevatedButton(
                 onPressed: () {
                   Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => const WeekoverviewScreen()));
+                          builder: (context) => AddToMealplannerScreen(recipe: recipe,)));
                 },
                 child: const Text('+ Weekoverzicht'),
-              ),
+              ),]
             ),
             const SizedBox(height: 16.0),
           ],
