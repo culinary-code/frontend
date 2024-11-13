@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:frontend/models/accounts/account.dart';
+import 'package:frontend/services/api_client.dart';
 import 'package:http/http.dart' as http;
 
 class AccountService {
@@ -12,10 +13,7 @@ class AccountService {
           (throw Exception('Environment variable BACKEND_BASE_URL not found'));
 
   Future<Account> fetchUser(String accountId) async {
-    final response = await http.get(
-      Uri.parse('$backendUrl/api/Account/$accountId'),
-      headers: {'Content-Type': 'application/json', 'Accept': '*/*'},
-    );
+    final response = await ApiClient().authorizedGet('api/Account/$accountId');
 
     if (response.statusCode == 200) {
       try {
@@ -58,15 +56,11 @@ class AccountService {
 
   Future<void> updateUsername(String userId, String newUsername) async {
     try {
-      final url = Uri.parse('$backendUrl/api/Account/updateAccount/$userId');
-      final response = await http.put(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'AccountId': userId,
-          'Name': newUsername,
-        }),
-      );
+      final endpoint = 'api/Account/updateAccount';
+
+      final response = await ApiClient().authorizedPut(endpoint, {
+        'Name': newUsername,
+      });
 
       if (response.statusCode != 200) {
         throw Exception(
