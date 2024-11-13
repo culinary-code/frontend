@@ -25,7 +25,6 @@ class WeekOverview extends StatefulWidget {
 }
 
 class _WeekOverviewState extends State<WeekOverview> {
-
   late Future<List<PlannedMeal>> _plannedMealsFuture;
   late DateTime _selectedDate;
 
@@ -33,7 +32,8 @@ class _WeekOverviewState extends State<WeekOverview> {
   void initState() {
     super.initState();
     _selectedDate = DateTime.now();
-    _plannedMealsFuture = PlannedMealsService().getDummyPlannedMeals(_selectedDate);
+    _plannedMealsFuture =
+        PlannedMealsService().getDummyPlannedMeals(_selectedDate);
   }
 
   static const List<String> daysOfWeek = [
@@ -52,9 +52,8 @@ class _WeekOverviewState extends State<WeekOverview> {
     return stringDay;
   }
 
-  getDateSubtitleString(){
-    return
-        "${DateFormat('dd/MM/yyyy').format(_selectedDate)} - "
+  getDateSubtitleString() {
+    return "${DateFormat('dd/MM/yyyy').format(_selectedDate)} - "
         "${DateFormat('dd/MM/yyyy').format(_selectedDate.add(Duration(days: 6)))}";
   }
 
@@ -72,91 +71,161 @@ class _WeekOverviewState extends State<WeekOverview> {
       // You can use the selectedDate variable for your purposes
       setState(() {
         _selectedDate = selectedDate;
-        _plannedMealsFuture = PlannedMealsService().getDummyPlannedMeals(_selectedDate);
+        _plannedMealsFuture =
+            PlannedMealsService().getDummyPlannedMeals(_selectedDate);
       });
     }
   }
 
-  updateSelectedDate(daysExtra){
+  updateSelectedDate(daysExtra) {
     setState(() {
       _selectedDate = _selectedDate.add(Duration(days: daysExtra));
-      _plannedMealsFuture = PlannedMealsService().getDummyPlannedMeals(_selectedDate);
+      _plannedMealsFuture =
+          PlannedMealsService().getDummyPlannedMeals(_selectedDate);
     });
+  }
+
+  bool isSameDate(DateTime date1, DateTime date2) {
+    return date1.year == date2.year &&
+        date1.month == date2.month &&
+        date1.day == date2.day;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back), // Left button
-          onPressed: () {
-            // Handle left button press
-            updateSelectedDate(-7);
-          },
-        ),
-        title: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center, // Align to the left
-          children: [
-            Text(
-              "Weekoverzicht",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        appBar: AppBar(
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back), // Left button
+            onPressed: () {
+              // Handle left button press
+              updateSelectedDate(-7);
+            },
+          ),
+          title: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center, // Align to the left
+            children: [
+              Text(
+                "Weekoverzicht",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              Text(
+                getDateSubtitleString(),
+                style: TextStyle(fontSize: 14, color: Colors.grey),
+              ),
+            ],
+          ), // Center text
+          centerTitle: true, // Center the title in the middle
+          actions: [
+            IconButton(
+              icon: Icon(Icons.calendar_month), // First button on the right
+              onPressed: () {
+                // Handle first right button press
+                openDatePicker(context);
+              },
             ),
-            Text(
-              getDateSubtitleString(),
-              style: TextStyle(fontSize: 14, color: Colors.grey),
+            IconButton(
+              icon: Icon(Icons.arrow_forward), // Second button on the right
+              onPressed: () {
+                // Handle second right button press
+                updateSelectedDate(7);
+              },
             ),
           ],
-        ), // Center text
-        centerTitle: true, // Center the title in the middle
-        actions: [
-          IconButton(
-            icon: Icon(Icons.calendar_month), // First button on the right
-            onPressed: () {
-              // Handle first right button press
-              openDatePicker(context);
-            },
-          ),
-          IconButton(
-            icon: Icon(Icons.arrow_forward), // Second button on the right
-            onPressed: () {
-              // Handle second right button press
-              updateSelectedDate(7);
-            },
-          ),
-        ],
-      ),
+        ),
+        body: FutureBuilder<List<PlannedMeal>>(
+          future: _plannedMealsFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (snapshot.hasError) {
+              return Center(child: Text('Error: ${snapshot.error}'));
+            } else if (!snapshot.hasData) {
+              return const Center(child: Text('No planned meals found'));
+            } else {
+              final plannedMeals = snapshot.data!;
 
-      body: FutureBuilder<List<PlannedMeal>>(
-        future: _plannedMealsFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('No planned meals found'));
-          } else {
-            final plannedMeals = snapshot.data!;
-            return ListView.builder(
-              itemCount: plannedMeals.length,
-              itemBuilder: (context, index) {
-                return PlannedMealWidget(
-                  weekday: getWeekDay(plannedMeals[index].plannedDay),
-                  plannedMeal: plannedMeals[index],
-                  onButtonPressed: () => {},
-                );
-              },
-            );
-          }
-        },
-      ),
+              // Generate the 7 days from _selectedDate
+              List<DateTime> weekDates = List.generate(
+                7,
+                (index) => _selectedDate.add(Duration(days: index)),
+              );
+
+              return ListView.builder(
+                itemCount: 7,
+                itemBuilder: (context, index) {
+                  DateTime currentDate = weekDates[index];
+
+                  PlannedMeal? mealForDate;
+                  try {
+                    mealForDate = plannedMeals.firstWhere(
+                      (meal) => isSameDate(meal.plannedDay, currentDate),
+                    );
+                  } catch (e) {
+                    mealForDate = null;
+                  }
+
+                  if (mealForDate != null) {
+                    return PlannedMealWidget(
+                      weekday: getWeekDay(currentDate),
+                      plannedMeal: mealForDate,
+                      onButtonPressed: () => {},
+                    );
+                  } else {
+                    // Show "No meal selected" if there's no meal for the date
+                    return EmptyPlannedMealWidget(
+                      weekday: getWeekDay(currentDate),
+                    );
+                  }
+                },
+              );
+            }
+          },
+        )
     );
   }
 }
 
+class EmptyPlannedMealWidget extends StatelessWidget {
+  final String weekday;
 
+  const EmptyPlannedMealWidget({
+    super.key,
+    required this.weekday,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+        padding: const EdgeInsets.fromLTRB(15,0,15,16),
+        child: Column(children: [
+          // Top Part
+          Padding(
+            padding: const EdgeInsets.fromLTRB(0, 16, 16, 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                // Weekday String
+                Text(
+                  weekday,
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ),
+          Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              // Optional for some left margin
+              children: [
+                Text(
+                  "Geen geselecteerde maaltijd.",
+                  style: TextStyle(fontSize: 16, color: Colors.grey),
+                ),
+              ])
+        ]));
+  }
+}
 
 class PlannedMealWidget extends StatelessWidget {
   final String weekday;
@@ -264,10 +333,15 @@ class PlannedMealWidget extends StatelessWidget {
                         const SizedBox(height: 30),
                         Row(
                           children: [
-                            _buildLabel(context, plannedMeal.amountOfPeople.toString(), Icons.people),
+                            _buildLabel(
+                                context,
+                                plannedMeal.amountOfPeople.toString(),
+                                Icons.people),
                             const SizedBox(width: 8),
                             // Spacing between labels
-                            _buildLabel(context, "${plannedMeal.recipe.cookingTime}'",
+                            _buildLabel(
+                                context,
+                                "${plannedMeal.recipe.cookingTime}'",
                                 Icons.access_time),
                           ],
                         ),
@@ -293,7 +367,8 @@ class PlannedMealWidget extends StatelessWidget {
       decoration: BoxDecoration(
         color: colorScheme.primary.withOpacity(0.1), // Lightened primary color
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colorScheme.primary, width: 1), // Primary color border
+        border: Border.all(
+            color: colorScheme.primary, width: 1), // Primary color border
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -301,7 +376,8 @@ class PlannedMealWidget extends StatelessWidget {
           Text(
             text,
             style: textTheme.bodySmall?.copyWith(
-              color: colorScheme.onSurface, // Use theme's onSurface for text color
+              color:
+                  colorScheme.onSurface, // Use theme's onSurface for text color
             ),
           ),
           const SizedBox(width: 4),

@@ -14,7 +14,7 @@ class PlannedMealsService {
     List<PlannedMeal> plannedMeals = [];
     Random random = Random();
 
-    for (int i = 0; i < 7; i++) {
+    for (int i = 0; i < 5; i++) {
       // Choose a random recipe from the list
       Recipe randomRecipe = dummyRecipes[random.nextInt(dummyRecipes.length)];
 
