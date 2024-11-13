@@ -5,7 +5,7 @@ import 'package:frontend/models/meal_planning/PlannedMeal.dart';
 
 class IngredientQuantity {
   final String ingredientQuantityId;
-  final double quantity;
+  double quantity;
   final Ingredient ingredient;
   Recipe? recipe;
   GroceryList? groceryList;
