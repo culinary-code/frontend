@@ -54,7 +54,6 @@ class KeycloakService {
         'client_id': clientId,
         'username': username,
         'password': password,
-        'audience': clientId,
       },
     );
     final responseBody = json.decode(response.body);
