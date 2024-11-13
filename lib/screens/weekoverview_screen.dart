@@ -109,7 +109,7 @@ class _WeekOverviewState extends State<WeekOverview> {
             ),
           ],
         ), // Center text
-        centerTitle: false, // Center the title in the middle
+        centerTitle: true, // Center the title in the middle
         actions: [
           IconButton(
             icon: Icon(Icons.calendar_month), // First button on the right
