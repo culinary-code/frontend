@@ -72,3 +72,16 @@ String measurementTypeToStringNl(MeasurementType type) {
       return 'teentje';
   }
 }
+
+String measurementTypeToStringMultipleNl(MeasurementType type) {
+  switch (type) {
+    case MeasurementType.piece:
+      return 'stukken';
+    case MeasurementType.clove:
+      return 'teentjes';
+    case MeasurementType.pinch:
+      return 'snufjes';
+    default:
+      return measurementTypeToStringNl(type);
+  }
+}

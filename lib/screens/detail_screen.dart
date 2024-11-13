@@ -390,7 +390,7 @@ class IngredientsOverview extends StatelessWidget {
               ...ingredientList.map((ingredient) {
                 final ingredientName = ingredient.ingredient.ingredientName;
                 final quantity =
-                    '${ingredient.quantity} ${measurementTypeToStringNl(ingredient.ingredient.measurement)}';
+                    '${ingredient.quantity} ${(ingredient.quantity > 1) ? measurementTypeToStringMultipleNl(ingredient.ingredient.measurement) : measurementTypeToStringNl(ingredient.ingredient.measurement)}';
 
                 return TableRow(
                   children: [
