@@ -86,10 +86,10 @@ class _AccountSettingsState extends State<AccountSettings> {
 
   Future<void> _saveUsername() async {
     final newUsername = _usernameController.text;
-    if (newUsername.length < 3) {
+    if (newUsername.length <= 3) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            content: Text('Gebruikersnaam moet minstens 2 karakters zijn.')),
+            content: Text('Gebruikersnaam moet minstens  karakters zijn.')),
       );
       return;
     }
