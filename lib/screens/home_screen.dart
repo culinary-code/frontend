@@ -9,14 +9,9 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: const RecipeOverview(),
-      title: 'Culinary Code',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.cyan),
-        useMaterial3: true,
-      ),
-      debugShowCheckedModeBanner: false,
+    return Scaffold(
+        appBar: AppBar(title: const Text("Vind jouw recept!")),
+        body: RecipeOverview(),
     );
   }
 }
@@ -39,9 +34,7 @@ class _RecipeOverviewState extends State<RecipeOverview> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("Vind jouw recept!")),
-      body: Padding(
+    return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 8.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -102,8 +95,8 @@ class _RecipeOverviewState extends State<RecipeOverview> {
             ),
           ],
         ),
-      ),
-    );
+      );
+
   }
 }
 
