@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'package:frontend/services/api_client.dart';
+import 'package:frontend/services/keycloak_service.dart';
 import 'package:frontend/models/recipes/difficulty.dart';
 import 'package:frontend/models/recipes/ingredients/ingredient.dart';
 import 'package:frontend/models/recipes/ingredients/ingredient_quantity.dart';
@@ -11,16 +13,11 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class RecipeService {
-  String get backendUrl =>
-      dotenv.env['BACKEND_BASE_URL'] ??
-      (throw Exception('Environment variable BACKEND_BASE_URL not found'));
-
   Future<List<Recipe>> getRecipes() async {
-    final response = await http.get(
-      // TODO: change endpoint once filtering is implemented
-      Uri.parse('$backendUrl/Recipe/Collection/ByName/o'),
-      headers: {'Content-Type': 'application/json', 'Accept': '*/*'},
-    );
+    final String searchQuery = "o";
+    final String searchEndpoint = "Recipe/Collection/ByName/$searchQuery";
+
+    final response = await ApiClient().authorizedGet(searchEndpoint);
 
     if (response.statusCode != 200) {
       throw FormatException('Failed to load recipes: ${response.body}');
@@ -49,50 +46,40 @@ class RecipeService {
     return recipes;
   }
 
-  Future<List<Recipe>> getRecipesByName(String query) {
-    return http.get(
-      Uri.parse('$backendUrl/Recipe/Collection/ByName/$query'),
-      headers: {'Content-Type': 'application/json', 'Accept': '*/*'},
-    ).then((response) {
-      if (response.statusCode == 404) {
-        return [];
-      } else
+  Future<List<Recipe>> getRecipesByName(String query) async {
+    final response = await ApiClient().authorizedGet('Recipe/Collection/ByName/$query');
 
-      if (response.statusCode != 200) {
-        throw FormatException('Failed to load recipes: ${response.body}');
-      }
+    if (response.statusCode == 404) {
+      return [];
+    } else if (response.statusCode != 200) {
+      throw FormatException('Failed to load recipes: ${response.body}');
+    }
 
+    final List<dynamic> dynamicRecipes = json.decode(response.body);
 
+    final List<Recipe> recipes = dynamicRecipes.map((dynamic recipe) {
+      return Recipe(
+        recipeId: recipe['recipeId'],
+        recipeName: recipe['recipeName'],
+        recipeType: intToRecipeType(recipe['recipeType']),
+        description: recipe['description'],
+        cookingTime: recipe['cookingTime'],
+        amountOfPeople: recipe['amountOfPeople'],
+        difficulty: intToDifficulty(recipe['difficulty']),
+        imagePath: recipe['imagePath'],
+        createdAt: DateTime.parse(recipe['createdAt']),
+        instructions: [],
+        reviews: [],
+        plannedMeals: [],
+        favoriteRecipes: [],
+      );
+    }).toList();
 
-      final List<dynamic> dynamicRecipes = json.decode(response.body);
-
-      final List<Recipe> recipes = dynamicRecipes.map((dynamic recipe) {
-        return Recipe(
-          recipeId: recipe['recipeId'],
-          recipeName: recipe['recipeName'],
-          recipeType: intToRecipeType(recipe['recipeType']),
-          description: recipe['description'],
-          cookingTime: recipe['cookingTime'],
-          amountOfPeople: recipe['amountOfPeople'],
-          difficulty: intToDifficulty(recipe['difficulty']),
-          imagePath: recipe['imagePath'],
-          createdAt: DateTime.parse(recipe['createdAt']),
-          instructions: [],
-          reviews: [],
-          plannedMeals: [],
-          favoriteRecipes: [],
-        );
-      }).toList();
-
-      return recipes;
-    });
+    return recipes;
   }
 
   Future<Recipe> getRecipeById(String id) async {
-    final response = await http.get(
-      Uri.parse('$backendUrl/Recipe/$id'),
-      headers: {'Content-Type': 'application/json', 'Accept': '*/*'},
-    );
+    final response = await ApiClient().authorizedGet('Recipe/$id');
 
     if (response.statusCode != 200) {
       throw FormatException('Failed to load recipe: ${response.body}');
@@ -138,13 +125,9 @@ class RecipeService {
   }
 
   Future<String> createRecipe(String name) async {
-    final response = await http.post(
-      Uri.parse('$backendUrl/Recipe/Create'),
-      headers: {'Content-Type': 'application/json', 'Accept': '*/*'},
-      body: json.encode({
-        'name': name,
-      }),
-    );
+    final response = await ApiClient().authorizedPost('Recipe/Create', {
+      'recipeName': name,
+    });
 
     if (response.statusCode == 400) {
       return response.body;
