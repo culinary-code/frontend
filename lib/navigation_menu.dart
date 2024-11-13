@@ -3,7 +3,7 @@ import 'package:frontend/screens/account_screen.dart';
 import 'package:frontend/screens/favorite_screen.dart';
 import 'package:frontend/screens/grocery_screen.dart';
 import 'package:frontend/screens/home_screen.dart';
-import 'package:frontend/screens/mealplanner_screen.dart';
+import 'package:frontend/screens/weekoverview_screen.dart';
 
 class NavigationMenu extends StatefulWidget {
   const NavigationMenu({super.key});
@@ -17,7 +17,7 @@ class _NavigationMenuState extends State<NavigationMenu> {
 
   var screens = [
     const HomeScreen(),
-    const MealplannerScreen(),
+    const WeekoverviewScreen(),
     const GroceryScreen(),
     const FavoriteScreen(),
     const AccountScreen()
