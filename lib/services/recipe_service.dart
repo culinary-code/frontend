@@ -126,7 +126,7 @@ class RecipeService {
 
   Future<String> createRecipe(String name) async {
     final response = await ApiClient().authorizedPost('Recipe/Create', {
-      'recipeName': name,
+      'Name': name,
     });
 
     if (response.statusCode == 400) {
