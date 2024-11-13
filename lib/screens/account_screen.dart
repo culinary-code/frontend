@@ -156,8 +156,8 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
 
   List<DropdownItem<String>> preferences = [
     DropdownItem(label: 'Vegan', value: 'Vegan'),
-    DropdownItem(label: 'Vegetarian', value: 'Vegetarian'),
-    DropdownItem(label: 'Nut Allergy', value: 'Nut Allergy'),
+    DropdownItem(label: 'Vegetarisch', value: 'Vegetarian'),
+    DropdownItem(label: 'Notenallergie', value: 'Nut Allergy'),
     DropdownItem(label: 'Lactose Intolerant', value: 'Lactose Intolerant'),
   ];
 
