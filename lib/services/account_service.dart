@@ -58,7 +58,7 @@ class AccountService {
 
   Future<void> updateUsername(String userId, String newUsername) async {
     try {
-      final url = Uri.parse('$backendUrl/updateAccount/$userId');
+      final url = Uri.parse('$backendUrl/api/Account/updateAccount/$userId');
       final response = await http.put(
         url,
         headers: {'Content-Type': 'application/json'},
