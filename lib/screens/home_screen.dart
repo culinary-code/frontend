@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:frontend/models/recipes/recipe.dart';
 import 'package:frontend/screens/create_recipe_screen.dart';
@@ -32,11 +34,35 @@ class RecipeOverview extends StatefulWidget {
 class _RecipeOverviewState extends State<RecipeOverview> {
   late Future<List<Recipe>> _recipesFuture;
   final TextEditingController _searchController = TextEditingController();
+  Timer? _debounce;
 
   @override
   void initState() {
     super.initState();
     _recipesFuture = RecipeService().getRecipes();
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged(String value) {
+    if (_debounce?.isActive ?? false) _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      setState(() {
+        if (value.isEmpty) {
+          _recipesFuture = RecipeService().getRecipes();
+          return;
+        }
+        if (value.length < 3) {
+          return;
+        }
+        _recipesFuture = RecipeService().getRecipesByName(value);
+      });
+    });
   }
 
   @override
@@ -60,23 +86,12 @@ class _RecipeOverviewState extends State<RecipeOverview> {
               style: const TextStyle(fontSize: 20),
               controller: _searchController,
               decoration: const InputDecoration(
-                  hintText: 'Stoofvlees',
+                  hintText: 'Zoek',
                   isDense: true,
                   border: OutlineInputBorder(
                       borderRadius: BorderRadius.all(Radius.circular(8.0))),
                   suffixIcon: Icon(Icons.search)),
-              onChanged: (value) {
-                setState(() {
-                  if (value.isEmpty) {
-                    _recipesFuture = RecipeService().getRecipes();
-                    return;
-                  }
-                  if (value.length < 3) {
-                    return;
-                  }
-                  _recipesFuture = RecipeService().getRecipesByName(value);
-                });
-              },
+              onChanged: _onSearchChanged,
             ),
             const SizedBox(
               height: 16.0,
@@ -126,49 +141,55 @@ class _RecipeOverviewState extends State<RecipeOverview> {
                       children: [
                         Expanded(
                           child: ListView.builder(
-                            itemCount: recipes.length,
+                            itemCount: recipes.length + 1,
                             itemBuilder: (context, index) {
-                              return RecipeCard(
-                                recipeId: recipes[index].recipeId,
-                                recipeName: recipes[index].recipeName,
-                                score: recipes[index].score,
-                                isFavorited: recipes[index].isFavorited,
-                                imageUrl: recipes[index].imagePath,
-                                onFavoriteToggle: () {
-                                  setState(() {
-                                    recipes[index].isFavorited =
-                                        !recipes[index].isFavorited;
-                                  });
-                                },
-                              );
+                              if (index == recipes.length) {
+                                return Column(
+                                  children: [
+                                    const Center(
+                                      child: Text(
+                                        'Recept met jouw zoekterm aanmaken?',
+                                        style: TextStyle(fontSize: 14),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 10),
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        String query = _searchController.text;
+                                        _searchController.clear();
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                CreateRecipeScreen(
+                                              preloadedRecipeName: query,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      child: const Text('Maak een recept aan'),
+                                    ),
+                                    const SizedBox(height: 20),
+                                  ],
+                                );
+                              } else {
+                                return RecipeCard(
+                                  recipeId: recipes[index].recipeId,
+                                  recipeName: recipes[index].recipeName,
+                                  score: recipes[index].score,
+                                  isFavorited: recipes[index].isFavorited,
+                                  imageUrl: recipes[index].imagePath,
+                                  onFavoriteToggle: () {
+                                    setState(() {
+                                      recipes[index].isFavorited =
+                                          !recipes[index].isFavorited;
+                                    });
+                                  },
+                                );
+                              }
                             },
                           ),
                         ),
-                        if (recipes.length < 4) ...[
-                          const Center(
-                            child: Text(
-                              'Recept met jouw zoekterm aanmaken?',
-                              style: TextStyle(fontSize: 14),
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          ElevatedButton(
-                            onPressed: () {
-                              String query = _searchController.text;
-                              _searchController.clear();
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => CreateRecipeScreen(
-                                    preloadedRecipeName: query,
-                                  ),
-                                ),
-                              );
-                            },
-                            child: const Text('Maak een recept aan'),
-                          ),
-                          const SizedBox(height: 20),
-                        ],
                       ],
                     );
                   }
