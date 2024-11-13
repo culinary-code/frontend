@@ -1,11 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/meal_planning/PlannedMeal.dart';
-import 'package:frontend/models/recipes/recipe.dart';
 import 'package:frontend/screens/detail_screen.dart';
+import 'package:frontend/services/planned_meals_service.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 
 class WeekoverviewScreen extends StatelessWidget {
   const WeekoverviewScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Laten we koken!")),
+      body: WeekOverview(),
+    );
+  }
+}
+
+class WeekOverview extends StatefulWidget {
+  const WeekOverview({super.key});
+
+  @override
+  State<WeekOverview> createState() => _WeekOverviewState();
+}
+
+class _WeekOverviewState extends State<WeekOverview> {
+
+  late Future<List<PlannedMeal>> _plannedMealsFuture;
+  late DateTime _selectedDate;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedDate = DateTime.now();
+    _plannedMealsFuture = PlannedMealsService().getDummyPlannedMeals(_selectedDate);
+  }
 
   static const List<String> daysOfWeek = [
     'Maandag',
@@ -17,17 +46,16 @@ class WeekoverviewScreen extends StatelessWidget {
     'Zondag'
   ];
 
-  static getWeekDay(index) {
-    var dateTime = DateTime.parse("2024-10-27");
-    var addedDate = dateTime.add(Duration(days: index, hours: 3));
-    var weekday = addedDate.weekday;
+  static getWeekDay(dateTime) {
+    var weekday = dateTime.weekday - 1;
     var stringDay = daysOfWeek[weekday % 7];
     return stringDay;
   }
 
-  static getRecipeForDay(weekdayInt) {
-    var recipeList = Recipe.recipeList();
-    return recipeList[(weekdayInt % recipeList.length)];
+  getDateSubtitleString(){
+    return
+        "${DateFormat('dd/MM/yyyy').format(_selectedDate)} - "
+        "${DateFormat('dd/MM/yyyy').format(_selectedDate.add(Duration(days: 6)))}";
   }
 
   Future<void> openDatePicker(BuildContext context) async {
@@ -42,10 +70,18 @@ class WeekoverviewScreen extends StatelessWidget {
     // If a date is selected, display it in a snackbar or process it
     if (selectedDate != null) {
       // You can use the selectedDate variable for your purposes
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Selected Date: ${selectedDate.toLocal()}')),
-      );
+      setState(() {
+        _selectedDate = selectedDate;
+        _plannedMealsFuture = PlannedMealsService().getDummyPlannedMeals(_selectedDate);
+      });
     }
+  }
+
+  updateSelectedDate(daysExtra){
+    setState(() {
+      _selectedDate = _selectedDate.add(Duration(days: daysExtra));
+      _plannedMealsFuture = PlannedMealsService().getDummyPlannedMeals(_selectedDate);
+    });
   }
 
   @override
@@ -56,6 +92,7 @@ class WeekoverviewScreen extends StatelessWidget {
           icon: Icon(Icons.arrow_back), // Left button
           onPressed: () {
             // Handle left button press
+            updateSelectedDate(-7);
           },
         ),
         title: Column(
@@ -67,7 +104,7 @@ class WeekoverviewScreen extends StatelessWidget {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             Text(
-              "21/10/2024 - 27/10/2024",
+              getDateSubtitleString(),
               style: TextStyle(fontSize: 14, color: Colors.grey),
             ),
           ],
@@ -85,42 +122,50 @@ class WeekoverviewScreen extends StatelessWidget {
             icon: Icon(Icons.arrow_forward), // Second button on the right
             onPressed: () {
               // Handle second right button press
+              updateSelectedDate(7);
             },
           ),
         ],
       ),
-      body: ListView.builder(
-        padding: EdgeInsets.symmetric(vertical: 16),
-        itemCount: 7, // Number of custom elements to display
-        itemBuilder: (context, index) {
-          return PlannedMealWidget(
-            // weekday: daysOfWeek[DateTime.parse("2024-10-27").add(Duration(days: index)).weekday - 1],
-            weekday: getWeekDay(index),
-            numberOfPeople: index.toString(),
-            plannedMeal: PlannedMeal(
-                AmountOfPeople: index + 1,
-                recipe: getRecipeForDay(index),
-                plannedDay: DateTime.parse("2024-10-27")
-                    .add(Duration(days: index, hours: 3))),
 
-            onButtonPressed: () => {},
-          );
+      body: FutureBuilder<List<PlannedMeal>>(
+        future: _plannedMealsFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(child: Text('No planned meals found'));
+          } else {
+            final plannedMeals = snapshot.data!;
+            return ListView.builder(
+              itemCount: plannedMeals.length,
+              itemBuilder: (context, index) {
+                return PlannedMealWidget(
+                  weekday: getWeekDay(plannedMeals[index].plannedDay),
+                  plannedMeal: plannedMeals[index],
+                  onButtonPressed: () => {},
+                );
+              },
+            );
+          }
         },
       ),
     );
   }
 }
 
+
+
 class PlannedMealWidget extends StatelessWidget {
   final String weekday;
-  final String numberOfPeople;
   final PlannedMeal plannedMeal;
   final VoidCallback onButtonPressed;
 
   const PlannedMealWidget({
     super.key,
     required this.weekday,
-    required this.numberOfPeople,
     required this.plannedMeal,
     required this.onButtonPressed,
   });
@@ -219,7 +264,7 @@ class PlannedMealWidget extends StatelessWidget {
                         const SizedBox(height: 30),
                         Row(
                           children: [
-                            _buildLabel(numberOfPeople, Icons.people),
+                            _buildLabel(plannedMeal.amountOfPeople.toString(), Icons.people),
                             const SizedBox(width: 8),
                             // Spacing between labels
                             _buildLabel("${plannedMeal.recipe.cookingTime}'",
