@@ -32,6 +32,7 @@ dependencies:
   hexcolor: ^3.0.1
   flutter:
     sdk: flutter
+  flutter_settings_ui: ^3.0.1
 
   # Lets you make http requests
   http: ^1.2.2
@@ -47,6 +48,9 @@ dependencies:
   cupertino_icons: ^1.0.8
   input_quantity: ^2.4.1
   input_dialog: ^0.1.1
+  flutter_settings_screens: ^0.3.4
+  multi_dropdown: ^3.0.1
+  dropdown_textfield: ^1.0.0
 
   # DateTime formatting
   intl: ^0.19.0
