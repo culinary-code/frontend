@@ -177,7 +177,7 @@ class _AddToMealPlanner extends State<AddToMealPlanner> {
 
             // Ingredients List Section
             const Text(
-              'Ingredients',
+              'Ingrediënten',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 5),
