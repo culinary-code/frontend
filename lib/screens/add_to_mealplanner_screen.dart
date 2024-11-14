@@ -195,7 +195,7 @@ class _AddToMealPlanner extends State<AddToMealPlanner> {
                 ...ingredients.map((ingredient) {
                   final ingredientName = ingredient.ingredient.ingredientName;
                   final quantity =
-                      '${ingredient.quantity == ingredient.quantity.toInt() ? '${ingredient.quantity.toInt()}' // Display as integer if it's a whole number
+                      '${ingredient.quantity == ingredient.quantity.toInt() ? ingredient.quantity.toInt() // Display as integer if it's a whole number
                           : ingredient.quantity.toStringAsFixed(2)} ${(ingredient.quantity > 1) ? measurementTypeToStringMultipleNl(ingredient.ingredient.measurement) : measurementTypeToStringNl(ingredient.ingredient.measurement)}';
 
                   return TableRow(
