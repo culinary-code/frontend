@@ -85,7 +85,7 @@ class _DetailOverviewState extends State<DetailOverview> {
                   textAlign: TextAlign.justify,
                   style: const TextStyle(fontSize: 18)),
             ),
-            const PortionSelector(),
+            PortionSelector(recipeAmountOfPeople: widget.recipe.amountOfPeople,),
             const SizedBox(height: 16.0),
             IngredientsOverview(ingredientList: _ingredients),
             const SizedBox(height: 16.0),
@@ -247,14 +247,15 @@ class GridItem extends StatelessWidget {
 
 // Hierin maak je een functie waarmee je het aantal porties bepaald.
 class PortionSelector extends StatefulWidget {
-  const PortionSelector({super.key});
+  final int recipeAmountOfPeople;
+  const PortionSelector({super.key, required this.recipeAmountOfPeople});
 
   @override
   State<PortionSelector> createState() => _PortionSelectorState();
 }
 
 class _PortionSelectorState extends State<PortionSelector> {
-  int portions = 2;
+  late int portions;
 
   void addPortions() {
     setState(() {
@@ -266,6 +267,12 @@ class _PortionSelectorState extends State<PortionSelector> {
     setState(() {
       if (portions > 1) portions--;
     });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    portions = widget.recipeAmountOfPeople;
   }
 
   @override

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/models/recipes/ingredients/ingredient_quantity.dart';
 import 'package:frontend/models/recipes/ingredients/measurement_type.dart';
 import 'package:frontend/models/recipes/recipe.dart';
+import 'package:frontend/navigation_menu.dart';
 
 class AddToMealplannerScreen extends StatelessWidget {
   final Recipe recipe;
@@ -32,8 +33,8 @@ class _AddToMealPlanner extends State<AddToMealPlanner> {
   bool isDeleting = false;
   bool isUndoPressed = false;
   late List<IngredientQuantity> ingredients;
-  int numberOfPeople = 3;
-  int initialPeopleCount = 3;
+  late int numberOfPeople;
+  late int initialPeopleCount;
   late Map<String, double> originalQuantities;
   late Recipe recipe;
 
@@ -59,7 +60,8 @@ class _AddToMealPlanner extends State<AddToMealPlanner> {
     double scaleFactor = numberOfPeople / initialPeopleCount;
     for (var ingredient in ingredients) {
       // Use the id to look up the original quantity in the map
-      double originalQuantity = originalQuantities[ingredient.ingredientQuantityId] ?? 0;
+      double originalQuantity =
+          originalQuantities[ingredient.ingredientQuantityId] ?? 0;
       ingredient.quantity = originalQuantity * scaleFactor;
     }
   }
@@ -77,9 +79,32 @@ class _AddToMealPlanner extends State<AddToMealPlanner> {
     });
   }
 
-  void _addToMealPlanner() {
-    // Handle adding the recipe to the meal planner (logic here)
-    print('Added to Meal Planner');
+  void _addToMealPlanner() async {
+    final DateTime today = DateTime.now();
+    final DateTime lastDate = today.add(const Duration(days: 6));
+
+    // Show the date picker
+    final DateTime? selectedDate = await showDatePicker(
+      context: context,
+      initialDate: today,
+      firstDate: today,
+      lastDate: lastDate,
+    );
+
+    // Optional: handle the selected date
+    if (selectedDate != null) {
+      //TODO: when implementing the backend method for saving a meal to the mealplanner: add call to backend here
+
+      if (!mounted) return;
+
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const NavigationMenu(initialIndex: 1),
+        ),
+        (route) => false, // This removes all previous routes
+      );
+    }
   }
 
   @override
@@ -93,7 +118,7 @@ class _AddToMealPlanner extends State<AddToMealPlanner> {
       return IngredientQuantity(
         ingredientQuantityId: ingredient.ingredientQuantityId,
         ingredient: ingredient.ingredient,
-        quantity: ingredient.quantity,  // Copy the quantity
+        quantity: ingredient.quantity, // Copy the quantity
       );
     }).toList();
 
@@ -102,12 +127,13 @@ class _AddToMealPlanner extends State<AddToMealPlanner> {
       for (var ingredient in ingredients)
         ingredient.ingredientQuantityId: ingredient.quantity
     };
+
+    numberOfPeople = recipe.amountOfPeople;
+    initialPeopleCount = recipe.amountOfPeople;
   }
 
   @override
   Widget build(BuildContext context) {
-
-
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: SingleChildScrollView(
@@ -125,7 +151,7 @@ class _AddToMealPlanner extends State<AddToMealPlanner> {
             Center(
               child: Image.network(
                 recipe.imagePath,
-                width: 150,
+                width: double.infinity,
                 height: 150,
                 fit: BoxFit.cover,
               ),
@@ -169,9 +195,8 @@ class _AddToMealPlanner extends State<AddToMealPlanner> {
                 ...ingredients.map((ingredient) {
                   final ingredientName = ingredient.ingredient.ingredientName;
                   final quantity =
-                      '${ingredient.quantity == ingredient.quantity.toInt()
-                      ? '${ingredient.quantity.toInt()}'  // Display as integer if it's a whole number
-                      : ingredient.quantity.toStringAsFixed(2)} ${(ingredient.quantity > 1) ? measurementTypeToStringMultipleNl(ingredient.ingredient.measurement) : measurementTypeToStringNl(ingredient.ingredient.measurement)}';
+                      '${ingredient.quantity == ingredient.quantity.toInt() ? '${ingredient.quantity.toInt()}' // Display as integer if it's a whole number
+                          : ingredient.quantity.toStringAsFixed(2)} ${(ingredient.quantity > 1) ? measurementTypeToStringMultipleNl(ingredient.ingredient.measurement) : measurementTypeToStringNl(ingredient.ingredient.measurement)}';
 
                   return TableRow(
                     children: [
