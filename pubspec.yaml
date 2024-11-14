@@ -32,6 +32,8 @@ dependencies:
   hexcolor: ^3.0.1
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
   flutter_settings_ui: ^3.0.1
 
   # Lets you make http requests

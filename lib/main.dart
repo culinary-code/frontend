@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
-import 'package:frontend/navigation_menu.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:frontend/theme/theme_loader.dart';
 import 'package:frontend/screens/keycloak/login_screen.dart';
 
@@ -30,6 +30,19 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
         title: 'Culinary Code',
         theme: theme,
+        locale: Locale('nl'),
+
+        // These delegates make sure that Material widgets use the correct localization
+        localizationsDelegates: [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: [
+          const Locale('en'), // English
+          const Locale('nl'), // Dutch
+          // Add more supported locales here
+        ],
         debugShowCheckedModeBanner: false,
         home: const Main());
   }
