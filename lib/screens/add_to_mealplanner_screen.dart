@@ -161,7 +161,7 @@ class _AddToMealPlanner extends State<AddToMealPlanner> {
             // Number of People Section
             Row(
               children: [
-                const Text('Number of People:'),
+                const Text('Aantal personen:'),
                 IconButton(
                   icon: const Icon(Icons.remove),
                   onPressed: _decrementPeople,
@@ -182,7 +182,7 @@ class _AddToMealPlanner extends State<AddToMealPlanner> {
             ),
             const SizedBox(height: 5),
             const Text(
-              'You can remove ingredients you already have.',
+              'Je kan ingrediënten verwijderen die je al hebt.',
               style: TextStyle(fontSize: 14, color: Colors.grey),
             ),
             const SizedBox(height: 10),
@@ -275,7 +275,7 @@ class _AddToMealPlanner extends State<AddToMealPlanner> {
             Center(
               child: ElevatedButton(
                 onPressed: _addToMealPlanner,
-                child: const Text('Add to Meal Planner'),
+                child: const Text('Voeg toe aan maaltijdplanner'),
               ),
             ),
             const SizedBox(height: 20),
