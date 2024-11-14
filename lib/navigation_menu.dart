@@ -6,14 +6,15 @@ import 'package:frontend/screens/home_screen.dart';
 import 'package:frontend/screens/weekoverview_screen.dart';
 
 class NavigationMenu extends StatefulWidget {
-  const NavigationMenu({super.key});
+  final int initialIndex;
+  const NavigationMenu({super.key, this.initialIndex = 0});
 
   @override
   State<NavigationMenu> createState() => _NavigationMenuState();
 }
 
 class _NavigationMenuState extends State<NavigationMenu> {
-  int _currentIndex = 0;
+  late int _currentIndex;
 
   var screens = [
     const HomeScreen(),
@@ -22,6 +23,12 @@ class _NavigationMenuState extends State<NavigationMenu> {
     const FavoriteScreen(),
     const AccountScreen()
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex;  // Set the starting index based on the passed parameter
+  }
 
   @override
   Widget build(BuildContext context) {

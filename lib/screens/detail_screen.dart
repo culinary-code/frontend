@@ -5,7 +5,7 @@ import 'package:frontend/models/recipes/ingredients/measurement_type.dart';
 import 'package:frontend/models/recipes/instruction_step.dart';
 import 'package:frontend/models/recipes/recipe.dart';
 import 'package:frontend/models/recipes/recipe_type.dart';
-import 'package:frontend/screens/weekoverview_screen.dart';
+import 'package:frontend/screens/add_to_mealplanner_screen.dart';
 import 'package:frontend/services/recipe_service.dart';
 
 class DetailScreen extends StatelessWidget {
@@ -85,24 +85,23 @@ class _DetailOverviewState extends State<DetailOverview> {
                   textAlign: TextAlign.justify,
                   style: const TextStyle(fontSize: 18)),
             ),
-            const PortionSelector(),
+            PortionSelector(recipeAmountOfPeople: widget.recipe.amountOfPeople,),
             const SizedBox(height: 16.0),
             IngredientsOverview(ingredientList: _ingredients),
             const SizedBox(height: 16.0),
             InstructionsOverview(instructionsSteps: _instructionSteps),
             const SizedBox(height: 16.0),
-            Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 45.0, vertical: 8.0),
-              child: ElevatedButton(
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [ElevatedButton(
                 onPressed: () {
                   Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => const WeekoverviewScreen()));
+                          builder: (context) => AddToMealplannerScreen(recipe: recipe,)));
                 },
                 child: const Text('+ Weekoverzicht'),
-              ),
+              ),]
             ),
             const SizedBox(height: 16.0),
           ],
@@ -248,14 +247,15 @@ class GridItem extends StatelessWidget {
 
 // Hierin maak je een functie waarmee je het aantal porties bepaald.
 class PortionSelector extends StatefulWidget {
-  const PortionSelector({super.key});
+  final int recipeAmountOfPeople;
+  const PortionSelector({super.key, required this.recipeAmountOfPeople});
 
   @override
   State<PortionSelector> createState() => _PortionSelectorState();
 }
 
 class _PortionSelectorState extends State<PortionSelector> {
-  int portions = 2;
+  late int portions;
 
   void addPortions() {
     setState(() {
@@ -267,6 +267,12 @@ class _PortionSelectorState extends State<PortionSelector> {
     setState(() {
       if (portions > 1) portions--;
     });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    portions = widget.recipeAmountOfPeople;
   }
 
   @override
