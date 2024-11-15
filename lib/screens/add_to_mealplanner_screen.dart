@@ -86,6 +86,13 @@ class _AddToMealPlanner extends State<AddToMealPlanner> {
     });
   }
 
+  void addAllIngredients(){
+    setState(() {
+      for (var ingredient in ingredients) {
+        ingredient.isAddedToList = true;
+      }
+    });
+  }
 
   void _addToMealPlanner() async {
     final DateTime today = DateTime.now();
@@ -186,10 +193,17 @@ class _AddToMealPlanner extends State<AddToMealPlanner> {
             const SizedBox(height: 20),
 
             // Ingredients List Section
-            const Text(
-              'Ingrediënten',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Ingrediënten',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                ElevatedButton(onPressed: addAllIngredients, child: const Text('Voeg alle ingredienten toe'),)
+              ],
             ),
+
             const SizedBox(height: 5),
             const Text(
               'Je kan ingrediënten toevoegen aan je boodschappenlijst door te swipen.',
@@ -238,8 +252,10 @@ class AddMealPlannerIngredientQuantity {
 }
 
 // Swipeable table row that changes based on being added to the ingredientlist
-TableRow buildIngredientRow(BuildContext context,
-    AddMealPlannerIngredientQuantity ingredient, VoidCallback toggleItemAddedToRecipe) {
+TableRow buildIngredientRow(
+    BuildContext context,
+    AddMealPlannerIngredientQuantity ingredient,
+    VoidCallback toggleItemAddedToRecipe) {
   final ingredientName =
       ingredient.ingredientQuantity.ingredient.ingredientName;
   final quantity =
@@ -288,7 +304,9 @@ TableRow buildIngredientRow(BuildContext context,
                         size: 30,
                       ),
                       Icon(
-                        (ingredient.isAddedToList) ?  Icons.local_grocery_store : Icons.cancel_outlined,
+                        (ingredient.isAddedToList)
+                            ? Icons.local_grocery_store
+                            : Icons.cancel_outlined,
                         color: Colors.black,
                         size: 30,
                       ),
