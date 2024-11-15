@@ -32,7 +32,7 @@ class AddToMealPlanner extends StatefulWidget {
 class _AddToMealPlanner extends State<AddToMealPlanner> {
   bool isDeleting = false;
   bool isUndoPressed = false;
-  late List<IngredientQuantity> ingredients;
+  late List<AddMealPlannerIngredientQuantity> ingredients;
   late int numberOfPeople;
   late int initialPeopleCount;
   late Map<String, double> originalQuantities;
@@ -60,22 +60,37 @@ class _AddToMealPlanner extends State<AddToMealPlanner> {
     double scaleFactor = numberOfPeople / initialPeopleCount;
     for (var ingredient in ingredients) {
       // Use the id to look up the original quantity in the map
-      double originalQuantity =
-          originalQuantities[ingredient.ingredientQuantityId] ?? 0;
-      ingredient.quantity = originalQuantity * scaleFactor;
+      double originalQuantity = originalQuantities[
+              ingredient.ingredientQuantity.ingredientQuantityId] ??
+          0;
+      ingredient.ingredientQuantity.quantity = originalQuantity * scaleFactor;
     }
   }
 
-  void addItem(IngredientQuantity newIngredient) {
+  void addItem(AddMealPlannerIngredientQuantity newIngredient) {
     setState(() {
       ingredients.add(newIngredient);
     });
   }
 
-  void deleteItem(IngredientQuantity ingredient) {
+  void deleteItem(AddMealPlannerIngredientQuantity ingredient) {
     setState(() {
       ingredients.remove(ingredient);
       isDeleting = true;
+    });
+  }
+
+  void toggleItemAddedToRecipe(AddMealPlannerIngredientQuantity ingredient) {
+    setState(() {
+      ingredient.isAddedToList = !ingredient.isAddedToList;
+    });
+  }
+
+  void addAllIngredients(){
+    setState(() {
+      for (var ingredient in ingredients) {
+        ingredient.isAddedToList = true;
+      }
     });
   }
 
@@ -115,16 +130,18 @@ class _AddToMealPlanner extends State<AddToMealPlanner> {
 
     ingredients = recipe.ingredients.map((ingredient) {
       // Create a new IngredientQuantity object by copying the properties
-      return IngredientQuantity(
-        ingredientQuantityId: ingredient.ingredientQuantityId,
-        ingredient: ingredient.ingredient,
-        quantity: ingredient.quantity, // Copy the quantity
-      );
+      return AddMealPlannerIngredientQuantity(
+          ingredientQuantity: IngredientQuantity(
+            ingredientQuantityId: ingredient.ingredientQuantityId,
+            ingredient: ingredient.ingredient,
+            quantity: ingredient.quantity, // Copy the quantity
+          ),
+          isAddedToList: false);
     }).toList();
 
     // Store the original quantities for scaling purposes
     originalQuantities = {
-      for (var ingredient in ingredients)
+      for (var ingredient in recipe.ingredients)
         ingredient.ingredientQuantityId: ingredient.quantity
     };
 
@@ -176,14 +193,21 @@ class _AddToMealPlanner extends State<AddToMealPlanner> {
             const SizedBox(height: 20),
 
             // Ingredients List Section
-            const Text(
-              'Ingrediënten',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Ingrediënten',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                ElevatedButton(onPressed: addAllIngredients, child: const Text('Voeg alle ingredienten toe'),)
+              ],
             ),
+
             const SizedBox(height: 5),
             const Text(
-              'Je kan ingrediënten verwijderen die je al hebt.',
-              style: TextStyle(fontSize: 14, color: Colors.grey),
+              'Je kan ingrediënten toevoegen aan je boodschappenlijst door te swipen.',
+              style: TextStyle(fontSize: 12, color: Colors.grey),
             ),
             const SizedBox(height: 10),
 
@@ -193,77 +217,10 @@ class _AddToMealPlanner extends State<AddToMealPlanner> {
               defaultVerticalAlignment: TableCellVerticalAlignment.middle,
               children: [
                 ...ingredients.map((ingredient) {
-                  final ingredientName = ingredient.ingredient.ingredientName;
-                  final quantity =
-                      '${ingredient.quantity == ingredient.quantity.toInt() ? ingredient.quantity.toInt() // Display as integer if it's a whole number
-                          : ingredient.quantity.toStringAsFixed(2)} ${(ingredient.quantity > 1) ? measurementTypeToStringMultipleNl(ingredient.ingredient.measurement) : measurementTypeToStringNl(ingredient.ingredient.measurement)}';
-
-                  return TableRow(
-                    children: [
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.middle,
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 8.0),
-                          child: Dismissible(
-                            background: Container(
-                              color: Colors.red,
-                            ),
-                            key: Key(ingredient.ingredientQuantityId),
-                            direction: DismissDirection.endToStart,
-                            onDismissed: (direction) {
-                              deleteItem(ingredient);
-                              ScaffoldMessenger.of(context)
-                                  .showSnackBar(SnackBar(
-                                content: Text('$ingredientName is verwijderd'),
-                                action: SnackBarAction(
-                                    label: "Ongedaan maken",
-                                    onPressed: () {
-                                      isUndoPressed = true;
-                                      setState(() {
-                                        isDeleting = false;
-                                        ingredients.add(ingredient);
-                                      });
-                                    }),
-                              ));
-                            },
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    ingredientName,
-                                    style: const TextStyle(fontSize: 16),
-                                  ),
-                                ),
-                                Padding(
-                                  padding: EdgeInsets.fromLTRB(8, 0, 16, 0),
-                                  child: Text(
-                                    quantity,
-                                    style: const TextStyle(fontSize: 16),
-                                  ),
-                                ),
-                                Container(
-                                  color: Colors.red,
-                                  child: const Row(
-                                    children: [
-                                      Icon(
-                                        Icons.keyboard_arrow_left,
-                                        size: 30,
-                                      ),
-                                      Icon(
-                                        Icons.delete,
-                                        color: Colors.black,
-                                        size: 30,
-                                      )
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+                  return buildIngredientRow(
+                    context,
+                    ingredient,
+                    () => toggleItemAddedToRecipe(ingredient),
                   );
                 })
               ],
@@ -284,4 +241,83 @@ class _AddToMealPlanner extends State<AddToMealPlanner> {
       ),
     );
   }
+}
+
+class AddMealPlannerIngredientQuantity {
+  final IngredientQuantity ingredientQuantity;
+  bool isAddedToList = false;
+
+  AddMealPlannerIngredientQuantity(
+      {required this.ingredientQuantity, required this.isAddedToList});
+}
+
+// Swipeable table row that changes based on being added to the ingredientlist
+TableRow buildIngredientRow(
+    BuildContext context,
+    AddMealPlannerIngredientQuantity ingredient,
+    VoidCallback toggleItemAddedToRecipe) {
+  final ingredientName =
+      ingredient.ingredientQuantity.ingredient.ingredientName;
+  final quantity =
+      '${ingredient.ingredientQuantity.quantity == ingredient.ingredientQuantity.quantity.toInt() ? ingredient.ingredientQuantity.quantity.toInt() // Display as integer if it's a whole number
+          : ingredient.ingredientQuantity.quantity.toStringAsFixed(2)} ${(ingredient.ingredientQuantity.quantity > 1) ? measurementTypeToStringMultipleNl(ingredient.ingredientQuantity.ingredient.measurement) : measurementTypeToStringNl(ingredient.ingredientQuantity.ingredient.measurement)}';
+
+  return TableRow(
+    children: [
+      TableCell(
+        verticalAlignment: TableCellVerticalAlignment.middle,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 8.0),
+          child: Dismissible(
+            background: Container(
+              color: (ingredient.isAddedToList) ? Colors.green : Colors.red,
+            ),
+            key: Key(ingredient.ingredientQuantity.ingredientQuantityId),
+            direction: DismissDirection.endToStart,
+            confirmDismiss: (direction) async {
+              // Update the state when swiped
+              toggleItemAddedToRecipe();
+              return false; // Prevent the item from being dismissed
+            },
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    ingredientName,
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 0, 16, 0),
+                  child: Text(
+                    quantity,
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                ),
+                Container(
+                  color: (ingredient.isAddedToList) ? Colors.green : Colors.red,
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.keyboard_arrow_left,
+                        size: 30,
+                      ),
+                      Icon(
+                        (ingredient.isAddedToList)
+                            ? Icons.local_grocery_store
+                            : Icons.cancel_outlined,
+                        color: Colors.black,
+                        size: 30,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ],
+  );
 }
