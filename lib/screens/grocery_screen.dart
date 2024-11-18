@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/models/recipes/ingredients/ingredient.dart';
+import 'package:frontend/models/recipes/ingredients/item_quantity.dart';
+import 'package:frontend/models/recipes/ingredients/measurement_type.dart';
+import 'package:uuid/uuid.dart';
 
+import '../Services/keycloak_service.dart';
 import '../models/groceryListItem.dart';
+import '../services/grocery_list_service.dart';
 
 class GroceryScreen extends StatelessWidget {
   const GroceryScreen({super.key});
@@ -40,14 +46,21 @@ class GroceryList extends StatefulWidget {
 class _GroceryListState extends State<GroceryList> {
   bool isDeleting = false;
   bool isUndoPressed = false;
+  late List<ItemQuantity> groceryList = [];
+  final Uuid uuid = Uuid();
+  final GroceryListService groceryListService = GroceryListService();
+  final KeycloakService keycloakService = KeycloakService();
 
-  late final List<String> groceryList = [
+
+
+  /* late final List<String> groceryList = [
     "1 stuk savooi",
     "500g gehakt",
     "600g aardappelen",
     "1kg appels",
     "500g wortels",
   ];
+
 
   late final List<GroceryListItem> groceryList2 = [
     GroceryListItem(productName: "savooi", quantity: 1, measurement: "stuk"),
@@ -60,9 +73,24 @@ class _GroceryListState extends State<GroceryList> {
     setState(() {
       groceryList.add(newItem);
     });
+  }*/
+
+  void addItem(ItemQuantity newItem) async {
+    setState(() {
+      groceryList.add(newItem);
+    });
+    //addItemToGroceryList(newItem);
+
+    String? groceryListId = await groceryListService.getGroceryListId('6ceed686-8784-4386-9a0b-899dd7fde3e3');
+    if (groceryListId == null) {
+      print('id: $groceryListId');
+      print('Failed to fetch grocery list ID');
+      return;
+    }
+    groceryListService.addItemToGroceryList(groceryListId, newItem);
   }
 
-  void deleteItem(String item) {
+  void deleteItem(ItemQuantity item) {
     setState(() {
       groceryList.remove(item);
       isDeleting = true;
@@ -109,7 +137,7 @@ class _GroceryListState extends State<GroceryList> {
                         ),
                       ),
                     ]),
-                ...groceryList.map((groceryItem) {
+                ...groceryList.map((item) {
                   return TableRow(
                     children: [
                       TableCell(
@@ -120,20 +148,20 @@ class _GroceryListState extends State<GroceryList> {
                             background: Container(
                               color: Colors.red,
                             ),
-                            key: Key(groceryItem),
+                            key: Key(item.itemQuantityId),
                             direction: DismissDirection.endToStart,
                             onDismissed: (direction) {
-                              deleteItem(groceryItem);
+                              deleteItem(item);
                               ScaffoldMessenger.of(context)
                                   .showSnackBar(SnackBar(
-                                content: Text('$groceryItem is verwijderd'),
+                                content: Text('$item is verwijderd'),
                                 action: SnackBarAction(
                                     label: "Ongedaan maken",
                                     onPressed: () {
                                       isUndoPressed = true;
                                       setState(() {
                                         isDeleting = false;
-                                        groceryList.add(groceryItem);
+                                        groceryList.add(item);
                                       });
                                     }),
                               ));
@@ -144,7 +172,7 @@ class _GroceryListState extends State<GroceryList> {
                                 Align(
                                   alignment: Alignment.centerLeft,
                                   child: Text(
-                                    groceryItem,
+                                    item.ingredient.ingredientName,
                                     style: const TextStyle(fontSize: 22),
                                   ),
                                 ),
@@ -167,7 +195,36 @@ class _GroceryListState extends State<GroceryList> {
                 })
               ],
             ),
-            Padding(
+            Padding(padding: const EdgeInsets.symmetric(vertical: 10),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconButton(
+                    onPressed: () {
+                      showDialog(context: context, builder: (context) {
+                        return DialogInputGrocery(onAdd: (name, quantity, measurement) {
+                          final newItem =
+                          ItemQuantity(
+                              itemQuantityId: uuid.v4(),
+                              quantity: quantity,
+                              ingredient: Ingredient(
+                              ingredientId: 'ingredient-id',
+                                  ingredientName: name,
+                                  measurement: measurement,
+                                  ingredientQuantities: [],
+                              ),
+                          );
+                          addItem(newItem);
+                        });
+                      });
+                    }, 
+                    icon: const Icon(Icons.add_box, size: 50),
+                )
+              ],
+            ),)
+            
+            
+            /*Padding(
               padding: const EdgeInsets.symmetric(vertical: 10),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -229,7 +286,7 @@ class _GroceryListState extends State<GroceryList> {
                   ),
                 ],
               ),
-            ),
+            ),*/
           ],
         ),
       ),
@@ -238,7 +295,7 @@ class _GroceryListState extends State<GroceryList> {
 }
 
 class DialogInputGrocery extends StatefulWidget {
-  final Function(String) onAdd;
+  final Function(String, double, MeasurementType) onAdd;
 
   const DialogInputGrocery({super.key, required this.onAdd});
 
@@ -247,12 +304,64 @@ class DialogInputGrocery extends StatefulWidget {
 }
 
 class _DialogInputGroceryState extends State<DialogInputGrocery> {
-  final TextEditingController controller = TextEditingController();
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController quantityController = TextEditingController();
+  MeasurementType selectedMeasurement = MeasurementType.piece;
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text('Wat wil je toevoegen?'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: nameController,
+            decoration: const InputDecoration(hintText: "Naam"),
+          ),
+          TextField(
+            controller: quantityController,
+            decoration: const InputDecoration(hintText: '1'),
+            keyboardType: TextInputType.number,
+          ),
+          DropdownButton<MeasurementType>(
+            value: selectedMeasurement,
+            onChanged: (MeasurementType? newValue) {
+              setState(() {
+                selectedMeasurement = newValue!;
+              });
+            },
+            items: MeasurementType.values.map((MeasurementType measurement) {
+              return DropdownMenuItem<MeasurementType>(
+                value: measurement,
+                child: Text(measurementTypeToStringNl(measurement)),
+              );
+            }).toList(),
+          )
+        ],
+      ),
+      actions: [
+        TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            }, 
+            child: const Text('Annuleer')
+        ),
+        TextButton(
+            onPressed: () {
+              final name = nameController.text.trim();
+              final quantity = double.tryParse(quantityController.text.trim()) ?? 1.0;
+              
+              if (name.isNotEmpty && quantity > 0) {
+                widget.onAdd(name, quantity, selectedMeasurement);
+              }
+              Navigator.of(context).pop();
+            },
+            child: const Text('Voeg toe')
+        )
+      ],
+
+      /*
       content: TextField(
         controller: controller,
       ),
@@ -272,9 +381,13 @@ class _DialogInputGroceryState extends State<DialogInputGrocery> {
               Navigator.of(context).pop();
             },
             child: const Text('Voeg toe'))
-      ],
+      ],*/
     );
   }
+}
+
+Future<void> addItemToGroceryList(ItemQuantity item) async {
+  print('Adding item: ${item.ingredient.ingredientName}, Quantity: ${item.quantity}');
 }
 
 Future<void> showEditDialog({
