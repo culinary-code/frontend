@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/models/recipes/ingredients/ingredient.dart';
 import 'package:frontend/models/recipes/ingredients/item_quantity.dart';
 import 'package:frontend/models/recipes/ingredients/measurement_type.dart';
+import 'package:frontend/services/account_service.dart';
 import 'package:uuid/uuid.dart';
 
 import '../Services/keycloak_service.dart';
@@ -50,6 +51,7 @@ class _GroceryListState extends State<GroceryList> {
   final Uuid uuid = Uuid();
   final GroceryListService groceryListService = GroceryListService();
   final KeycloakService keycloakService = KeycloakService();
+  final AccountService accountService = AccountService();
 
 
 
@@ -81,13 +83,17 @@ class _GroceryListState extends State<GroceryList> {
     });
     //addItemToGroceryList(newItem);
 
-    String? groceryListId = await groceryListService.getGroceryListId('6ceed686-8784-4386-9a0b-899dd7fde3e3');
-    if (groceryListId == null) {
-      print('id: $groceryListId');
+    final String id = '6ceed686-8784-4386-9a0b-899dd7fde3e3';
+    Uuid.parse(id);
+
+    String? userId = await groceryListService.getUserIdForGroceryList(id);
+    //String? groceryListId = await accountService.fetchUser(userId);
+    if (userId == null) {
+      print('id: $userId');
       print('Failed to fetch grocery list ID');
       return;
     }
-    groceryListService.addItemToGroceryList(groceryListId, newItem);
+    groceryListService.addItemToGroceryList(userId, newItem);
   }
 
   void deleteItem(ItemQuantity item) {

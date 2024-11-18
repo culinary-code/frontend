@@ -19,6 +19,7 @@ class ApiClient {
       },
     );
 
+    print(response.body);
     return response;
   }
 
