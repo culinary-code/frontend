@@ -6,6 +6,9 @@ import 'package:frontend/models/recipes/ingredients/item_quantity.dart';
 import 'package:frontend/services/api_client.dart';
 import 'package:http/http.dart' as http;
 
+import '../models/recipes/ingredients/ingredient.dart';
+import '../models/recipes/ingredients/measurement_type.dart';
+
 class GroceryListService {
   final FlutterSecureStorage storage = FlutterSecureStorage();
 
@@ -13,7 +16,7 @@ class GroceryListService {
       dotenv.env['BACKEND_BASE_URL'] ??
       (throw Exception('Environment variable BACKEND_BASE_URL not found'));
 
-  Future<String?> getUserIdForGroceryList(String id) async {
+  Future<String?> getGroceryListId() async {
     try {
       print('Janno');
       final response =
@@ -24,73 +27,22 @@ class GroceryListService {
         return null;
       }
 
-      print(
-          'Requesting grocery list with access token to $backendUrl/api/Grocery/account/grocery-list');
+      print('Requesting grocery list with access token to $backendUrl/api/Grocery/account/grocery-list');
 
       if (response.statusCode == 200) {
         print('Successfully fetched grocery list: ${response.body}');
         Map<String, dynamic> responseBody = json.decode(response.body);
 
         String? groceryId = responseBody['groceryListId'];
+        print('groceryId $groceryId' + responseBody['groceryListId']);
+
         if (groceryId == null) {
           print('groceryListId is null in the response.');
           return null;
         }
 
-        String accountId = responseBody['accountId'];
-        //String groceryId = responseBody['groceryListId'];
-
-        print('GroceryIDDDD ID: $groceryId');
-        return response.body;
+        return groceryId;
         //return response.body;
-      } else if (response.statusCode == 401) {
-        print('Unauthorized: Invalid access token');
-        return null;
-      } else if (response.statusCode == 404) {
-        print('Grocery list not found: ${response.body}');
-        return null;
-      } else {
-        print(
-            'Failed to fetch grocery list: ${response.statusCode}, Response: ${response.body}');
-        return null;
-      }
-    } catch (e) {
-      print('Error fetching grocery list ID: $e');
-      return id;
-    }
-  }
-
-  /*Future<String?> getGroceryListById(String id) async {
-    try {
-      print(
-          'Requesting grocery list with access token to $backendUrl/api/account/grocery-list');
-
-      final response =
-          await ApiClient().authorizedGet('api/account/grocery-list');
-
-      if (response.statusCode == 200) {
-        print('Successfully fetched grocery list: ${response.body}');
-        Map<String, dynamic> responseBody = json.decode(response.body);
-
-        if (responseBody.containsKey('groceryListId') &&
-            responseBody['groceryListId'] != null) {
-          final groceryListData = responseBody['groceryListId'];
-
-          if (groceryListData is String) {
-            print('GroceryList ID: $groceryListData');
-            return groceryListData;
-          }
-
-          if (groceryListData is Map<String, dynamic> &&
-              groceryListData.containsKey('id')) {
-            String groceryListId = groceryListData['id'];
-            print('GroceryList ID from object: $groceryListId');
-            return groceryListId;
-          }
-        }
-
-        print('Grocery list is null or improperly formatted.');
-        return null;
       } else if (response.statusCode == 401) {
         print('Unauthorized: Invalid access token');
         return null;
@@ -106,7 +58,8 @@ class GroceryListService {
       print('Error fetching grocery list ID: $e');
       return null;
     }
-  }*/
+  }
+
 
   Future<void> addItemToGroceryList(
       String groceryListId, ItemQuantity item) async {
@@ -147,4 +100,56 @@ class GroceryListService {
       print("Error adding item: $e");
     }
   }
+
+  Future<List<ItemQuantity>> getGroceryItems() async {
+    try {
+      final groceryListId = await getGroceryListId();
+      if (groceryListId == null) {
+        throw Exception('No grocery list found');
+      }
+
+      final response = await ApiClient().authorizedGet('api/Grocery/account/grocery-list');
+
+      if (response.statusCode != 200) {
+        throw FormatException('Failed to load grocery items: ${response.body}');
+      }
+
+      final Map<String, dynamic> responseBody = json.decode(response.body);
+
+      // Combine the 'items' and 'ingredients' data from the response
+      final List<ItemQuantity> groceryItems = [];
+
+      final items = responseBody['items'] as List<dynamic>;
+      final ingredients = responseBody['ingredients'] as List<dynamic>;
+
+      for (int i = 0; i < items.length; i++) {
+        final item = items[i];
+        final ingredientData = ingredients.firstWhere(
+                (ingredient) => ingredient['ingredientQuantityId'] == item['ingredientQuantityId'],
+            orElse: () => {});
+
+        // Only add if a valid ingredient is found for this item
+        if (ingredientData.isNotEmpty) {
+          final ingredient = Ingredient(
+            ingredientId: ingredientData['ingredient']['ingredientId'],
+            ingredientName: ingredientData['ingredient']['ingredientName'],
+            measurement: intToMeasurementType(ingredientData['ingredient']['measurement']),
+            ingredientQuantities: [], // If necessary, populate this too
+          );
+
+          groceryItems.add(ItemQuantity(
+            itemQuantityId: item['ingredientQuantityId'],
+            quantity: item['quantity'].toDouble(),
+            ingredient: ingredient,
+          ));
+        }
+      }
+
+      return groceryItems;
+    } catch (e) {
+      print('Error fetching grocery items: $e');
+      return [];
+    }
+  }
+
 }

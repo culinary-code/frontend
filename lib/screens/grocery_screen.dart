@@ -53,40 +53,216 @@ class _GroceryListState extends State<GroceryList> {
   final KeycloakService keycloakService = KeycloakService();
   final AccountService accountService = AccountService();
 
-
-
-  /* late final List<String> groceryList = [
-    "1 stuk savooi",
-    "500g gehakt",
-    "600g aardappelen",
-    "1kg appels",
-    "500g wortels",
-  ];
-
-
-  late final List<GroceryListItem> groceryList2 = [
-    GroceryListItem(productName: "savooi", quantity: 1, measurement: "stuk"),
-    GroceryListItem(productName: "gehakt", quantity: 500, measurement: "g"),
-    GroceryListItem(
-        productName: "aardappelen", quantity: 600, measurement: "g"),
-  ];
-
-  void addItem(String newItem) {
+  void addItem(ItemQuantity newItem) async {
     setState(() {
       groceryList.add(newItem);
     });
-  }*/
+
+    String? userId = await groceryListService.getGroceryListId();
+    if (userId == null) {
+      print('id: $userId');
+      print('Failed to fetch grocery list ID');
+      return;
+    }
+    groceryListService.addItemToGroceryList(userId, newItem);
+  }
+
+  void deleteItem(ItemQuantity item) {
+    setState(() {
+      groceryList.remove(item);
+      isDeleting = true;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2),
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          children: [
+            Table(
+              border: TableBorder.all(color: Colors.blueGrey.shade200), // Added border to cells
+              defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+              children: [
+                TableRow(
+                    decoration: BoxDecoration(
+                      color: Colors.blueGrey[200],
+                    ),
+                    children: const [
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.middle,
+                        child: Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Align(
+                                alignment: Alignment.center,
+                                child: Text(
+                                  'Boodschappenlijst',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold, fontSize: 25),
+                                ),
+                              ),
+                              Icon(Icons.shopping_cart, size: 30,)
+                            ],
+                          ),
+                        ),
+                      ),
+                    ]),
+                ...groceryList.map((item) {
+                  return TableRow(
+                    children: [
+                      Dismissible(
+                        background: Container(
+                          color: Colors.red,
+                        ),
+                        key: Key(item.itemQuantityId),
+                        direction: DismissDirection.endToStart,
+                        onDismissed: (direction) {
+                          deleteItem(item);
+                          ScaffoldMessenger.of(context)
+                              .showSnackBar(SnackBar(
+                            content: Text('$item is verwijderd'),
+                            action: SnackBarAction(
+                                label: "Ongedaan maken",
+                                onPressed: () {
+                                  isUndoPressed = true;
+                                  setState(() {
+                                    isDeleting = false;
+                                    groceryList.add(item);
+                                  });
+                                }),
+                          ));
+                        },
+                        child: Container(
+                          child: Table(
+                            children: [
+                              TableRow(
+                                children: [
+                                  // Ingredient Name Column
+                                  TableCell(
+                                    verticalAlignment:
+                                    TableCellVerticalAlignment.middle,
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Text(
+                                        item.ingredient.ingredientName,
+                                        style: const TextStyle(fontSize: 22),
+                                      ),
+                                    ),
+                                  ),
+                                  // Measurement Column
+                                  TableCell(
+                                    verticalAlignment:
+                                    TableCellVerticalAlignment.middle,
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Text(
+                                        item.ingredient.measurement.name,
+                                        style: const TextStyle(fontSize: 22),
+                                      ),
+                                    ),
+                                  ),
+                                  // Quantity Column
+                                  TableCell(
+                                    verticalAlignment:
+                                    TableCellVerticalAlignment.middle,
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Text(
+                                        item.quantity.toString(),
+                                        style: const TextStyle(fontSize: 22),
+                                      ),
+                                    ),
+                                  ),
+                                  // Delete Icon Column: Always show the delete icon
+                                  TableCell(
+                                    verticalAlignment: TableCellVerticalAlignment.middle,
+                                    child: Container(
+                                      color: Colors.red,
+                                      child: const Row(
+                                        children: [
+                                          Icon(Icons.keyboard_arrow_left, size: 30,),
+                                          Icon(Icons.delete, color: Colors.black, size: 30,)
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                })
+              ],
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IconButton(
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) {
+                          return DialogInputGrocery(onAdd: (name, quantity, measurement) {
+                            final newItem = ItemQuantity(
+                              itemQuantityId: uuid.v4(),
+                              quantity: quantity,
+                              ingredient: Ingredient(
+                                ingredientId: uuid.v4(),
+                                ingredientName: name,
+                                measurement: measurement,
+                                ingredientQuantities: [],
+                              ),
+                            );
+                            addItem(newItem);
+                          });
+                        },
+                      );
+                    },
+                    icon: const Icon(Icons.add_box, size: 50),
+                  )
+                ],
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+
+/*class GroceryList extends StatefulWidget {
+  const GroceryList({super.key});
+
+  @override
+  State<GroceryList> createState() => _GroceryListState();
+}
+
+class _GroceryListState extends State<GroceryList> {
+  bool isDeleting = false;
+  bool isUndoPressed = false;
+  late List<ItemQuantity> groceryList = [];
+  final Uuid uuid = Uuid();
+  final GroceryListService groceryListService = GroceryListService();
+  final KeycloakService keycloakService = KeycloakService();
+  final AccountService accountService = AccountService();
 
   void addItem(ItemQuantity newItem) async {
     setState(() {
       groceryList.add(newItem);
     });
-    //addItemToGroceryList(newItem);
 
-    final String id = 'd1ec841b-9646-4ca7-a1ef-eda7354547f3';
-    Uuid.parse(id);
-
-    String? userId = await groceryListService.getUserIdForGroceryList(id);
+    String? userId = await groceryListService.getGroceryListId();
     if (userId == null) {
       print('id: $userId');
       print('Failed to fetch grocery list ID');
@@ -136,9 +312,7 @@ class _GroceryListState extends State<GroceryList> {
                               ),
                               Icon(Icons.shopping_cart, size: 30,)
                             ],
-                          )
-
-                          ,
+                          ),
                         ),
                       ),
                     ]),
@@ -201,103 +375,39 @@ class _GroceryListState extends State<GroceryList> {
               ],
             ),
             Padding(padding: const EdgeInsets.symmetric(vertical: 10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconButton(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IconButton(
                     onPressed: () {
                       showDialog(context: context, builder: (context) {
                         return DialogInputGrocery(onAdd: (name, quantity, measurement) {
                           final newItem =
                           ItemQuantity(
-                              itemQuantityId: uuid.v4(),
-                              quantity: quantity,
-                              ingredient: Ingredient(
+                            itemQuantityId: uuid.v4(),
+                            quantity: quantity,
+                            ingredient: Ingredient(
                               ingredientId: uuid.v4(),
-                                  ingredientName: name,
-                                  measurement: measurement,
-                                  ingredientQuantities: [],
-                              ),
+                              ingredientName: name,
+                              measurement: measurement,
+                              ingredientQuantities: [],
+                            ),
                           );
                           addItem(newItem);
                         });
                       });
-                    }, 
-                    icon: const Icon(Icons.add_box, size: 50),
-                )
-              ],
-            ),)
-            
-            
-            /*Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.add_box, size: 50),
-                    onPressed: () {
-                      showDialog(
-                          context: context,
-                          builder: (context) {
-                            return DialogInputGrocery(onAdd: (newItem) {
-                              if (groceryList.contains(newItem)) {
-                                Future.delayed(Duration.zero, () {
-                                  if (!context.mounted) return;
-                                  showDialog(
-                                      context: context,
-                                      builder: (context) {
-                                        return AlertDialog(
-                                          title: const Text(
-                                              'Dit staat al op jouw lijstje, wil je dit aanpassen?'),
-                                          actions: [
-                                            TextButton(
-                                                onPressed: () {
-                                                  Navigator.pop(context);
-                                                  showEditDialog(
-                                                      context: context,
-                                                      currentItem: newItem,
-                                                      groceryList: groceryList,
-                                                      onItemUpdated:
-                                                          (updatedItem) {
-                                                        setState(() {
-                                                          int index =
-                                                          groceryList
-                                                              .indexOf(
-                                                              newItem);
-                                                          if (index != -1) {
-                                                            groceryList[index] =
-                                                                updatedItem;
-                                                          }
-                                                        });
-                                                      });
-                                                },
-                                                child: const Text('Ja')),
-                                            TextButton(
-                                                onPressed: () {
-                                                  Navigator.pop(context);
-                                                },
-                                                child: const Text('Nee')),
-                                          ],
-                                        );
-                                      });
-                                });
-                              } else {
-                                addItem(newItem);
-                              }
-                            });
-                          });
                     },
-                  ),
+                    icon: const Icon(Icons.add_box, size: 50),
+                  )
                 ],
               ),
-            ),*/
+            )
           ],
         ),
       ),
     );
   }
-}
+}*/
 
 class DialogInputGrocery extends StatefulWidget {
   final Function(String, double, MeasurementType) onAdd;
@@ -349,14 +459,14 @@ class _DialogInputGroceryState extends State<DialogInputGrocery> {
         TextButton(
             onPressed: () {
               Navigator.of(context).pop();
-            }, 
+            },
             child: const Text('Annuleer')
         ),
         TextButton(
             onPressed: () {
               final name = nameController.text.trim();
               final quantity = double.tryParse(quantityController.text.trim()) ?? 1.0;
-              
+
               if (name.isNotEmpty && quantity > 0) {
                 widget.onAdd(name, quantity, selectedMeasurement);
               }
