@@ -87,13 +87,13 @@ class _GroceryListState extends State<GroceryList> {
     Uuid.parse(id);
 
     String? userId = await groceryListService.getUserIdForGroceryList(id);
-    //String? groceryListId = await accountService.fetchUser(userId);
+    String? groceryListId = await groceryListService.getGroceryListById(userId!);
     if (userId == null) {
       print('id: $userId');
       print('Failed to fetch grocery list ID');
       return;
     }
-    groceryListService.addItemToGroceryList(userId, newItem);
+    groceryListService.addItemToGroceryList('15a3b9da-5564-4a68-8530-5cf2973fa501', newItem);
   }
 
   void deleteItem(ItemQuantity item) {
@@ -214,7 +214,7 @@ class _GroceryListState extends State<GroceryList> {
                               itemQuantityId: uuid.v4(),
                               quantity: quantity,
                               ingredient: Ingredient(
-                              ingredientId: 'ingredient-id',
+                              ingredientId: uuid.v4(),
                                   ingredientName: name,
                                   measurement: measurement,
                                   ingredientQuantities: [],

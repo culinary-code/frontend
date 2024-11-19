@@ -30,11 +30,10 @@ class GroceryListService {
         print('Successfully fetched grocery list: ${response.body}');
         Map<String, dynamic> responseBody = json.decode(response.body);
 
-        // Extract the accountId from the parsed JSON
         String accountId = responseBody['accountId'];
 
         print('Account ID: $accountId');
-        return accountId; // Return the accountId
+        return accountId;
         //return response.body;
       } else if (response.statusCode == 401) {
         print('Unauthorized: Invalid access token');
@@ -53,30 +52,49 @@ class GroceryListService {
     }
   }
 
-  /*
-  Future<String?> getGroceryListId(String id) async {
+
+  Future<String?> getGroceryListById(String id) async {
     try {
-      final accessToken = await ApiClient().authorizedGet(id);
+      print(
+          'Requesting grocery list with access token to $backendUrl/api/account/grocery-list');
 
-      if (accessToken == null) {
-        print('No access token available');
-        return null;
-      }
-
-      final response = await http.get(
-        Uri.parse('$backendUrl/account/grocery-list'),
-        headers: {
-          'Authorization': 'Bearer $accessToken',
-          'Content-Type': 'application/json',
-        },
-      );
-
-      print('Making request to $backendUrl/account/grocery-list');
+      final response = await ApiClient().authorizedGet('api/account/grocery-list');
 
       if (response.statusCode == 200) {
-        return response.body;
+        print('Successfully fetched grocery list: ${response.body}');
+        Map<String, dynamic> responseBody = json.decode(response.body);
+
+        // Check if groceryList exists and extract its ID
+        if (responseBody.containsKey('groceryListId') && responseBody['groceryListId'] != null) {
+          final groceryListData = responseBody['groceryListId'];
+
+          // If groceryList is just a string ID
+          if (groceryListData is String) {
+            print('GroceryList ID: $groceryListData');
+            return groceryListData;
+          }
+
+          // If groceryList is an object, extract its ID
+          if (groceryListData is Map<String, dynamic> &&
+              groceryListData.containsKey('id')) {
+            String groceryListId = groceryListData['id'];
+            print('GroceryList ID from object: $groceryListId');
+            return groceryListId;
+          }
+        }
+
+        print('Grocery list is null or improperly formatted.');
+        return null;
+
+      } else if (response.statusCode == 401) {
+        print('Unauthorized: Invalid access token');
+        return null;
+      } else if (response.statusCode == 404) {
+        print('Grocery list not found: ${response.body}');
+        return null;
       } else {
-        print('Failed to fetch grocery list ID: ${response.statusCode}');
+        print(
+            'Failed to fetch grocery list: ${response.statusCode}, Response: ${response.body}');
         return null;
       }
     } catch (e) {
@@ -84,17 +102,18 @@ class GroceryListService {
       return null;
     }
   }
-*/
+
+
 
   Future<void> addItemToGroceryList(
       String groceryListId, ItemQuantity item) async {
     final Uri url =
         Uri.parse("$backendUrl/api/Grocery/$groceryListId/add-item");
     try {
-      final response = await ApiClient().authorizedPost(
+      final response = await ApiClient().authorizedPut(
         'api/Grocery/$groceryListId/add-item',
         {
-          "itemQuantityId": item.itemQuantityId,
+          "ingredientQuantityId": item.itemQuantityId,
           "quantity": item.quantity,
           "ingredient": {
             "ingredientId": item.ingredient.ingredientId,
@@ -125,6 +144,15 @@ class GroceryListService {
       print("Error adding item: $e");
     }
   }
+
+
+
+
+
+
+
+
+
 
 /* final FlutterSecureStorage storage = FlutterSecureStorage();
 
