@@ -6,7 +6,9 @@ import 'package:frontend/models/recipes/recipe_filter.dart';
 import 'package:frontend/screens/create_recipe_screen.dart';
 import 'package:frontend/screens/detail_screen.dart';
 import 'package:frontend/services/recipe_service.dart';
+import 'package:frontend/state/RecipeFilterOptionsProvider.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -35,18 +37,14 @@ class _RecipeOverviewState extends State<RecipeOverview> {
   FilterType selectedFilter = FilterType.select;
   String ingredient = '';
 
-  List<FilterOption> filters = [
-    // FilterOption(value: "aardappel", type: FilterType.ingredient),
-    // FilterOption(value: "makkelijk", type: FilterType.difficulty),
-    // FilterOption(value: "50", type: FilterType.cookTime),
-    // FilterOption(value: "ontbijt", type: FilterType.mealType)
-  ];
+  List<FilterOption> filters = [];
   String recipeNameFilter = "";
 
   @override
   void initState() {
     super.initState();
     _recipesFuture = RecipeService().getRecipes();
+
   }
 
   @override
@@ -119,6 +117,9 @@ class _RecipeOverviewState extends State<RecipeOverview> {
 
   @override
   Widget build(BuildContext context) {
+    var recipeFilterOptionsProvider = Provider.of<RecipeFilterOptionsProvider>(context);
+    filters = recipeFilterOptionsProvider.filterOptions;
+    _onFilterChanged();
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 8.0),
       child: Column(
