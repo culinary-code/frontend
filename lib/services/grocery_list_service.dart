@@ -15,8 +15,9 @@ class GroceryListService {
 
   Future<String?> getUserIdForGroceryList(String id) async {
     try {
+      print('Janno');
       final response =
-          await ApiClient().authorizedGet('api/account/grocery-list');
+          await ApiClient().authorizedGet('api/Grocery/account/grocery-list');
 
       if (response == null) {
         print('No access token available');
@@ -24,17 +25,23 @@ class GroceryListService {
       }
 
       print(
-          'Requesting grocery list with access token to $backendUrl/api/account/grocery-list');
+          'Requesting grocery list with access token to $backendUrl/api/Grocery/account/grocery-list');
 
       if (response.statusCode == 200) {
         print('Successfully fetched grocery list: ${response.body}');
         Map<String, dynamic> responseBody = json.decode(response.body);
 
-        String accountId = responseBody['accountId'];
-        String groceryId = responseBody['groceryListId'];
+        String? groceryId = responseBody['groceryListId'];
+        if (groceryId == null) {
+          print('groceryListId is null in the response.');
+          return null;
+        }
 
-        print('Account ID: $accountId');
-        return accountId;
+        String accountId = responseBody['accountId'];
+        //String groceryId = responseBody['groceryListId'];
+
+        print('GroceryIDDDD ID: $groceryId');
+        return response.body;
         //return response.body;
       } else if (response.statusCode == 401) {
         print('Unauthorized: Invalid access token');
@@ -53,7 +60,7 @@ class GroceryListService {
     }
   }
 
-  Future<String?> getGroceryListById(String id) async {
+  /*Future<String?> getGroceryListById(String id) async {
     try {
       print(
           'Requesting grocery list with access token to $backendUrl/api/account/grocery-list');
@@ -99,7 +106,7 @@ class GroceryListService {
       print('Error fetching grocery list ID: $e');
       return null;
     }
-  }
+  }*/
 
   Future<void> addItemToGroceryList(
       String groceryListId, ItemQuantity item) async {
