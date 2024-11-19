@@ -93,7 +93,7 @@ class _GroceryListState extends State<GroceryList> {
       print('Failed to fetch grocery list ID');
       return;
     }
-    groceryListService.addItemToGroceryList('15a3b9da-5564-4a68-8530-5cf2973fa501', newItem);
+    groceryListService.addItemToGroceryList(groceryListId!, newItem);
   }
 
   void deleteItem(ItemQuantity item) {
