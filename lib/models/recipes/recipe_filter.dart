@@ -26,20 +26,6 @@ class FilterOption {
   FilterOption({required this.value, required this.type});
 }
 
-Color getFilterColor(FilterType type) {
-  switch (type) {
-    case FilterType.ingredient:
-      return Colors.greenAccent;
-    case FilterType.difficulty:
-      return Colors.yellowAccent;
-    case FilterType.cookTime:
-      return Colors.blueAccent;
-    case FilterType.mealType:
-      return Colors.redAccent;
-    default:
-      return Colors.grey;
-  }
-}
 
 IconData getFilterIcon(FilterType type) {
   switch (type) {

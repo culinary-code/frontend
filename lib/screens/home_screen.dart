@@ -5,7 +5,6 @@ import 'package:frontend/models/recipes/recipe.dart';
 import 'package:frontend/models/recipes/recipe_filter.dart';
 import 'package:frontend/screens/create_recipe_screen.dart';
 import 'package:frontend/screens/detail_screen.dart';
-import 'package:frontend/services/recipe_service.dart';
 import 'package:frontend/state/RecipeFilterOptionsProvider.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
@@ -31,7 +30,7 @@ class RecipeOverview extends StatefulWidget {
 
 class _RecipeOverviewState extends State<RecipeOverview> {
   late Future<List<Recipe>> _recipesFuture;
-  final TextEditingController _searchController = TextEditingController();
+  late TextEditingController _searchController = TextEditingController();
   Timer? _debounce;
 
   FilterType selectedFilter = FilterType.select;
@@ -43,8 +42,21 @@ class _RecipeOverviewState extends State<RecipeOverview> {
   @override
   void initState() {
     super.initState();
-    _recipesFuture = RecipeService().getRecipes();
 
+    // Initialize TextEditingController with the current value of recipenamefilter
+    final filterProvider = Provider.of<RecipeFilterOptionsProvider>(context, listen: false);
+    _searchController = TextEditingController(text: filterProvider.recipeName);
+
+    // Listen to TextEditingController changes and update the provider
+    _searchController.addListener(() {
+      filterProvider.recipeName = _searchController.text;
+    });
+
+    // filters = filterProvider.filterOptions;
+    // recipeNameFilter = filterProvider.recipeName;
+    // _recipesFuture = filterProvider.recipes;
+
+    // _onFilterChanged();
   }
 
   @override
@@ -54,24 +66,19 @@ class _RecipeOverviewState extends State<RecipeOverview> {
     super.dispose();
   }
 
-  void _onSearchChanged(String value) {
-    recipeNameFilter = value;
+  void _onSearchChanged() {
+
     if (_debounce?.isActive ?? false) _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () {
-      setState(() {
-        _onFilterChanged();
-      });
+      _onFilterChanged();
     });
   }
 
   void _onFilterChanged() {
-    if (recipeNameFilter.isNotEmpty || filters.isNotEmpty){
-      _recipesFuture =
-          RecipeService().getFilteredRecipes(recipeNameFilter, filters);
-    }
-    else {
-      _recipesFuture = RecipeService().getRecipes();
-    }
+    final filterProvider = Provider.of<RecipeFilterOptionsProvider>(context, listen: false);
+    setState(() {
+      filterProvider.onFilterChanged();
+    });
   }
 
   void _showFilterPopup(BuildContext context) {
@@ -117,9 +124,12 @@ class _RecipeOverviewState extends State<RecipeOverview> {
 
   @override
   Widget build(BuildContext context) {
-    var recipeFilterOptionsProvider = Provider.of<RecipeFilterOptionsProvider>(context);
-    filters = recipeFilterOptionsProvider.filterOptions;
-    _onFilterChanged();
+    final filterProvider = Provider.of<RecipeFilterOptionsProvider>(context, listen: false);
+
+    filters = filterProvider.filterOptions;
+    recipeNameFilter = filterProvider.recipeName;
+    _recipesFuture = filterProvider.recipes;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 8.0),
       child: Column(
@@ -138,7 +148,7 @@ class _RecipeOverviewState extends State<RecipeOverview> {
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.all(Radius.circular(8.0))),
                       suffixIcon: Icon(Icons.search)),
-                  onChanged: _onSearchChanged,
+                  onChanged: (value) => _onSearchChanged(), // value is linked through the controller inside the init function.
                 ),
               ),
               SizedBox(
@@ -196,7 +206,7 @@ class _RecipeOverviewState extends State<RecipeOverview> {
                       ElevatedButton(
                         onPressed: () {
                           String query = _searchController.text;
-                          _searchController.clear();
+                          // _searchController.clear();
                           Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -576,11 +586,10 @@ class FilterOptionChip extends StatelessWidget {
         onDeleted: onDelete,
         backgroundColor: backgroundColor,
         shape: RoundedRectangleBorder(
-          // side: BorderSide(color: getFilterColor(filter.type), width: 2),
           side: BorderSide(color: borderColor, width: 2),
           // Set the border color
           borderRadius: BorderRadius.circular(
-              20), // Customize the border radius as needed
+              20),
         ),
         deleteIconColor: Colors.white,
         labelStyle: TextStyle(
