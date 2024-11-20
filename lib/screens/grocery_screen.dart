@@ -159,7 +159,9 @@ class _GroceryListState extends State<GroceryList> {
                                     child: Padding(
                                       padding: const EdgeInsets.all(8.0),
                                       child: Text(
-                                        item.ingredient.measurement.name,
+                                        item.ingredient != null
+                                            ? measurementTypeToStringMultipleNl(item.ingredient.measurement)
+                                            : measurementTypeToStringNl(item.ingredient.measurement),
                                         style: const TextStyle(fontSize: 22),
                                       ),
                                     ),
@@ -248,7 +250,7 @@ class DialogInputGrocery extends StatefulWidget {
 class _DialogInputGroceryState extends State<DialogInputGrocery> {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController quantityController = TextEditingController();
-  MeasurementType selectedMeasurement = MeasurementType.piece;
+  MeasurementType selectedMeasurement = MeasurementType.kilogram;
 
   @override
   Widget build(BuildContext context) {
