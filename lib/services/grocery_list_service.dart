@@ -4,10 +4,6 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:frontend/models/recipes/ingredients/item_quantity.dart';
 import 'package:frontend/services/api_client.dart';
-import 'package:http/http.dart' as http;
-
-import '../models/recipes/ingredients/ingredient.dart';
-import '../models/recipes/ingredients/measurement_type.dart';
 
 class GroceryListService {
   final FlutterSecureStorage storage = FlutterSecureStorage();
@@ -40,9 +36,7 @@ class GroceryListService {
           print('groceryListId is null in the response.');
           return null;
         }
-
         return groceryId;
-        //return response.body;
       } else if (response.statusCode == 401) {
         print('Unauthorized: Invalid access token');
         return null;
@@ -100,56 +94,4 @@ class GroceryListService {
       print("Error adding item: $e");
     }
   }
-
-  Future<List<ItemQuantity>> getGroceryItems() async {
-    try {
-      final groceryListId = await getGroceryListId();
-      if (groceryListId == null) {
-        throw Exception('No grocery list found');
-      }
-
-      final response = await ApiClient().authorizedGet('api/Grocery/account/grocery-list');
-
-      if (response.statusCode != 200) {
-        throw FormatException('Failed to load grocery items: ${response.body}');
-      }
-
-      final Map<String, dynamic> responseBody = json.decode(response.body);
-
-      // Combine the 'items' and 'ingredients' data from the response
-      final List<ItemQuantity> groceryItems = [];
-
-      final items = responseBody['items'] as List<dynamic>;
-      final ingredients = responseBody['ingredients'] as List<dynamic>;
-
-      for (int i = 0; i < items.length; i++) {
-        final item = items[i];
-        final ingredientData = ingredients.firstWhere(
-                (ingredient) => ingredient['ingredientQuantityId'] == item['ingredientQuantityId'],
-            orElse: () => {});
-
-        // Only add if a valid ingredient is found for this item
-        if (ingredientData.isNotEmpty) {
-          final ingredient = Ingredient(
-            ingredientId: ingredientData['ingredient']['ingredientId'],
-            ingredientName: ingredientData['ingredient']['ingredientName'],
-            measurement: intToMeasurementType(ingredientData['ingredient']['measurement']),
-            ingredientQuantities: [], // If necessary, populate this too
-          );
-
-          groceryItems.add(ItemQuantity(
-            itemQuantityId: item['ingredientQuantityId'],
-            quantity: item['quantity'].toDouble(),
-            ingredient: ingredient,
-          ));
-        }
-      }
-
-      return groceryItems;
-    } catch (e) {
-      print('Error fetching grocery items: $e');
-      return [];
-    }
-  }
-
 }

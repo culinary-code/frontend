@@ -6,7 +6,6 @@ import 'package:frontend/services/account_service.dart';
 import 'package:uuid/uuid.dart';
 
 import '../Services/keycloak_service.dart';
-import '../models/groceryListItem.dart';
 import '../services/grocery_list_service.dart';
 
 class GroceryScreen extends StatelessWidget {
@@ -65,6 +64,7 @@ class _GroceryListState extends State<GroceryList> {
       return;
     }
     groceryListService.addItemToGroceryList(userId, newItem);
+    print(newItem.toString());
   }
 
   void deleteItem(ItemQuantity item) {
@@ -83,7 +83,7 @@ class _GroceryListState extends State<GroceryList> {
         child: Column(
           children: [
             Table(
-              border: TableBorder.all(color: Colors.blueGrey.shade200), // Added border to cells
+              border: TableBorder.all(color: Colors.black),
               defaultVerticalAlignment: TableCellVerticalAlignment.middle,
               children: [
                 TableRow(
@@ -103,7 +103,7 @@ class _GroceryListState extends State<GroceryList> {
                                 child: Text(
                                   'Boodschappenlijst',
                                   style: TextStyle(
-                                      fontWeight: FontWeight.bold, fontSize: 25),
+                                      fontWeight: FontWeight.bold, fontSize: 25)
                                 ),
                               ),
                               Icon(Icons.shopping_cart, size: 30,)
@@ -142,7 +142,6 @@ class _GroceryListState extends State<GroceryList> {
                             children: [
                               TableRow(
                                 children: [
-                                  // Ingredient Name Column
                                   TableCell(
                                     verticalAlignment:
                                     TableCellVerticalAlignment.middle,
@@ -154,7 +153,6 @@ class _GroceryListState extends State<GroceryList> {
                                       ),
                                     ),
                                   ),
-                                  // Measurement Column
                                   TableCell(
                                     verticalAlignment:
                                     TableCellVerticalAlignment.middle,
@@ -166,7 +164,6 @@ class _GroceryListState extends State<GroceryList> {
                                       ),
                                     ),
                                   ),
-                                  // Quantity Column
                                   TableCell(
                                     verticalAlignment:
                                     TableCellVerticalAlignment.middle,
@@ -178,7 +175,6 @@ class _GroceryListState extends State<GroceryList> {
                                       ),
                                     ),
                                   ),
-                                  // Delete Icon Column: Always show the delete icon
                                   TableCell(
                                     verticalAlignment: TableCellVerticalAlignment.middle,
                                     child: Container(
@@ -239,175 +235,6 @@ class _GroceryListState extends State<GroceryList> {
     );
   }
 }
-
-
-/*class GroceryList extends StatefulWidget {
-  const GroceryList({super.key});
-
-  @override
-  State<GroceryList> createState() => _GroceryListState();
-}
-
-class _GroceryListState extends State<GroceryList> {
-  bool isDeleting = false;
-  bool isUndoPressed = false;
-  late List<ItemQuantity> groceryList = [];
-  final Uuid uuid = Uuid();
-  final GroceryListService groceryListService = GroceryListService();
-  final KeycloakService keycloakService = KeycloakService();
-  final AccountService accountService = AccountService();
-
-  void addItem(ItemQuantity newItem) async {
-    setState(() {
-      groceryList.add(newItem);
-    });
-
-    String? userId = await groceryListService.getGroceryListId();
-    if (userId == null) {
-      print('id: $userId');
-      print('Failed to fetch grocery list ID');
-      return;
-    }
-    groceryListService.addItemToGroceryList(userId, newItem);
-  }
-
-  void deleteItem(ItemQuantity item) {
-    setState(() {
-      groceryList.remove(item);
-      isDeleting = true;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 2),
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          children: [
-            Table(
-              border: TableBorder.all(color: Colors.blueGrey.shade200),
-              defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-              children: [
-                TableRow(
-                    decoration: BoxDecoration(
-                      color: Colors.blueGrey[200],
-                    ),
-                    children: const [
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.middle,
-                        child: Padding(
-                          padding: EdgeInsets.all(8.0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Align(
-                                alignment: Alignment.center,
-                                child: Text(
-                                  'Boodschappenlijst',
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold, fontSize: 25),
-                                ),
-                              ),
-                              Icon(Icons.shopping_cart, size: 30,)
-                            ],
-                          ),
-                        ),
-                      ),
-                    ]),
-                ...groceryList.map((item) {
-                  return TableRow(
-                    children: [
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.middle,
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 8.0),
-                          child: Dismissible(
-                            background: Container(
-                              color: Colors.red,
-                            ),
-                            key: Key(item.itemQuantityId),
-                            direction: DismissDirection.endToStart,
-                            onDismissed: (direction) {
-                              deleteItem(item);
-                              ScaffoldMessenger.of(context)
-                                  .showSnackBar(SnackBar(
-                                content: Text('$item is verwijderd'),
-                                action: SnackBarAction(
-                                    label: "Ongedaan maken",
-                                    onPressed: () {
-                                      isUndoPressed = true;
-                                      setState(() {
-                                        isDeleting = false;
-                                        groceryList.add(item);
-                                      });
-                                    }),
-                              ));
-                            },
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Text(
-                                    item.ingredient.ingredientName,
-                                    style: const TextStyle(fontSize: 22),
-                                  ),
-                                ),
-                                Container(
-                                  color: Colors.red,
-                                  child: const Row(
-                                    children: [
-                                      Icon(Icons.keyboard_arrow_left, size: 30,),
-                                      Icon(Icons.delete, color: Colors.black, size: 30,)
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  );
-                })
-              ],
-            ),
-            Padding(padding: const EdgeInsets.symmetric(vertical: 10),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  IconButton(
-                    onPressed: () {
-                      showDialog(context: context, builder: (context) {
-                        return DialogInputGrocery(onAdd: (name, quantity, measurement) {
-                          final newItem =
-                          ItemQuantity(
-                            itemQuantityId: uuid.v4(),
-                            quantity: quantity,
-                            ingredient: Ingredient(
-                              ingredientId: uuid.v4(),
-                              ingredientName: name,
-                              measurement: measurement,
-                              ingredientQuantities: [],
-                            ),
-                          );
-                          addItem(newItem);
-                        });
-                      });
-                    },
-                    icon: const Icon(Icons.add_box, size: 50),
-                  )
-                ],
-              ),
-            )
-          ],
-        ),
-      ),
-    );
-  }
-}*/
 
 class DialogInputGrocery extends StatefulWidget {
   final Function(String, double, MeasurementType) onAdd;
@@ -520,8 +347,6 @@ Future<void> showEditDialog({
         title: const Text('Pas aan'),
         content: TextField(
           controller: controller,
-          /*decoration:
-          const InputDecoration(hintText: "Wat wil je aanpassen?"),*/
         ),
         actions: [
           TextButton(
