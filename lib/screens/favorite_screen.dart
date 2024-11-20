@@ -33,7 +33,7 @@ class _FavoriteRecipesState extends State<FavoriteRecipes> {
 
   @override
   void initState() {
-    _favoriteRecipesFuture = FavoriteRecipeService().getDummyFovoriteRecipes();
+    _favoriteRecipesFuture = FavoriteRecipeService().getDummyFavoriteRecipes();
     super.initState();
   }
 

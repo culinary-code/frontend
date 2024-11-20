@@ -6,7 +6,7 @@ class FavoriteRecipeService {
       dotenv.env['BACKEND_BASE_URL'] ??
           (throw Exception('Environment variable BACKEND_BASE_URL not found'));
 
-  Future<List<Recipe>> getDummyFovoriteRecipes() async {
+  Future<List<Recipe>> getDummyFavoriteRecipes() async {
 
     var dummyRecipes = Recipe.recipeList();
     List<Recipe> favoriteRecipes = dummyRecipes.where((recipe) => recipe.isFavorited).toList();
