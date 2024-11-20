@@ -54,6 +54,7 @@ class _AccountSettingsState extends State<AccountSettings> {
   final AccountService _accountService = AccountService();
 
   String _currentUsername = '';
+  int _familySize = 1;
   late String userId;
 
   final storage = FlutterSecureStorage();
@@ -285,11 +286,106 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
                     child: const Text('Andere..'),
                   ),
                 ]),
+                MyFamilySelector(recipeAmountOfPeople: 8)
               ],
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+
+class MyFamilySelector extends StatefulWidget {
+  final int recipeAmountOfPeople;
+  const MyFamilySelector({super.key, required this.recipeAmountOfPeople});
+
+  @override
+  State<MyFamilySelector> createState() => _MyFamilySelectorState();
+}
+
+class _MyFamilySelectorState extends State<MyFamilySelector> {
+  late int portions;
+
+  void addPortions() {
+    setState(() {
+      portions++;
+    });
+  }
+
+  void removePortions() {
+    setState(() {
+      if (portions > 1) portions--;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    portions = widget.recipeAmountOfPeople;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.family_restroom,
+                    size: 30,
+                  ),
+                  const SizedBox(
+                    width: 8,
+                  ),
+                  Text(
+                    'Mijn gezin',
+                    style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(
+                    width: 12,
+                  ),
+                  GestureDetector(
+                    onTap: removePortions,
+                    child: CircleAvatar(
+                      radius: 15,
+                      child: Icon(
+                        Icons.remove,
+                        size: 18,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    '$portions',
+                    style: const TextStyle(fontSize: 22),
+                  ),
+                  const SizedBox(width: 10),
+                  GestureDetector(
+                    onTap: addPortions,
+                    child: CircleAvatar(
+                      radius: 15,
+                      child: Icon(
+                        Icons.add,
+                        size: 18,
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
