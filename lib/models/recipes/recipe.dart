@@ -26,7 +26,7 @@ class Recipe {
   final List<Review> reviews;
 
   // navigation properties
-  final List<PlannedMeal> plannedMeals;
+  final List<PlannedMealReduced> plannedMeals;
   final List<FavoriteRecipe> favoriteRecipes;
 
   Recipe(

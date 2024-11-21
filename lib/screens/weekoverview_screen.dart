@@ -25,7 +25,7 @@ class WeekOverview extends StatefulWidget {
 }
 
 class _WeekOverviewState extends State<WeekOverview> {
-  late Future<List<PlannedMeal>> _plannedMealsFuture;
+  late Future<List<PlannedMealReduced>> _plannedMealsFuture;
   late DateTime _selectedDate;
 
   @override
@@ -134,7 +134,7 @@ class _WeekOverviewState extends State<WeekOverview> {
             ),
           ],
         ),
-        body: FutureBuilder<List<PlannedMeal>>(
+        body: FutureBuilder<List<PlannedMealReduced>>(
           future: _plannedMealsFuture,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
@@ -157,7 +157,7 @@ class _WeekOverviewState extends State<WeekOverview> {
                 itemBuilder: (context, index) {
                   DateTime currentDate = weekDates[index];
 
-                  PlannedMeal? mealForDate;
+                  PlannedMealReduced? mealForDate;
                   try {
                     mealForDate = plannedMeals.firstWhere(
                       (meal) => isSameDate(meal.plannedDay, currentDate),
@@ -229,7 +229,7 @@ class EmptyPlannedMealWidget extends StatelessWidget {
 
 class PlannedMealWidget extends StatelessWidget {
   final String weekday;
-  final PlannedMeal plannedMeal;
+  final PlannedMealReduced plannedMeal;
   final VoidCallback onButtonPressed;
 
   const PlannedMealWidget({
