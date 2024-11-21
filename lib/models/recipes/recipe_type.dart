@@ -1,4 +1,5 @@
 enum RecipeType {
+  notAvailable,
   breakfast,
   lunch,
   dinner,
@@ -9,14 +10,16 @@ enum RecipeType {
 RecipeType intToRecipeType(int value) {
   switch (value) {
     case 0:
-      return RecipeType.breakfast;
+      return RecipeType.notAvailable;
     case 1:
-      return RecipeType.lunch;
+      return RecipeType.breakfast;
     case 2:
-      return RecipeType.dinner;
+      return RecipeType.lunch;
     case 3:
-      return RecipeType.dessert;
+      return RecipeType.dinner;
     case 4:
+      return RecipeType.dessert;
+    case 5:
       return RecipeType.snack;
     default:
       throw ArgumentError('Invalid integer value for RecipeType');

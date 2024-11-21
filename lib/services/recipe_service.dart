@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:frontend/models/recipes/recipe_filter.dart';
 import 'package:frontend/services/api_client.dart';
 import 'package:frontend/services/keycloak_service.dart';
 import 'package:frontend/models/recipes/difficulty.dart';
@@ -18,6 +19,64 @@ class RecipeService {
     final String searchEndpoint = "Recipe/Collection/ByName/$searchQuery";
 
     final response = await ApiClient().authorizedGet(searchEndpoint);
+
+    if (response.statusCode != 200) {
+      throw FormatException('Failed to load recipes: ${response.body}');
+    }
+
+    final List<dynamic> dynamicRecipes = json.decode(response.body);
+
+    final List<Recipe> recipes = dynamicRecipes.map((dynamic recipe) {
+      return Recipe(
+        recipeId: recipe['recipeId'],
+        recipeName: recipe['recipeName'],
+        recipeType: intToRecipeType(recipe['recipeType']),
+        description: recipe['description'],
+        cookingTime: recipe['cookingTime'],
+        amountOfPeople: recipe['amountOfPeople'],
+        difficulty: intToDifficulty(recipe['difficulty']),
+        imagePath: recipe['imagePath'],
+        createdAt: DateTime.parse(recipe['createdAt']),
+        instructions: [],
+        reviews: [],
+        plannedMeals: [],
+        favoriteRecipes: [],
+      );
+    }).toList();
+
+    return recipes;
+  }
+
+  Future<List<Recipe>> getFilteredRecipes(String recipename, List<FilterOption> filterOptions) async {
+    final String searchEndpoint = "Recipe/Collection/Filtered";
+
+    List<String> ingredients = [];
+    var difficulty = "";
+    var cooktime = 0;
+    var mealtype = "";
+
+    for (var option in filterOptions) {
+      switch (option.type){
+        case FilterType.ingredient: ingredients.add(option.value);
+        case FilterType.difficulty:
+          difficulty = option.value;
+        case FilterType.cookTime:
+          cooktime = int.parse(option.value); //TODO: change this when it is implemented
+        case FilterType.mealType:
+          mealtype = option.value;
+        default:
+      }
+    }
+
+
+    final response = await ApiClient().authorizedPost(searchEndpoint,
+        {
+          "RecipeName" : recipename,
+          "Ingredients" : ingredients,
+          "Difficulty" : difficulty,
+          "CookTime" : cooktime,
+          "MealType" : mealtype,
+        });
 
     if (response.statusCode != 200) {
       throw FormatException('Failed to load recipes: ${response.body}');

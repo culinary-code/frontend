@@ -4,18 +4,26 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:frontend/state/RecipeFilterOptionsProvider.dart';
 import 'package:frontend/theme/theme_loader.dart';
 import 'package:frontend/screens/keycloak/login_screen.dart';
+import 'package:provider/provider.dart';
 
 void main() async {
   await dotenv.load(fileName: ".env");
   await Settings.init(cacheProvider: SharePreferenceCache());
   // runApp(const MyApp());
 
-  runApp(DevicePreview(
+  runApp(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (context) => RecipeFilterOptionsProvider()),
+        ],
+        child:
+      DevicePreview(
     enabled: !kReleaseMode,
     builder: (context) => MyApp(),
-  ));
+  )));
 }
 
 class MyApp extends StatelessWidget {
