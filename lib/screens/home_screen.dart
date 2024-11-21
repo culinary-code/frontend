@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:frontend/models/recipes/recipe.dart';
 import 'package:frontend/models/recipes/recipe_filter.dart';
+import 'package:frontend/models/recipes/recipe_type.dart';
 import 'package:frontend/screens/create_recipe_screen.dart';
 import 'package:frontend/state/RecipeFilterOptionsProvider.dart';
 import 'package:frontend/widgets/recipe_card.dart';
@@ -33,17 +34,19 @@ class _RecipeOverviewState extends State<RecipeOverview> {
   Timer? _debounce;
 
   FilterType selectedFilter = FilterType.select;
-  String ingredient = '';
+  String ingredientFilter = '';
 
   List<FilterOption> filters = [];
   String recipeNameFilter = "";
+  RecipeType recipeTypeFilter = RecipeType.snack;
 
   @override
   void initState() {
     super.initState();
 
     // Initialize TextEditingController with the current value of recipenamefilter
-    final filterProvider = Provider.of<RecipeFilterOptionsProvider>(context, listen: false);
+    final filterProvider =
+        Provider.of<RecipeFilterOptionsProvider>(context, listen: false);
     _searchController = TextEditingController(text: filterProvider.recipeName);
 
     // Listen to TextEditingController changes and update the provider
@@ -51,11 +54,6 @@ class _RecipeOverviewState extends State<RecipeOverview> {
       filterProvider.recipeName = _searchController.text;
     });
 
-    // filters = filterProvider.filterOptions;
-    // recipeNameFilter = filterProvider.recipeName;
-    // _recipesFuture = filterProvider.recipes;
-
-    // _onFilterChanged();
   }
 
   @override
@@ -66,7 +64,6 @@ class _RecipeOverviewState extends State<RecipeOverview> {
   }
 
   void _onSearchChanged() {
-
     if (_debounce?.isActive ?? false) _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () {
       _onFilterChanged();
@@ -74,7 +71,8 @@ class _RecipeOverviewState extends State<RecipeOverview> {
   }
 
   void _onFilterChanged() {
-    final filterProvider = Provider.of<RecipeFilterOptionsProvider>(context, listen: false);
+    final filterProvider =
+        Provider.of<RecipeFilterOptionsProvider>(context, listen: false);
     setState(() {
       filterProvider.onFilterChanged();
     });
@@ -87,6 +85,7 @@ class _RecipeOverviewState extends State<RecipeOverview> {
         return FilterPopup(
             initialFilter: FilterType.select,
             initialIngredient: '',
+            initialRecipeType: RecipeType.snack,
             onFilterSelected: (filter) {
               setState(() {
                 selectedFilter = filter;
@@ -94,7 +93,12 @@ class _RecipeOverviewState extends State<RecipeOverview> {
             },
             onIngredientEntered: (ing) {
               setState(() {
-                ingredient = ing;
+                ingredientFilter = ing;
+              });
+            },
+            onRecipeTypeSelected: (recipeType) {
+              setState(() {
+                recipeTypeFilter = recipeType;
               });
             },
             onSave: () {
@@ -102,7 +106,12 @@ class _RecipeOverviewState extends State<RecipeOverview> {
               setState(() {
                 filters.add(FilterOption(
                   type: selectedFilter, // Use selected filter type
-                  value: ingredient, // Use the entered ingredient
+                  value: switch (selectedFilter) {
+                    FilterType.ingredient => ingredientFilter,
+                    FilterType.mealType => recipeTypeFilter.index.toString(),
+                  // Add other cases here if needed
+                    _ => "", // Handle default case gracefully
+                  },
                 ));
                 _onFilterChanged();
               });
@@ -123,7 +132,8 @@ class _RecipeOverviewState extends State<RecipeOverview> {
 
   @override
   Widget build(BuildContext context) {
-    final filterProvider = Provider.of<RecipeFilterOptionsProvider>(context, listen: false);
+    final filterProvider =
+        Provider.of<RecipeFilterOptionsProvider>(context, listen: false);
 
     filters = filterProvider.filterOptions;
     recipeNameFilter = filterProvider.recipeName;
@@ -147,7 +157,8 @@ class _RecipeOverviewState extends State<RecipeOverview> {
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.all(Radius.circular(8.0))),
                       suffixIcon: Icon(Icons.search)),
-                  onChanged: (value) => _onSearchChanged(), // value is linked through the controller inside the init function.
+                  onChanged: (value) =>
+                      _onSearchChanged(), // value is linked through the controller inside the init function.
                 ),
               ),
               SizedBox(
@@ -173,11 +184,15 @@ class _RecipeOverviewState extends State<RecipeOverview> {
                   return Column(
                     children: [
                       Align(
-                        alignment: Alignment.centerLeft, // Center the entire Wrap
+                        alignment: Alignment.centerLeft,
+                        // Center the entire Wrap
                         child: Wrap(
-                          spacing: 0, // Horizontal space between chips
-                          runSpacing: 0, // Vertical space between rows
-                          alignment: WrapAlignment.start, // Center items in each row
+                          spacing: 0,
+                          // Horizontal space between chips
+                          runSpacing: 0,
+                          // Vertical space between rows
+                          alignment: WrapAlignment.start,
+                          // Center items in each row
                           children: filters.map((filter) {
                             return FilterOptionChip(
                               filter: filter,
@@ -223,11 +238,15 @@ class _RecipeOverviewState extends State<RecipeOverview> {
                       // Sliver that contains the Wrap (it will scroll with the rest)
                       SliverToBoxAdapter(
                         child: Align(
-                          alignment: Alignment.centerLeft, // Center the entire Wrap
+                          alignment: Alignment.centerLeft,
+                          // Center the entire Wrap
                           child: Wrap(
-                            spacing: 0, // Horizontal space between chips
-                            runSpacing: 0, // Vertical space between rows
-                            alignment: WrapAlignment.start, // Center items in each row
+                            spacing: 0,
+                            // Horizontal space between chips
+                            runSpacing: 0,
+                            // Vertical space between rows
+                            alignment: WrapAlignment.start,
+                            // Center items in each row
                             children: filters.map((filter) {
                               return FilterOptionChip(
                                 filter: filter,
@@ -238,12 +257,14 @@ class _RecipeOverviewState extends State<RecipeOverview> {
                         ),
                       ),
                       const SliverToBoxAdapter(
-                        child: SizedBox(height: 8.0), // Space between the Wrap and the ListView
+                        child: SizedBox(
+                            height:
+                                8.0), // Space between the Wrap and the ListView
                       ),
                       // Sliver that contains the ListView
                       SliverList(
                         delegate: SliverChildBuilderDelegate(
-                              (context, index) {
+                          (context, index) {
                             if (index == recipes.length) {
                               return Column(
                                 children: [
@@ -261,7 +282,8 @@ class _RecipeOverviewState extends State<RecipeOverview> {
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                          builder: (context) => CreateRecipeScreen(
+                                          builder: (context) =>
+                                              CreateRecipeScreen(
                                             preloadedRecipeName: query,
                                           ),
                                         ),
@@ -281,7 +303,8 @@ class _RecipeOverviewState extends State<RecipeOverview> {
                                 imageUrl: recipes[index].imagePath,
                                 onFavoriteToggle: () {
                                   setState(() {
-                                    recipes[index].isFavorited = !recipes[index].isFavorited;
+                                    recipes[index].isFavorited =
+                                        !recipes[index].isFavorited;
                                   });
                                 },
                               );
@@ -302,20 +325,23 @@ class _RecipeOverviewState extends State<RecipeOverview> {
   }
 }
 
-
 class FilterPopup extends StatelessWidget {
   final FilterType initialFilter;
   final String initialIngredient;
+  final RecipeType initialRecipeType;
   final ValueChanged<FilterType> onFilterSelected;
   final ValueChanged<String> onIngredientEntered;
+  final ValueChanged<RecipeType> onRecipeTypeSelected;
   final VoidCallback onSave;
 
   const FilterPopup({
     super.key,
     required this.initialFilter,
     required this.initialIngredient,
+    required this.initialRecipeType,
     required this.onFilterSelected,
     required this.onIngredientEntered,
+    required this.onRecipeTypeSelected,
     required this.onSave,
   });
 
@@ -323,6 +349,7 @@ class FilterPopup extends StatelessWidget {
   Widget build(BuildContext context) {
     FilterType tempFilter = initialFilter;
     String tempIngredient = initialIngredient;
+    RecipeType tempMealType = initialRecipeType;
     FocusNode dropdownFocusNode = FocusNode();
 
     return StatefulBuilder(
@@ -342,6 +369,7 @@ class FilterPopup extends StatelessWidget {
                 items: [
                   FilterType.select,
                   FilterType.ingredient,
+                  FilterType.mealType,
                 ]
                     .map((filterType) => DropdownMenuItem<FilterType>(
                           value: filterType,
@@ -356,9 +384,13 @@ class FilterPopup extends StatelessWidget {
                 },
               ),
               SizedBox(height: 16),
-              _buildFilterOptions(tempFilter, tempIngredient, (newValue) {
+              _buildFilterOptions(tempFilter,
+                  tempIngredient, (newValue) {
                 tempIngredient = newValue;
-              }),
+              }, tempMealType, (newValue) {
+                    tempMealType = newValue;
+                  }
+              ),
             ],
           ),
           actions: [
@@ -373,6 +405,7 @@ class FilterPopup extends StatelessWidget {
                   ? () {
                       onFilterSelected(tempFilter);
                       onIngredientEntered(tempIngredient);
+                      onRecipeTypeSelected(tempMealType);
                       onSave();
                       Navigator.pop(context); // Close the dialog
                     }
@@ -396,6 +429,8 @@ class FilterPopup extends StatelessWidget {
     FilterType filterType,
     String currentIngredient,
     ValueChanged<String> onIngredientChanged,
+    RecipeType selectedRecipeType,
+    ValueChanged<RecipeType> onRecipeTypeChanged,
   ) {
     switch (filterType) {
       case FilterType.ingredient:
@@ -405,6 +440,27 @@ class FilterPopup extends StatelessWidget {
             border: OutlineInputBorder(),
           ),
           onChanged: onIngredientChanged,
+        );
+      case FilterType.mealType:
+        return DropdownButtonFormField<RecipeType>(
+          value: selectedRecipeType,
+          decoration: InputDecoration(
+            labelText: "Select Recipe Type",
+            border: OutlineInputBorder(),
+          ),
+          items: RecipeType.values
+              .where((type) => type != RecipeType.notAvailable)
+              .map((type) {
+            return DropdownMenuItem<RecipeType>(
+              value: type,
+              child: Text(recipeTypeToStringNl(type)),
+            );
+          }).toList(),
+          onChanged: (value) {
+            if (value != null) {
+              onRecipeTypeChanged(value);
+            }
+          },
         );
       default:
         return Container(); // Empty widget for unsupported or default options
@@ -422,17 +478,28 @@ class FilterOptionChip extends StatelessWidget {
     required this.onDelete,
   });
 
+  getFilterText(){
+    return switch (filter.type){
+      FilterType.mealType => recipeTypeToStringNlFromIntString(filter.value),
+      FilterType.cookTime => "${filter.value}'",
+      _ => filter.value
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     var backgroundColor = Theme.of(context).colorScheme.primaryContainer;
     var textColor = Theme.of(context).colorScheme.onPrimaryContainer;
     var borderColor = Theme.of(context).colorScheme.secondary;
+
+
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 2),
       child: Chip(
-
         label: Wrap(
-          crossAxisAlignment: WrapCrossAlignment.center, // Aligns children vertically
+          crossAxisAlignment: WrapCrossAlignment.center,
+          // Aligns children vertically
           children: [
             Icon(
               getFilterIcon(filter.type),
@@ -440,22 +507,19 @@ class FilterOptionChip extends StatelessWidget {
               color: textColor,
             ),
             SizedBox(width: 8.0), // Space between icon and text
-            Text(filter.value),
+            Text(getFilterText()),
           ],
         ),
-        deleteIcon: Icon(Icons.close,
-            color: textColor),
+        deleteIcon: Icon(Icons.close, color: textColor),
         onDeleted: onDelete,
         backgroundColor: backgroundColor,
         shape: RoundedRectangleBorder(
           side: BorderSide(color: borderColor, width: 2),
           // Set the border color
-          borderRadius: BorderRadius.circular(
-              20),
+          borderRadius: BorderRadius.circular(20),
         ),
         deleteIconColor: Colors.white,
-        labelStyle: TextStyle(
-            color: textColor),
+        labelStyle: TextStyle(color: textColor),
       ),
     );
   }
