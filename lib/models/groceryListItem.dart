@@ -1,7 +1,6 @@
 class GroceryListItem {
-  String productName;
-  int quantity;
-  String measurement;
+  String groceryItemId;
+  String groceryItemName;
 
-  GroceryListItem({required this.productName, required this.quantity, required this.measurement});
+  GroceryListItem({required this.groceryItemId, required this.groceryItemName});
 }

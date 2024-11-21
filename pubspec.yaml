@@ -57,6 +57,9 @@ dependencies:
   # DateTime formatting
   intl: ^0.19.0
 
+  # Add dependency injection for provider classes in the main method
+  provider: ^6.1.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
