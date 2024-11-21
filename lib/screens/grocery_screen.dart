@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/models/recipes/ingredients/ingredient.dart';
 import 'package:frontend/models/recipes/ingredients/item_quantity.dart';
 import 'package:frontend/models/recipes/ingredients/measurement_type.dart';
 import 'package:frontend/services/account_service.dart';
-import 'package:uuid/uuid.dart';
 
 import '../Services/keycloak_service.dart';
-import '../models/meal_planning/grocery_list_item.dart';
 import '../models/meal_planning/grocery_list_item.dart';
 import '../services/grocery_list_service.dart';
 
@@ -49,7 +46,6 @@ class _GroceryListState extends State<GroceryList> {
   bool isDeleting = false;
   bool isUndoPressed = false;
   late List<ItemQuantity> groceryList = [];
-  final Uuid uuid = Uuid();
   final GroceryListService groceryListService = GroceryListService();
   final KeycloakService keycloakService = KeycloakService();
   final AccountService accountService = AccountService();
@@ -59,14 +55,11 @@ class _GroceryListState extends State<GroceryList> {
       groceryList.add(newItem);
     });
 
-    String? userId = await groceryListService.getGroceryListId();
-    if (userId == null) {
-      print('id: $userId');
-      print('Failed to fetch grocery list ID');
+    String? groceryListId = await groceryListService.getGroceryListId();
+    if (groceryListId == null) {
       return;
     }
-    groceryListService.addItemToGroceryList(userId, newItem);
-    print(newItem.toString());
+    groceryListService.addItemToGroceryList(groceryListId, newItem);
   }
 
   void deleteItem(ItemQuantity item) {
@@ -139,62 +132,60 @@ class _GroceryListState extends State<GroceryList> {
                                 }),
                           ));
                         },
-                        child: Container(
-                          child: Table(
-                            children: [
-                              TableRow(
-                                children: [
-                                  TableCell(
-                                    verticalAlignment:
-                                    TableCellVerticalAlignment.middle,
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: Text(
-                                        item.groceryListItem.ingredientName,
-                                        style: const TextStyle(fontSize: 22),
-                                      ),
+                        child: Table(
+                          children: [
+                            TableRow(
+                              children: [
+                                TableCell(
+                                  verticalAlignment:
+                                  TableCellVerticalAlignment.middle,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Text(
+                                      item.groceryListItem.ingredientName,
+                                      style: const TextStyle(fontSize: 22),
                                     ),
                                   ),
-                                  TableCell(
-                                    verticalAlignment:
-                                    TableCellVerticalAlignment.middle,
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: Text(
-                                        item.groceryListItem != null
-                                            ? measurementTypeToStringMultipleNl(item.groceryListItem.measurement)
-                                            : measurementTypeToStringNl(item.groceryListItem.measurement),
-                                        style: const TextStyle(fontSize: 22),
-                                      ),
+                                ),
+                                TableCell(
+                                  verticalAlignment:
+                                  TableCellVerticalAlignment.middle,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Text(
+                                      item.groceryListItem != null
+                                          ? measurementTypeToStringMultipleNl(item.groceryListItem.measurement)
+                                          : measurementTypeToStringNl(item.groceryListItem.measurement),
+                                      style: const TextStyle(fontSize: 22),
                                     ),
                                   ),
-                                  TableCell(
-                                    verticalAlignment:
-                                    TableCellVerticalAlignment.middle,
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: Text(
-                                        item.quantity.toString(),
-                                        style: const TextStyle(fontSize: 22),
-                                      ),
+                                ),
+                                TableCell(
+                                  verticalAlignment:
+                                  TableCellVerticalAlignment.middle,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Text(
+                                      item.quantity.toString(),
+                                      style: const TextStyle(fontSize: 22),
                                     ),
                                   ),
-                                  TableCell(
-                                    verticalAlignment: TableCellVerticalAlignment.middle,
-                                    child: Container(
-                                      color: Colors.red,
-                                      child: const Row(
-                                        children: [
-                                          Icon(Icons.keyboard_arrow_left, size: 30,),
-                                          Icon(Icons.delete, color: Colors.black, size: 30,)
-                                        ],
-                                      ),
+                                ),
+                                TableCell(
+                                  verticalAlignment: TableCellVerticalAlignment.middle,
+                                  child: Container(
+                                    color: Colors.red,
+                                    child: const Row(
+                                      children: [
+                                        Icon(Icons.keyboard_arrow_left, size: 30,),
+                                        Icon(Icons.delete, color: Colors.black, size: 30,)
+                                      ],
                                     ),
                                   ),
-                                ],
-                              ),
-                            ],
-                          ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
                     ],

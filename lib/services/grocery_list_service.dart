@@ -18,14 +18,10 @@ class GroceryListService {
           await ApiClient().authorizedGet('api/Grocery/account/grocery-list');
 
       if (response == null) {
-        print('No access token available');
         return null;
       }
 
-      print('Requesting grocery list with access token to $backendUrl/api/Grocery/account/grocery-list');
-
       if (response.statusCode == 200) {
-        print('Successfully fetched grocery list: ${response.body}');
         Map<String, dynamic> responseBody = json.decode(response.body);
 
         String? groceryId = responseBody['groceryListId'];
@@ -35,7 +31,6 @@ class GroceryListService {
         return null;
       }
     } catch (e) {
-      print('Error fetching grocery list ID: $e');
       return null;
     }
   }
@@ -47,7 +42,6 @@ class GroceryListService {
       final response = await ApiClient().authorizedPut(
         'api/Grocery/$groceryListId/add-item',
         {
-          //"itemQuantityId": item.itemQuantityId,
           "quantity": item.quantity,
           "ingredient": {
             "ingredientName": item.groceryListItem.ingredientName,
@@ -56,13 +50,11 @@ class GroceryListService {
         },
       );
       if (response.statusCode == 200) {
-        print("Item added successfully: ${response.body}");
       } else {
-        print("Failed to add item: ${response.statusCode} - ${response.body}");
-        print(response);
+        return;
       }
     } catch (e) {
-      print("Error adding item: $e");
+      return;
     }
   }
 }

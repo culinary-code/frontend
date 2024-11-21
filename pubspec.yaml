@@ -35,7 +35,6 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   flutter_settings_ui: ^3.0.1
-  uuid: ^4.4.2
 
   # Lets you make http requests
   http: ^1.2.2
