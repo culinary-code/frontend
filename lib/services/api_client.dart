@@ -18,8 +18,6 @@ class ApiClient {
         'Authorization': 'Bearer $accesstoken',
       },
     );
-
-    print(response.body);
     return response;
   }
 
