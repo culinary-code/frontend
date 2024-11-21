@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/models/accounts/review.dart';
 import 'package:frontend/models/recipes/difficulty.dart';
 import 'package:frontend/models/recipes/ingredients/ingredient_quantity.dart';
 import 'package:frontend/models/recipes/ingredients/measurement_type.dart';
 import 'package:frontend/models/recipes/instruction_step.dart';
 import 'package:frontend/models/recipes/recipe.dart';
 import 'package:frontend/models/recipes/recipe_type.dart';
+import 'package:frontend/screens/add_review_screen.dart';
 import 'package:frontend/screens/add_to_mealplanner_screen.dart';
 import 'package:frontend/services/recipe_service.dart';
+import 'package:frontend/services/review_service.dart';
 
 class DetailScreen extends StatelessWidget {
   final String recipeId;
@@ -51,6 +54,7 @@ class _DetailOverviewState extends State<DetailOverview> {
   late final int cookingTime = recipe.cookingTime;
   late final RecipeType recipeType = recipe.recipeType;
   late final Difficulty difficulty = recipe.difficulty;
+  late final reviews = ReviewService().getReviewsByRecipeId(recipe.recipeId);
 
   bool isFavorited = false;
 
@@ -85,24 +89,57 @@ class _DetailOverviewState extends State<DetailOverview> {
                   textAlign: TextAlign.justify,
                   style: const TextStyle(fontSize: 18)),
             ),
-            PortionSelector(recipeAmountOfPeople: widget.recipe.amountOfPeople,),
+            PortionSelector(
+              recipeAmountOfPeople: widget.recipe.amountOfPeople,
+            ),
             const SizedBox(height: 16.0),
             IngredientsOverview(ingredientList: _ingredients),
             const SizedBox(height: 16.0),
             InstructionsOverview(instructionsSteps: _instructionSteps),
             const SizedBox(height: 16.0),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => AddToMealplannerScreen(recipe: recipe,)));
-                },
-                child: const Text('+ Weekoverzicht'),
-              ),]
+            Center(
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => AddToMealplannerScreen(
+                                      recipe: recipe,
+                                    )));
+                      },
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: Size(180, 40),
+                        padding:
+                            EdgeInsets.symmetric(vertical: 16, horizontal: 32),
+                        textStyle: TextStyle(fontSize: 16),
+                      ),
+                      child: const Text('+ Weekoverzicht'),
+                    ),
+                    const SizedBox(height: 16.0),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => AddReviewScreen(
+                                    recipeId: recipe.recipeId)));
+                      },
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: Size(180, 40),
+                        padding:
+                            EdgeInsets.symmetric(vertical: 16, horizontal: 32),
+                        textStyle: TextStyle(fontSize: 16),
+                      ),
+                      child: const Text('Voeg review toe'),
+                    ),
+                  ]),
             ),
+            const SizedBox(height: 16.0),
+            ReviewsOverview(reviews: reviews),
             const SizedBox(height: 16.0),
           ],
         ),
@@ -248,6 +285,7 @@ class GridItem extends StatelessWidget {
 // Hierin maak je een functie waarmee je het aantal porties bepaald.
 class PortionSelector extends StatefulWidget {
   final int recipeAmountOfPeople;
+
   const PortionSelector({super.key, required this.recipeAmountOfPeople});
 
   @override
@@ -469,4 +507,67 @@ class InstructionsOverview extends StatelessWidget {
       ),
     );
   }
+}
+
+class ReviewsOverview extends StatelessWidget {
+  final Future<List<Review>> reviews;
+
+  const ReviewsOverview({super.key, required this.reviews});
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<Review>>(
+      future: reviews,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        } else {
+          final reviews = snapshot.data;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 16),
+              const Text(
+                "Reviews",
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 10),
+              if (reviews!.isEmpty)
+                const Text("Er zijn nog geen reviews voor dit recept.")
+              else
+                ...reviews.map((review) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        review.reviewerUsername,
+                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      ),
+
+
+
+                      Text(
+                        "${review.amountOfStars} sterren op ${review.createdAt.day}-${review.createdAt.month}-${review.createdAt.year}:",
+                        style: const TextStyle(fontSize: 18),
+                      ),
+                      Text(
+                        review.description,
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                      const SizedBox(height: 10),
+                    ],
+                  );
+                }),
+            ],
+          );
+        }
+      },
+    );
+  }
+
 }
