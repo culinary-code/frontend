@@ -6,6 +6,8 @@ import 'package:frontend/services/account_service.dart';
 import 'package:uuid/uuid.dart';
 
 import '../Services/keycloak_service.dart';
+import '../models/meal_planning/grocery_list_item.dart';
+import '../models/meal_planning/grocery_list_item.dart';
 import '../services/grocery_list_service.dart';
 
 class GroceryScreen extends StatelessWidget {
@@ -119,7 +121,7 @@ class _GroceryListState extends State<GroceryList> {
                         background: Container(
                           color: Colors.red,
                         ),
-                        key: Key(item.itemQuantityId),
+                        key: Key(item.groceryListItem.ingredientName + item.groceryListItem.measurement.name + item.quantity.toString()),
                         direction: DismissDirection.endToStart,
                         onDismissed: (direction) {
                           deleteItem(item);
@@ -148,7 +150,7 @@ class _GroceryListState extends State<GroceryList> {
                                     child: Padding(
                                       padding: const EdgeInsets.all(8.0),
                                       child: Text(
-                                        item.ingredient.ingredientName,
+                                        item.groceryListItem.ingredientName,
                                         style: const TextStyle(fontSize: 22),
                                       ),
                                     ),
@@ -159,9 +161,9 @@ class _GroceryListState extends State<GroceryList> {
                                     child: Padding(
                                       padding: const EdgeInsets.all(8.0),
                                       child: Text(
-                                        item.ingredient != null
-                                            ? measurementTypeToStringMultipleNl(item.ingredient.measurement)
-                                            : measurementTypeToStringNl(item.ingredient.measurement),
+                                        item.groceryListItem != null
+                                            ? measurementTypeToStringMultipleNl(item.groceryListItem.measurement)
+                                            : measurementTypeToStringNl(item.groceryListItem.measurement),
                                         style: const TextStyle(fontSize: 22),
                                       ),
                                     ),
@@ -212,10 +214,8 @@ class _GroceryListState extends State<GroceryList> {
                         builder: (context) {
                           return DialogInputGrocery(onAdd: (name, quantity, measurement) {
                             final newItem = ItemQuantity(
-                              itemQuantityId: uuid.v4(),
                               quantity: quantity,
-                              ingredient: Ingredient(
-                                ingredientId: uuid.v4(),
+                              groceryListItem: GroceryListItem(
                                 ingredientName: name,
                                 measurement: measurement,
                                 ingredientQuantities: [],
@@ -328,10 +328,6 @@ class _DialogInputGroceryState extends State<DialogInputGrocery> {
       ],*/
     );
   }
-}
-
-Future<void> addItemToGroceryList(ItemQuantity item) async {
-  print('Adding item: ${item.ingredient.ingredientName}, Quantity: ${item.quantity}');
 }
 
 Future<void> showEditDialog({

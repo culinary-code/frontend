@@ -14,7 +14,6 @@ class GroceryListService {
 
   Future<String?> getGroceryListId() async {
     try {
-      print('Janno');
       final response =
           await ApiClient().authorizedGet('api/Grocery/account/grocery-list');
 
@@ -30,22 +29,9 @@ class GroceryListService {
         Map<String, dynamic> responseBody = json.decode(response.body);
 
         String? groceryId = responseBody['groceryListId'];
-        print('groceryId $groceryId' + responseBody['groceryListId']);
-
-        if (groceryId == null) {
-          print('groceryListId is null in the response.');
-          return null;
-        }
         return groceryId;
-      } else if (response.statusCode == 401) {
-        print('Unauthorized: Invalid access token');
-        return null;
-      } else if (response.statusCode == 404) {
-        print('Grocery list not found: ${response.body}');
-        return null;
       } else {
-        print(
-            'Failed to fetch grocery list: ${response.statusCode}, Response: ${response.body}');
+            'Failed to fetch grocery list: ${response.statusCode}, Response: ${response.body}';
         return null;
       }
     } catch (e) {
@@ -57,33 +43,18 @@ class GroceryListService {
 
   Future<void> addItemToGroceryList(
       String groceryListId, ItemQuantity item) async {
-    final Uri url =
-        Uri.parse("$backendUrl/api/Grocery/$groceryListId/add-item");
     try {
       final response = await ApiClient().authorizedPut(
         'api/Grocery/$groceryListId/add-item',
         {
-          "itemQuantityId": item.itemQuantityId,
+          //"itemQuantityId": item.itemQuantityId,
           "quantity": item.quantity,
           "ingredient": {
-            "ingredientId": item.ingredient.ingredientId,
-            "ingredientName": item.ingredient.ingredientName,
-            "measurement": item.ingredient.measurement.index,
+            "ingredientName": item.groceryListItem.ingredientName,
+            "measurement": item.groceryListItem.measurement.index,
           },
         },
       );
-
-      print("Request URL: $url");
-      print("Request Body: ${jsonEncode({
-            "itemQuantityId": item.itemQuantityId,
-            "quantity": item.quantity,
-            "ingredient": {
-              "ingredientId": item.ingredient.ingredientId,
-              "ingredientName": item.ingredient.ingredientName,
-              "measurement": item.ingredient.measurement.index,
-            },
-          })}");
-
       if (response.statusCode == 200) {
         print("Item added successfully: ${response.body}");
       } else {

@@ -3,6 +3,8 @@ import 'package:frontend/models/recipes/recipe.dart';
 import 'package:frontend/screens/grocery_screen.dart';
 import 'package:frontend/models/meal_planning/PlannedMeal.dart';
 
+import '../../meal_planning/grocery_list_item.dart';
+
 class IngredientQuantity {
   final String ingredientQuantityId;
   double quantity;

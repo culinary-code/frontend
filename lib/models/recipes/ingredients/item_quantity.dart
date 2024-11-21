@@ -1,14 +1,12 @@
-import 'package:frontend/models/recipes/ingredients/ingredient.dart';
+import 'package:frontend/models/meal_planning/grocery_list_item.dart';
 
 class ItemQuantity {
-  final String itemQuantityId;
   double quantity;
-  final Ingredient ingredient;
+  final GroceryListItem groceryListItem;
 
   ItemQuantity(
   {
-  required this.itemQuantityId,
   required this.quantity,
-  required this.ingredient
+  required this.groceryListItem
   });
 }
