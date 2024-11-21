@@ -53,7 +53,6 @@ class _RecipeOverviewState extends State<RecipeOverview> {
     _searchController.addListener(() {
       filterProvider.recipeName = _searchController.text;
     });
-
   }
 
   @override
@@ -109,7 +108,7 @@ class _RecipeOverviewState extends State<RecipeOverview> {
                   value: switch (selectedFilter) {
                     FilterType.ingredient => ingredientFilter,
                     FilterType.mealType => recipeTypeFilter.index.toString(),
-                  // Add other cases here if needed
+                    // Add other cases here if needed
                     _ => "", // Handle default case gracefully
                   },
                 ));
@@ -384,13 +383,18 @@ class FilterPopup extends StatelessWidget {
                 },
               ),
               SizedBox(height: 16),
-              _buildFilterOptions(tempFilter,
-                  tempIngredient, (newValue) {
-                tempIngredient = newValue;
-              }, tempMealType, (newValue) {
+              _buildFilterOptions(
+                  tempFilter,
+                  tempIngredient,
+                  (newValue) {
+                    tempIngredient = newValue;
+                  },
+                  tempMealType,
+                  (newValue) {
                     tempMealType = newValue;
-                  }
-              ),
+                  },
+                  dropdownFocusNode,
+                  context),
             ],
           ),
           actions: [
@@ -431,6 +435,8 @@ class FilterPopup extends StatelessWidget {
     ValueChanged<String> onIngredientChanged,
     RecipeType selectedRecipeType,
     ValueChanged<RecipeType> onRecipeTypeChanged,
+    FocusNode dropdownFocusNode,
+    BuildContext context,
   ) {
     switch (filterType) {
       case FilterType.ingredient:
@@ -443,6 +449,7 @@ class FilterPopup extends StatelessWidget {
         );
       case FilterType.mealType:
         return DropdownButtonFormField<RecipeType>(
+          focusNode: dropdownFocusNode,
           value: selectedRecipeType,
           decoration: InputDecoration(
             labelText: "Select Recipe Type",
@@ -460,6 +467,7 @@ class FilterPopup extends StatelessWidget {
             if (value != null) {
               onRecipeTypeChanged(value);
             }
+            FocusScope.of(context).requestFocus(FocusNode());
           },
         );
       default:
@@ -478,8 +486,8 @@ class FilterOptionChip extends StatelessWidget {
     required this.onDelete,
   });
 
-  getFilterText(){
-    return switch (filter.type){
+  getFilterText() {
+    return switch (filter.type) {
       FilterType.mealType => recipeTypeToStringNlFromIntString(filter.value),
       FilterType.cookTime => "${filter.value}'",
       _ => filter.value
@@ -491,8 +499,6 @@ class FilterOptionChip extends StatelessWidget {
     var backgroundColor = Theme.of(context).colorScheme.primaryContainer;
     var textColor = Theme.of(context).colorScheme.onPrimaryContainer;
     var borderColor = Theme.of(context).colorScheme.secondary;
-
-
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 2),
