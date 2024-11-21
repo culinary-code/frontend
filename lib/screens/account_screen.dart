@@ -326,24 +326,24 @@ class MyFamilySelector extends StatefulWidget {
 }
 
 class _MyFamilySelectorState extends State<MyFamilySelector> {
-  late int portions;
+  late int numberOfPeople;
 
   void addPortions() {
     setState(() {
-      portions++;
+      numberOfPeople++;
     });
   }
 
   void removePortions() {
     setState(() {
-      if (portions > 1) portions--;
+      if (numberOfPeople > 1) numberOfPeople--;
     });
   }
 
   @override
   void initState() {
     super.initState();
-    portions = widget.familySize;
+    numberOfPeople = widget.familySize;
   }
 
   // update familysize
@@ -352,7 +352,7 @@ class _MyFamilySelectorState extends State<MyFamilySelector> {
     super.didUpdateWidget(oldWidget);
     if (widget.familySize != oldWidget.familySize) {
       setState(() {
-        portions = widget.familySize;
+        numberOfPeople = widget.familySize;
       });
     }
   }
@@ -360,7 +360,7 @@ class _MyFamilySelectorState extends State<MyFamilySelector> {
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisAlignment: MainAxisAlignment.start,
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
@@ -397,7 +397,7 @@ class _MyFamilySelectorState extends State<MyFamilySelector> {
                   ),
                   const SizedBox(width: 10),
                   Text(
-                    '$portions',
+                    '$numberOfPeople',
                     style: const TextStyle(fontSize: 22),
                   ),
                   const SizedBox(width: 10),
@@ -411,6 +411,8 @@ class _MyFamilySelectorState extends State<MyFamilySelector> {
                       ),
                     ),
                   ),
+                  IconButton(onPressed: () {
+                  }, icon: Icon(Icons.save), alignment: Alignment.centerRight,)
                 ],
               )
             ],
