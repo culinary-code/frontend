@@ -51,10 +51,11 @@ class AccountSettings extends StatefulWidget {
 
 class _AccountSettingsState extends State<AccountSettings> {
   final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _familySizeController = TextEditingController();
   final AccountService _accountService = AccountService();
 
   String _currentUsername = '';
-  int _familySize = 1;
+  int _currentFamilySize = 0;
   late String userId;
 
   final storage = FlutterSecureStorage();
@@ -72,6 +73,8 @@ class _AccountSettingsState extends State<AccountSettings> {
       setState(() {
         _currentUsername = user.username;
         _usernameController.text = _currentUsername;
+        _currentFamilySize = user.familySize;
+        _familySizeController.text = _currentFamilySize.toString();
       });
     } catch (e) {
       print('Error initializing account settings: $e');
@@ -79,7 +82,7 @@ class _AccountSettingsState extends State<AccountSettings> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
               content:
-                  Text('Account instellingen konden niet geladen worden.')),
+              Text('Account instellingen konden niet geladen worden.')),
         );
       }
     }
@@ -115,6 +118,17 @@ class _AccountSettingsState extends State<AccountSettings> {
     }
   }
 
+  Future<void> _saveFamilySize() async {
+    final int newFamilySize = _familySizeController as int;
+    if (newFamilySize < 1) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text('Mijn gezin moet minstens 1 zijn.')),
+      );
+      return;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -127,15 +141,22 @@ class _AccountSettingsState extends State<AccountSettings> {
             decoration: BoxDecoration(
               border: Border.all(color: Colors.black, width: 2),
             ),
-            child: TextField(
-              controller: _usernameController,
-              decoration: InputDecoration(
-                  labelText: 'Gebruikersnaam',
-                  floatingLabelBehavior: FloatingLabelBehavior.never,
-                  border: OutlineInputBorder(),
-                  suffixIcon: IconButton(
-                      icon: Icon(Icons.save), onPressed: _saveUsername)),
-            )),
+            child: Column(
+              children: [
+                TextField(
+                  controller: _usernameController,
+                  decoration: InputDecoration(
+                      labelText: 'Gebruikersnaam',
+                      floatingLabelBehavior: FloatingLabelBehavior.never,
+                      border: OutlineInputBorder(),
+                      suffixIcon: IconButton(
+                          icon: Icon(Icons.save), onPressed: _saveUsername)),
+                ),
+                MyFamilySelector(familySize: _currentFamilySize)
+              ],
+            )
+
+        ),
       ]),
     );
   }
@@ -152,7 +173,7 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
   final _formKey = GlobalKey<FormState>();
   final controller = MultiSelectController<String>();
   final TextEditingController customPreferenceController =
-      TextEditingController();
+  TextEditingController();
   String? selectedValue;
 
   List<DropdownItem<String>> preferences = [
@@ -286,7 +307,6 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
                     child: const Text('Andere..'),
                   ),
                 ]),
-                MyFamilySelector(recipeAmountOfPeople: 8)
               ],
             ),
           ),
@@ -298,8 +318,8 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
 
 
 class MyFamilySelector extends StatefulWidget {
-  final int recipeAmountOfPeople;
-  const MyFamilySelector({super.key, required this.recipeAmountOfPeople});
+  final int familySize;
+  const MyFamilySelector({super.key, required this.familySize});
 
   @override
   State<MyFamilySelector> createState() => _MyFamilySelectorState();
@@ -323,7 +343,18 @@ class _MyFamilySelectorState extends State<MyFamilySelector> {
   @override
   void initState() {
     super.initState();
-    portions = widget.recipeAmountOfPeople;
+    portions = widget.familySize;
+  }
+
+  // update familysize
+  @override
+  void didUpdateWidget(covariant MyFamilySelector oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.familySize != oldWidget.familySize) {
+      setState(() {
+        portions = widget.familySize;
+      });
+    }
   }
 
   @override
