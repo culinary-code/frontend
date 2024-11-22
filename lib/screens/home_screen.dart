@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:frontend/models/recipes/difficulty.dart';
 import 'package:frontend/models/recipes/recipe.dart';
 import 'package:frontend/models/recipes/recipe_filter.dart';
 import 'package:frontend/models/recipes/recipe_type.dart';
@@ -39,6 +40,7 @@ class _RecipeOverviewState extends State<RecipeOverview> {
   List<FilterOption> filters = [];
   String recipeNameFilter = "";
   RecipeType recipeTypeFilter = RecipeType.snack;
+  Difficulty recipeDifficultyFilter = Difficulty.easy;
 
   @override
   void initState() {
@@ -85,6 +87,7 @@ class _RecipeOverviewState extends State<RecipeOverview> {
             initialFilter: FilterType.select,
             initialIngredient: '',
             initialRecipeType: RecipeType.snack,
+            initialDifficulty: Difficulty.easy,
             onFilterSelected: (filter) {
               setState(() {
                 selectedFilter = filter;
@@ -100,18 +103,30 @@ class _RecipeOverviewState extends State<RecipeOverview> {
                 recipeTypeFilter = recipeType;
               });
             },
+            onDifficultySelected: (difficulty) {
+              setState(() {
+                recipeDifficultyFilter = difficulty;
+              });
+            },
             onSave: () {
               // This method will add a new filter to the list
               setState(() {
+                // if filteroption is not ingredient --> remove previous selection
+                if (selectedFilter != FilterType.ingredient) _removeExistingFilter(selectedFilter);
+
+                // add the new filteroption
                 filters.add(FilterOption(
                   type: selectedFilter, // Use selected filter type
                   value: switch (selectedFilter) {
                     FilterType.ingredient => ingredientFilter,
                     FilterType.mealType => recipeTypeFilter.index.toString(),
+                    FilterType.difficulty => recipeDifficultyFilter.index.toString(),
                     // Add other cases here if needed
                     _ => "", // Handle default case gracefully
                   },
                 ));
+
+                // rerender the filteroptions
                 _onFilterChanged();
               });
             }
@@ -322,15 +337,21 @@ class _RecipeOverviewState extends State<RecipeOverview> {
       ),
     );
   }
+
+  void _removeExistingFilter(FilterType selectedFilter) {
+    filters.removeWhere((filter) => filter.type == selectedFilter);
+  }
 }
 
 class FilterPopup extends StatelessWidget {
   final FilterType initialFilter;
   final String initialIngredient;
   final RecipeType initialRecipeType;
+  final Difficulty initialDifficulty;
   final ValueChanged<FilterType> onFilterSelected;
   final ValueChanged<String> onIngredientEntered;
   final ValueChanged<RecipeType> onRecipeTypeSelected;
+  final ValueChanged<Difficulty> onDifficultySelected;
   final VoidCallback onSave;
 
   const FilterPopup({
@@ -338,9 +359,11 @@ class FilterPopup extends StatelessWidget {
     required this.initialFilter,
     required this.initialIngredient,
     required this.initialRecipeType,
+    required this.initialDifficulty,
     required this.onFilterSelected,
     required this.onIngredientEntered,
     required this.onRecipeTypeSelected,
+    required this.onDifficultySelected,
     required this.onSave,
   });
 
@@ -349,6 +372,7 @@ class FilterPopup extends StatelessWidget {
     FilterType tempFilter = initialFilter;
     String tempIngredient = initialIngredient;
     RecipeType tempMealType = initialRecipeType;
+    Difficulty tempDifficulty = initialDifficulty;
     FocusNode dropdownFocusNode = FocusNode();
 
     return StatefulBuilder(
@@ -369,6 +393,7 @@ class FilterPopup extends StatelessWidget {
                   FilterType.select,
                   FilterType.ingredient,
                   FilterType.mealType,
+                  FilterType.difficulty,
                 ]
                     .map((filterType) => DropdownMenuItem<FilterType>(
                           value: filterType,
@@ -393,6 +418,10 @@ class FilterPopup extends StatelessWidget {
                   (newValue) {
                     tempMealType = newValue;
                   },
+                  tempDifficulty,
+                      (newValue) {
+                        tempDifficulty = newValue;
+                  },
                   dropdownFocusNode,
                   context),
             ],
@@ -410,6 +439,7 @@ class FilterPopup extends StatelessWidget {
                       onFilterSelected(tempFilter);
                       onIngredientEntered(tempIngredient);
                       onRecipeTypeSelected(tempMealType);
+                      onDifficultySelected(tempDifficulty);
                       onSave();
                       Navigator.pop(context); // Close the dialog
                     }
@@ -435,6 +465,8 @@ class FilterPopup extends StatelessWidget {
     ValueChanged<String> onIngredientChanged,
     RecipeType selectedRecipeType,
     ValueChanged<RecipeType> onRecipeTypeChanged,
+      Difficulty selectedDifficulty,
+      ValueChanged<Difficulty> onDifficultyChanged,
     FocusNode dropdownFocusNode,
     BuildContext context,
   ) {
@@ -452,7 +484,7 @@ class FilterPopup extends StatelessWidget {
           focusNode: dropdownFocusNode,
           value: selectedRecipeType,
           decoration: InputDecoration(
-            labelText: "Select Recipe Type",
+            labelText: "Selecteer Recepttype",
             border: OutlineInputBorder(),
           ),
           items: RecipeType.values
@@ -466,6 +498,29 @@ class FilterPopup extends StatelessWidget {
           onChanged: (value) {
             if (value != null) {
               onRecipeTypeChanged(value);
+            }
+            FocusScope.of(context).requestFocus(FocusNode());
+          },
+        );
+      case FilterType.difficulty:
+        return DropdownButtonFormField<Difficulty>(
+          focusNode: dropdownFocusNode,
+          value: selectedDifficulty,
+          decoration: InputDecoration(
+            labelText: "Selecteer moeilijkheid",
+            border: OutlineInputBorder(),
+          ),
+          items: Difficulty.values
+              .where((difficulty) => difficulty != Difficulty.notAvailable)
+              .map((difficulty) {
+            return DropdownMenuItem<Difficulty>(
+              value: difficulty,
+              child: Text(difficultyToStringNl(difficulty)),
+            );
+          }).toList(),
+          onChanged: (value) {
+            if (value != null) {
+              onDifficultyChanged(value);
             }
             FocusScope.of(context).requestFocus(FocusNode());
           },
@@ -489,6 +544,7 @@ class FilterOptionChip extends StatelessWidget {
   getFilterText() {
     return switch (filter.type) {
       FilterType.mealType => recipeTypeToStringNlFromIntString(filter.value),
+      FilterType.difficulty => recipeDifficultyToStringNlFromIntString(filter.value),
       FilterType.cookTime => "${filter.value}'",
       _ => filter.value
     };
