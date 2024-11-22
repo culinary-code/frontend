@@ -13,14 +13,28 @@ class AddReviewScreen extends StatefulWidget {
 class _AddReviewScreenState extends State<AddReviewScreen> {
   final TextEditingController _descriptionController = TextEditingController();
   int _rating = 0;
+  bool _showRatingError = false;
 
-  void _submitReview() {
+  Future<void> _submitReview() async {
     if (_rating == 0) {
-      // TODO: Show an error message
+      setState(() {
+        _showRatingError = true;
+      });
       return;
     }
-    ReviewService().submitReview(widget.recipeId, _rating, _descriptionController.text);
-    Navigator.pop(context);
+    Map<bool, String> result = await ReviewService()
+        .submitReview(widget.recipeId, _rating, _descriptionController.text);
+
+    if (!mounted) return;
+
+    if (result.keys.first) {
+      Navigator.pop(context);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(result.values.first),
+        backgroundColor: Colors.red,
+      ));
+    }
   }
 
   @override
@@ -53,11 +67,16 @@ class _AddReviewScreenState extends State<AddReviewScreen> {
                   onPressed: () {
                     setState(() {
                       _rating = index + 1;
+                      _showRatingError = false;
                     });
                   },
                 );
               }),
             ),
+            // add a small text to show error message if rating is not selected
+            if (_showRatingError)
+              Text('Selecteer een beoordeling',
+                  style: TextStyle(color: Colors.red)),
             SizedBox(height: 20),
             TextField(
               controller: _descriptionController,

@@ -1,16 +1,19 @@
 import 'package:frontend/models/accounts/preference.dart';
 import 'package:frontend/models/accounts/review.dart';
 import 'package:frontend/models/recipes/favorite_recipe.dart';
+import 'package:frontend/models/recipes/ingredients/ingredient.dart';
 import 'package:frontend/models/recipes/ingredients/ingredient_quantity.dart';
+import 'package:frontend/models/recipes/ingredients/measurement_type.dart';
 import 'package:frontend/models/recipes/instruction_step.dart';
 import 'package:frontend/models/recipes/recipe_type.dart';
 import 'package:frontend/models/recipes/difficulty.dart';
-import 'package:frontend/models/meal_planning/PlannedMeal.dart';
+import 'package:frontend/models/meal_planning/planned_meal.dart';
 
 class Recipe {
   final String recipeId;
   final String recipeName;
-  final double score;
+  final double averageRating;
+  final int amountOfRatings;
   bool isFavorited;
 
   final List<IngredientQuantity> ingredients;
@@ -32,7 +35,7 @@ class Recipe {
   Recipe(
       {required this.recipeId,
       required this.recipeName,
-      this.score = 0.0,
+      this.averageRating = 0.0,
       this.isFavorited = false,
       this.ingredients = const [],
       this.preferences = const [],
@@ -43,17 +46,57 @@ class Recipe {
       required this.difficulty,
       this.imagePath = "",
       required this.createdAt,
+      this.amountOfRatings = 0,
       this.instructions = const [],
       this.reviews = const [],
       this.plannedMeals = const [],
       this.favoriteRecipes = const []});
+
+  static Recipe fromJson(Map<String, dynamic> json) {
+    return Recipe(
+      recipeId: json['recipeId'],
+      recipeName: json['recipeName'],
+      recipeType: intToRecipeType(json['recipeType']),
+      description: json['description'],
+      cookingTime: json['cookingTime'],
+      amountOfPeople: json['amountOfPeople'],
+      difficulty: intToDifficulty(json['difficulty']),
+      imagePath: json['imagePath'],
+      createdAt: DateTime.parse(json['createdAt']),
+      averageRating: json['averageRating'],
+      amountOfRatings: json['amountOfRatings'],
+      instructions: (json['instructions'] as List<dynamic>?)
+              ?.map((instruction) => InstructionStep(
+                    instructionStepId: instruction['instructionStepId'],
+                    instruction: instruction['instruction'],
+                    stepNumber: instruction['stepNumber'],
+                  ))
+              .toList() ??
+          [],
+      ingredients: (json['ingredients'] as List<dynamic>?)
+              ?.map((ingredient) => IngredientQuantity(
+                    ingredientQuantityId: ingredient['ingredientQuantityId'],
+                    quantity: ingredient['quantity'],
+                    ingredient: Ingredient(
+                      ingredientId: ingredient['ingredient']['ingredientId'],
+                      ingredientName: ingredient['ingredient']
+                          ['ingredientName'],
+                      measurement: intToMeasurementType(
+                          ingredient['ingredient']['measurement']),
+                      ingredientQuantities: [],
+                    ),
+                  ))
+              .toList() ??
+          [],
+    );
+  }
 
   static List<Recipe> recipeList() {
     return [
       Recipe(
         recipeName: "Puree met spinazie",
         imagePath: "https://picsum.photos/300/300",
-        score: 5.0,
+        averageRating: 5.0,
         isFavorited: false,
         recipeId: "1",
         recipeType: RecipeType.dinner,
@@ -64,9 +107,10 @@ class Recipe {
         createdAt: DateTime.now(),
       ),
       Recipe(
-        recipeName: "Friet met stoofvlees, mayonaise en een hartig witloofslaatje met mosterddressing",
+        recipeName:
+            "Friet met stoofvlees, mayonaise en een hartig witloofslaatje met mosterddressing",
         imagePath: "https://picsum.photos/300/300",
-        score: 4.6,
+        averageRating: 4.6,
         isFavorited: true,
         recipeId: "2",
         recipeType: RecipeType.dinner,
@@ -79,7 +123,7 @@ class Recipe {
       Recipe(
         recipeName: "Aardappelgratin met bechamelsaus",
         imagePath: "https://picsum.photos/300/300",
-        score: 4.1,
+        averageRating: 4.1,
         isFavorited: false,
         recipeId: "3",
         recipeType: RecipeType.dinner,
@@ -92,7 +136,7 @@ class Recipe {
       Recipe(
         recipeName: "Garnaalkroketten",
         imagePath: "https://picsum.photos/300/300",
-        score: 0.0,
+        averageRating: 0.0,
         isFavorited: true,
         recipeId: "4",
         recipeType: RecipeType.dinner,
@@ -105,7 +149,7 @@ class Recipe {
       Recipe(
         recipeName: "Pasta Carbonara",
         imagePath: "https://picsum.photos/300/300",
-        score: 4.8,
+        averageRating: 4.8,
         isFavorited: false,
         recipeId: "5",
         recipeType: RecipeType.dinner,
@@ -118,7 +162,7 @@ class Recipe {
       Recipe(
         recipeName: "Spaghetti Bolognese",
         imagePath: "https://picsum.photos/300/300",
-        score: 4.7,
+        averageRating: 4.7,
         isFavorited: true,
         recipeId: "6",
         recipeType: RecipeType.dinner,
@@ -131,7 +175,7 @@ class Recipe {
       Recipe(
         recipeName: "Caesar Salad",
         imagePath: "https://picsum.photos/300/300",
-        score: 4.3,
+        averageRating: 4.3,
         isFavorited: false,
         recipeId: "7",
         recipeType: RecipeType.lunch,
@@ -144,7 +188,7 @@ class Recipe {
       Recipe(
         recipeName: "Vegetarian Quiche",
         imagePath: "https://picsum.photos/300/300",
-        score: 4.5,
+        averageRating: 4.5,
         isFavorited: true,
         recipeId: "8",
         recipeType: RecipeType.dinner,
@@ -157,7 +201,7 @@ class Recipe {
       Recipe(
         recipeName: "French Onion Soup",
         imagePath: "https://picsum.photos/300/300",
-        score: 4.0,
+        averageRating: 4.0,
         isFavorited: false,
         recipeId: "9",
         recipeType: RecipeType.lunch,
@@ -170,7 +214,7 @@ class Recipe {
       Recipe(
         recipeName: "Chicken Stir Fry",
         imagePath: "https://picsum.photos/300/300",
-        score: 4.6,
+        averageRating: 4.6,
         isFavorited: false,
         recipeId: "10",
         recipeType: RecipeType.dinner,
@@ -183,7 +227,7 @@ class Recipe {
       Recipe(
         recipeName: "Beef Stew",
         imagePath: "https://picsum.photos/300/300",
-        score: 4.2,
+        averageRating: 4.2,
         isFavorited: true,
         recipeId: "11",
         recipeType: RecipeType.dinner,
@@ -196,7 +240,7 @@ class Recipe {
       Recipe(
         recipeName: "Salmon with Asparagus",
         imagePath: "https://picsum.photos/300/300",
-        score: 4.9,
+        averageRating: 4.9,
         isFavorited: true,
         recipeId: "12",
         recipeType: RecipeType.dinner,
@@ -209,7 +253,7 @@ class Recipe {
       Recipe(
         recipeName: "Shrimp Tacos",
         imagePath: "https://picsum.photos/300/300",
-        score: 4.4,
+        averageRating: 4.4,
         isFavorited: false,
         recipeId: "13",
         recipeType: RecipeType.dinner,
@@ -222,7 +266,7 @@ class Recipe {
       Recipe(
         recipeName: "Minestrone Soup",
         imagePath: "https://picsum.photos/300/300",
-        score: 4.1,
+        averageRating: 4.1,
         isFavorited: false,
         recipeId: "14",
         recipeType: RecipeType.lunch,
@@ -235,7 +279,7 @@ class Recipe {
       Recipe(
         recipeName: "Chicken Parmesan",
         imagePath: "https://picsum.photos/300/300",
-        score: 5.0,
+        averageRating: 5.0,
         isFavorited: true,
         recipeId: "15",
         recipeType: RecipeType.dinner,
@@ -248,7 +292,7 @@ class Recipe {
       Recipe(
         recipeName: "Eggplant Parmesan",
         imagePath: "https://picsum.photos/300/300",
-        score: 4.3,
+        averageRating: 4.3,
         isFavorited: false,
         recipeId: "16",
         recipeType: RecipeType.dinner,
@@ -261,7 +305,7 @@ class Recipe {
       Recipe(
         recipeName: "Lamb Chops with Mint",
         imagePath: "https://picsum.photos/300/300",
-        score: 4.8,
+        averageRating: 4.8,
         isFavorited: true,
         recipeId: "17",
         recipeType: RecipeType.dinner,
@@ -274,7 +318,7 @@ class Recipe {
       Recipe(
         recipeName: "Vegetable Stir Fry",
         imagePath: "https://picsum.photos/300/300",
-        score: 4.0,
+        averageRating: 4.0,
         isFavorited: false,
         recipeId: "18",
         recipeType: RecipeType.dinner,
@@ -287,7 +331,7 @@ class Recipe {
       Recipe(
         recipeName: "Banana Pancakes",
         imagePath: "https://picsum.photos/300/300",
-        score: 4.5,
+        averageRating: 4.5,
         isFavorited: true,
         recipeId: "19",
         recipeType: RecipeType.breakfast,
@@ -300,7 +344,7 @@ class Recipe {
       Recipe(
         recipeName: "Fish Tacos",
         imagePath: "https://picsum.photos/300/300",
-        score: 4.2,
+        averageRating: 4.2,
         isFavorited: false,
         recipeId: "20",
         recipeType: RecipeType.dinner,
@@ -313,7 +357,7 @@ class Recipe {
       Recipe(
         recipeName: "Chili Con Carne",
         imagePath: "https://picsum.photos/300/300",
-        score: 4.6,
+        averageRating: 4.6,
         isFavorited: true,
         recipeId: "21",
         recipeType: RecipeType.dinner,
@@ -326,7 +370,7 @@ class Recipe {
       Recipe(
         recipeName: "Tomato Basil Pasta",
         imagePath: "https://picsum.photos/300/300",
-        score: 4.1,
+        averageRating: 4.1,
         isFavorited: false,
         recipeId: "22",
         recipeType: RecipeType.dinner,
@@ -339,7 +383,7 @@ class Recipe {
       Recipe(
         recipeName: "Pulled Pork Sandwich",
         imagePath: "https://picsum.photos/300/300",
-        score: 4.8,
+        averageRating: 4.8,
         isFavorited: true,
         recipeId: "23",
         recipeType: RecipeType.lunch,
@@ -352,7 +396,7 @@ class Recipe {
       Recipe(
         recipeName: "Stuffed Bell Peppers",
         imagePath: "https://picsum.photos/300/300",
-        score: 4.4,
+        averageRating: 4.4,
         isFavorited: false,
         recipeId: "24",
         recipeType: RecipeType.dinner,
@@ -365,7 +409,7 @@ class Recipe {
       Recipe(
         recipeName: "Chicken Alfredo",
         imagePath: "https://picsum.photos/300/300",
-        score: 4.7,
+        averageRating: 4.7,
         isFavorited: true,
         recipeId: "25",
         recipeType: RecipeType.dinner,
@@ -378,7 +422,7 @@ class Recipe {
       Recipe(
         recipeName: "Turkey Meatballs",
         imagePath: "https://picsum.photos/300/300",
-        score: 4.3,
+        averageRating: 4.3,
         isFavorited: false,
         recipeId: "26",
         recipeType: RecipeType.dinner,
@@ -391,7 +435,7 @@ class Recipe {
       Recipe(
         recipeName: "Roasted Vegetables",
         imagePath: "https://picsum.photos/300/300",
-        score: 4.5,
+        averageRating: 4.5,
         isFavorited: false,
         recipeId: "27",
         recipeType: RecipeType.dinner,
@@ -404,7 +448,7 @@ class Recipe {
       Recipe(
         recipeName: "Beef Wellington",
         imagePath: "https://picsum.photos/300/300",
-        score: 4.9,
+        averageRating: 4.9,
         isFavorited: true,
         recipeId: "28",
         recipeType: RecipeType.dinner,
@@ -417,7 +461,7 @@ class Recipe {
       Recipe(
         recipeName: "Clam Chowder",
         imagePath: "https://picsum.photos/300/300",
-        score: 4.0,
+        averageRating: 4.0,
         isFavorited: false,
         recipeId: "29",
         recipeType: RecipeType.dinner,
@@ -430,7 +474,7 @@ class Recipe {
       Recipe(
         recipeName: "Mushroom Risotto",
         imagePath: "https://picsum.photos/300/300",
-        score: 4.5,
+        averageRating: 4.5,
         isFavorited: true,
         recipeId: "30",
         recipeType: RecipeType.dinner,
@@ -440,7 +484,6 @@ class Recipe {
         difficulty: Difficulty.intermediate,
         createdAt: DateTime.now(),
       ),
-    ]
-    ;
+    ];
   }
 }

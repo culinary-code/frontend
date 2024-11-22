@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:frontend/models/accounts/review.dart';
 import 'package:frontend/models/recipes/difficulty.dart';
@@ -54,7 +56,8 @@ class _DetailOverviewState extends State<DetailOverview> {
   late final int cookingTime = recipe.cookingTime;
   late final RecipeType recipeType = recipe.recipeType;
   late final Difficulty difficulty = recipe.difficulty;
-  late final reviews = ReviewService().getReviewsByRecipeId(recipe.recipeId);
+  late var reviews = ReviewService().getReviewsByRecipeId(recipe.recipeId);
+  Timer? _debounce;
 
   bool isFavorited = false;
 
@@ -62,6 +65,12 @@ class _DetailOverviewState extends State<DetailOverview> {
     setState(() {
       isFavorited = !isFavorited;
     });
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    super.dispose();
   }
 
   @override
@@ -126,7 +135,17 @@ class _DetailOverviewState extends State<DetailOverview> {
                             context,
                             MaterialPageRoute(
                                 builder: (context) => AddReviewScreen(
-                                    recipeId: recipe.recipeId)));
+                                    recipeId: recipe.recipeId))).then((value) {
+                          setState(() {
+                            _debounce =
+                                Timer(const Duration(milliseconds: 500), () {
+                              reviews = ReviewService()
+                                  .getReviewsByRecipeId(recipe.recipeId);
+                              // force rerender of reviews overview
+                              setState(() {});
+                            });
+                          });
+                        });
                       },
                       style: ElevatedButton.styleFrom(
                         minimumSize: Size(180, 40),
@@ -139,7 +158,8 @@ class _DetailOverviewState extends State<DetailOverview> {
                   ]),
             ),
             const SizedBox(height: 16.0),
-            ReviewsOverview(reviews: reviews),
+            ReviewsOverview(
+                reviews: reviews, averageRating: recipe.averageRating),
             const SizedBox(height: 16.0),
           ],
         ),
@@ -511,8 +531,10 @@ class InstructionsOverview extends StatelessWidget {
 
 class ReviewsOverview extends StatelessWidget {
   final Future<List<Review>> reviews;
+  final double averageRating;
 
-  const ReviewsOverview({super.key, required this.reviews});
+  const ReviewsOverview(
+      {super.key, required this.reviews, required this.averageRating});
 
   @override
   Widget build(BuildContext context) {
@@ -529,12 +551,41 @@ class ReviewsOverview extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 16),
-              const Text(
-                "Reviews",
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        "Reviews",
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Expanded(
+                        child: Align(
+                          alignment: Alignment.centerRight,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                averageRating.toStringAsFixed(1),
+                                style: const TextStyle(fontSize: 20),
+                              ),
+                              if (averageRating > 0 && averageRating < 5)
+                                const Icon(Icons.star_half, size: 35, color: Colors.amber)
+                              else if (averageRating == 0)
+                                const Icon(Icons.star_outline, size: 35, color: Colors.amber)
+                              else if (averageRating == 5)
+                                  const Icon(Icons.star, size: 35, color: Colors.amber)
+                            ],
+                          ),
+                        ),
+                      )
+                    ],
+                  ),
+                ],
               ),
               const SizedBox(height: 10),
               if (reviews!.isEmpty)
@@ -546,15 +597,37 @@ class ReviewsOverview extends StatelessWidget {
                     children: [
                       Text(
                         review.reviewerUsername,
-                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                            fontSize: 20, fontWeight: FontWeight.bold),
                       ),
-
-
-
-                      Text(
-                        "${review.amountOfStars} sterren op ${review.createdAt.day}-${review.createdAt.month}-${review.createdAt.year}:",
-                        style: const TextStyle(fontSize: 18),
-                      ),
+                      Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Row(
+                                  children: List.generate(5, (index) {
+                                    return Icon(
+                                      index < review.amountOfStars
+                                          ? Icons.star
+                                          : Icons.star_border,
+                                      color: Colors.amber,
+                                      size: 28,
+                                    );
+                                  }),
+                                ),
+                                Expanded(
+                                  child: Align(
+                                    alignment: Alignment.centerRight,
+                                    child: Text(
+                                      '${review.createdAt.day}-${review.createdAt.month}-${review.createdAt.year}',
+                                      style: const TextStyle(fontSize: 16),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            )
+                          ]),
                       Text(
                         review.description,
                         style: const TextStyle(fontSize: 16),
@@ -569,5 +642,4 @@ class ReviewsOverview extends StatelessWidget {
       },
     );
   }
-
 }

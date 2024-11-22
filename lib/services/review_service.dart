@@ -28,21 +28,21 @@ class ReviewService {
     return reviews;
   }
 
-  Future<bool> submitReview(String recipeId, int rating, String description) async {
+  Future<Map<bool, String>> submitReview(String recipeId, int rating, String description) async {
     final response = await ApiClient().authorizedPost('Review/CreateReview', {
       'recipeId': recipeId,
       'amountOfStars': rating,
       'description': description,
     });
 
-    if (response.statusCode != 200) {
-      throw FormatException('Failed to submit review: ${response.body}');
+    if (response.statusCode == 409) {
+      return {false: 'U heeft dit recept al beoordeeld!'};
     }
 
-    if (response.statusCode == 200) {
-      return true;
-    } else {
-      return false;
+    if (response.statusCode != 200) {
+      return {false: 'Er is iets misgegaan bij het toevoegen van uw review. Probeer het later opnieuw.'};
     }
+
+    return {true: 'Review succesvol toegevoegd!'};
   }
 }
