@@ -1,3 +1,6 @@
+import 'package:frontend/models/accounts/preference.dart';
+import 'package:frontend/models/accounts/preferencedto.dart';
+
 class Account {
   final String userId;
   final String username;

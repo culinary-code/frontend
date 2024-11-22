@@ -5,6 +5,7 @@ import 'package:frontend/models/accounts/preference.dart';
 import 'package:multi_dropdown/multi_dropdown.dart';
 
 import '../models/accounts/account.dart';
+import '../models/accounts/preferencedto.dart';
 import '../services/account_service.dart';
 
 class AccountScreen extends StatelessWidget {
@@ -315,8 +316,11 @@ class PreferencesSettings extends StatefulWidget {
 class _PreferencesSettingsState extends State<PreferencesSettings> {
   final _formKey = GlobalKey<FormState>();
   final controller = MultiSelectController<String>();
-  final TextEditingController customPreferenceController =
-      TextEditingController();
+  final TextEditingController customPreferenceController = TextEditingController();
+
+  final _accountService = AccountService();
+  var userId = '';
+
   String? selectedValue;
 
   List<DropdownItem<String>> preferences = [
@@ -326,45 +330,45 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
     DropdownItem(label: 'Lactose Intolerant', value: 'Lactose Intolerant'),
   ];
 
+  // Method to update preferences in the backend
+  Future<void> _updatePreferences() async {
+    try {
+      // Get selected preferences as a list
+      List<String> selectedPreferences = controller.selectedItems.map((item) => item.value).toList();
+
+      // Convert the list to a format your backend expects
+      List<PreferenceDto> preferencesToUpdate = selectedPreferences
+          .map((pref) => PreferenceDto(preferenceId: pref, preferenceName: pref))
+          .toList();
+
+      // Get the user ID (either via JWT or another method)
+      String userId = await _accountService.getUserId();
+
+      // Call the update method from AccountService to send the preferences to the backend
+      await _accountService.updateUserPreferences(userId, preferencesToUpdate);
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Preferences updated successfully')));
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to update preferences')));
+    }
+  }
+
+  // Add new preference to dropdown
   void _addPreferenceToDropdown() {
     String newPreference = customPreferenceController.text.trim();
-    if (newPreference.isNotEmpty &&
-        !preferences.any((item) => item.value == newPreference)) {
+    if (newPreference.isNotEmpty && !preferences.any((item) => item.value == newPreference)) {
       setState(() {
         selectedValue = newPreference;
-        preferences
-            .add(DropdownItem(label: newPreference, value: newPreference));
-        controller.addItems(
-            [DropdownItem(label: newPreference, value: newPreference)]);
-        controller.selectedItems
-            .add(DropdownItem(label: newPreference, value: newPreference));
+        preferences.add(DropdownItem(label: newPreference, value: newPreference));
+        controller.addItems([DropdownItem(label: newPreference, value: newPreference)]);
+        controller.selectedItems.add(DropdownItem(label: newPreference, value: newPreference));
       });
       Navigator.pop(context);
     } else {
       debugPrint("Preference was empty or already exists.");
     }
   }
-
-  void _savePreferences() async {
-    try {
-      final userId = await AccountService().getUserId();
-      final selectedPreferences =
-      controller.selectedItems.map((item) => item.value).toList();
-      await AccountService().updatePreferences(userId, selectedPreferences.cast<Preference>());
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Preferences saved!')),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to save preferences.'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
-
 
   @override
   Widget build(BuildContext context) {
@@ -386,8 +390,7 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
                   controller: controller,
                   enabled: true,
                   searchEnabled: true,
-                  chipDecoration: const ChipDecoration(
-                      wrap: true, runSpacing: 2, spacing: 10),
+                  chipDecoration: const ChipDecoration(wrap: true, runSpacing: 2, spacing: 10),
                   fieldDecoration: FieldDecoration(
                     hintText: 'Voorkeuren',
                     hintStyle: const TextStyle(color: Colors.black),
@@ -415,7 +418,6 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
                     return null;
                   },
                   onSelectionChange: (selectedPreferences) {
-                    _savePreferences();
                     debugPrint('OnSelectionChange: $selectedPreferences');
                   },
                 ),
@@ -424,9 +426,7 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
                   ElevatedButton(
                     onPressed: () {
                       if (_formKey.currentState?.validate() ?? false) {
-                        final selectedItems = controller.selectedItems;
-                        _savePreferences();
-                        debugPrint(selectedItems.toString());
+                        _updatePreferences();  // Update preferences when "Opslaan" is pressed
                       }
                     },
                     child: const Text('Opslaan'),
@@ -452,8 +452,7 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
                           content: TextField(
                             controller: customPreferenceController,
                             maxLength: 25,
-                            decoration: const InputDecoration(
-                                labelText: "Eigen voorkeur"),
+                            decoration: const InputDecoration(labelText: "Eigen voorkeur"),
                           ),
                           actions: [
                             TextButton(

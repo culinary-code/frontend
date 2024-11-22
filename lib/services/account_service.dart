@@ -3,6 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:frontend/models/accounts/account.dart';
 import 'package:frontend/models/accounts/preference.dart';
+import 'package:frontend/models/accounts/preferencedto.dart';
 import 'package:frontend/services/api_client.dart';
 
 class AccountService {
@@ -18,6 +19,7 @@ class AccountService {
     if (response.statusCode == 200) {
       try {
         var jsonResponse = json.decode(response.body);
+        print(jsonResponse);
         return Account.fromJson(jsonResponse);
       } catch (e) {
         throw FormatException('Error parsing response: $e');
@@ -86,9 +88,35 @@ class AccountService {
     }
   }
 
-  Future<void> updatePreferences(String userId, List<Preference> newPreferences) async {
+  Future<void> updateUserPreferences(String userId, List<PreferenceDto> preferences) async {
     try {
-      final endpoint = 'api/Account/updateAccount?actionType=updatepreferences';
+      final endpoint = 'api/Account/updatePreferences';  // Your backend endpoint
+      final preferencesJson = preferences.map((pref) => pref.toJson()).toList();
+
+      final response = await ApiClient().authorizedPut(endpoint, {'preferences': preferencesJson});
+
+      if (response.statusCode == 200) {
+        print('Preferences updated successfully');
+      } else {
+        throw Exception('Error updating preferences: ${response.statusCode}, ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Error updating preferences: $e');
+    }
+  }
+
+
+
+
+
+
+
+
+
+
+/*Future<void> updatePreferences(String userId, List<Preference> newPreferences) async {
+    try {
+      final endpoint = 'api/Account/updatePreferences';
 
       final response = await ApiClient().authorizedPut(endpoint, {
         'Preferences': newPreferences,
@@ -101,4 +129,20 @@ class AccountService {
       throw Exception('Error updating familySize: $e');
     }
   }
+
+  Future<List<Preference>> getPreferences() async {
+    try {
+      final endpoint = 'api/Account/getPreferences';
+      final response = await ApiClient().authorizedGet(endpoint);
+
+      if (response.statusCode == 200) {
+        List<dynamic> preferencesJson = json.decode(response.body);
+        return preferencesJson.map((p) => Preference.fromJson(p)).toList();
+      } else {
+        throw Exception('Error fetching preferences: ${response.statusCode}, ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Error fetching preferences: $e');
+    }
+  }*/
 }
