@@ -60,7 +60,7 @@ class PlannedMealsService {
   Future<List<PlannedMealReduced>> getPlannedMealsByDate(
       DateTime dateTime) async {
     final response =
-        await ApiClient().authorizedGet('api/MealPlanner/PlannedMeal/$dateTime');
+        await ApiClient().authorizedGet('api/MealPlanner/$dateTime');
 
     if (response.statusCode == 404) {
       return [];
