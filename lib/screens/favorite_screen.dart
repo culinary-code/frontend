@@ -68,7 +68,7 @@ class _FavoriteRecipesState extends State<FavoriteRecipes> {
                 return RecipeCard(
                   recipeId: recipe.recipeId,
                   recipeName: recipe.recipeName,
-                  score: recipe.score,
+                  score: recipe.averageRating,
                   isFavorited: recipe.isFavorited,
                   onFavoriteToggle: () => _toggleFavorite(recipe),
                   imageUrl: recipe.imagePath,

@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:frontend/state/RecipeFilterOptionsProvider.dart';
+import 'package:frontend/state/recipe_filter_options_provider.dart';
 import 'package:frontend/theme/theme_loader.dart';
 import 'package:frontend/screens/keycloak/login_screen.dart';
 import 'package:provider/provider.dart';

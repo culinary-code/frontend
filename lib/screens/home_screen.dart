@@ -6,7 +6,7 @@ import 'package:frontend/models/recipes/recipe.dart';
 import 'package:frontend/models/recipes/recipe_filter.dart';
 import 'package:frontend/models/recipes/recipe_type.dart';
 import 'package:frontend/screens/create_recipe_screen.dart';
-import 'package:frontend/state/RecipeFilterOptionsProvider.dart';
+import 'package:frontend/state/recipe_filter_options_provider.dart';
 import 'package:frontend/widgets/recipe_card.dart';
 import 'package:provider/provider.dart';
 
@@ -312,7 +312,7 @@ class _RecipeOverviewState extends State<RecipeOverview> {
                               return RecipeCard(
                                 recipeId: recipes[index].recipeId,
                                 recipeName: recipes[index].recipeName,
-                                score: recipes[index].score,
+                                score: recipes[index].averageRating,
                                 isFavorited: recipes[index].isFavorited,
                                 imageUrl: recipes[index].imagePath,
                                 onFavoriteToggle: () {
