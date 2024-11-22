@@ -53,7 +53,7 @@ class AccountService {
 
   Future<void> updateUsername(String userId, String newUsername) async {
     try {
-      final endpoint = 'api/Account/updateAccount';
+      final endpoint = 'api/Account/updateAccount?actionType=updateusername';
 
       final response = await ApiClient().authorizedPut(endpoint, {
         'Name': newUsername,
@@ -70,7 +70,7 @@ class AccountService {
 
   Future<void> updateFamilySize(String userId, int newFamilySize) async {
     try {
-      final endpoint = 'api/Account/updateFamilySize';
+      final endpoint = 'api/Account/updateAccount?actionType=updatefamilysize';
 
       final response = await ApiClient().authorizedPut(endpoint, {
         'FamilySize': newFamilySize,
