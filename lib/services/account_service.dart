@@ -3,7 +3,6 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:frontend/models/accounts/account.dart';
 import 'package:frontend/services/api_client.dart';
-import 'package:http/http.dart' as http;
 
 class AccountService {
   final FlutterSecureStorage storage = FlutterSecureStorage();
