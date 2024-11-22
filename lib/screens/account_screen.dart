@@ -176,7 +176,7 @@ class _AccountSettingsState extends State<AccountSettings> {
                       border: OutlineInputBorder(),
                       suffixIcon: IconButton(
                           icon: Icon(Icons.save), onPressed: _saveUsername)),
-                  style: TextStyle(fontSize: 18),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ],
             )),
