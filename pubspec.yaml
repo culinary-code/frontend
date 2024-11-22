@@ -60,6 +60,9 @@ dependencies:
   # Add dependency injection for provider classes in the main method
   provider: ^6.1.2
 
+  # Add expandable text widget
+  expandable_text: 2.3.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
