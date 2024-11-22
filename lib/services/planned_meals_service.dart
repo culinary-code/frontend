@@ -1,6 +1,6 @@
 import 'dart:math';
+import 'package:frontend/models/meal_planning/planned_meal.dart';
 import 'dart:convert';
-import 'package:frontend/models/meal_planning/PlannedMeal.dart';
 import 'package:frontend/models/recipes/difficulty.dart';
 import 'package:frontend/models/recipes/recipe.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
