@@ -14,6 +14,27 @@ class _AddReviewScreenState extends State<AddReviewScreen> {
   final TextEditingController _descriptionController = TextEditingController();
   int _rating = 0;
   bool _showRatingError = false;
+  static const int _maxDescriptionLength = 650;
+  int _counter = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _descriptionController.addListener(_updateCounter);
+  }
+
+  @override
+  void dispose() {
+    _descriptionController.removeListener(_updateCounter);
+    _descriptionController.dispose();
+    super.dispose();
+  }
+
+  void _updateCounter() {
+    setState(() {
+      _counter = _descriptionController.text.length;
+    });
+  }
 
   Future<void> _submitReview() async {
     if (_rating == 0) {
@@ -73,7 +94,6 @@ class _AddReviewScreenState extends State<AddReviewScreen> {
                 );
               }),
             ),
-            // add a small text to show error message if rating is not selected
             if (_showRatingError)
               Text('Selecteer een beoordeling',
                   style: TextStyle(color: Colors.red)),
@@ -83,7 +103,9 @@ class _AddReviewScreenState extends State<AddReviewScreen> {
               decoration: InputDecoration(
                 labelText: 'Beschrijving (optioneel)',
                 border: OutlineInputBorder(),
+                counterText: '$_counter/$_maxDescriptionLength',
               ),
+              maxLength: _maxDescriptionLength,
               maxLines: 5,
             ),
             SizedBox(height: 20),

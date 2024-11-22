@@ -122,13 +122,13 @@ class RecipeCard extends StatelessWidget {
                           score.toStringAsFixed(1),
                           style: const TextStyle(fontSize: 18),
                         ),
-                        if (score > 0 && score < 5)
+                        if (score >= 2 && score < 4)
                           const Icon(Icons.star_half,
                               size: 26, color: Colors.amber)
-                        else if (score == 0)
+                        else if (score < 2)
                           const Icon(Icons.star_outline,
                               size: 26, color: Colors.amber)
-                        else if (score == 5)
+                        else if (score <= 4)
                           const Icon(Icons.star, size: 26, color: Colors.amber)
                       ],
                     )

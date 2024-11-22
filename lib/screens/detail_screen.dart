@@ -12,6 +12,8 @@ import 'package:frontend/screens/add_review_screen.dart';
 import 'package:frontend/screens/add_to_mealplanner_screen.dart';
 import 'package:frontend/services/recipe_service.dart';
 import 'package:frontend/services/review_service.dart';
+import 'package:expandable_text/expandable_text.dart';
+
 
 class DetailScreen extends StatelessWidget {
   final String recipeId;
@@ -578,13 +580,13 @@ class ReviewsOverview extends StatelessWidget {
                                 averageRating.toStringAsFixed(1),
                                 style: const TextStyle(fontSize: 20),
                               ),
-                              if (averageRating > 0 && averageRating < 5)
+                              if (averageRating >= 2 && averageRating < 4)
                                 const Icon(Icons.star_half,
                                     size: 35, color: Colors.amber)
-                              else if (averageRating == 0)
+                              else if (averageRating < 2)
                                 const Icon(Icons.star_outline,
                                     size: 35, color: Colors.amber)
-                              else if (averageRating == 5)
+                              else if (averageRating <= 4)
                                 const Icon(Icons.star,
                                     size: 35, color: Colors.amber),
                               Text(
@@ -604,51 +606,60 @@ class ReviewsOverview extends StatelessWidget {
               if (reviews!.isEmpty)
                 const Text("Er zijn nog geen reviews voor dit recept.")
               else
-                ...reviews.map((review) {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        review.reviewerUsername,
-                        style: const TextStyle(
-                            fontSize: 20, fontWeight: FontWeight.bold),
-                      ),
-                      Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Row(
-                                  children: List.generate(5, (index) {
-                                    return Icon(
-                                      index < review.amountOfStars
-                                          ? Icons.star
-                                          : Icons.star_border,
-                                      color: Colors.amber,
-                                      size: 28,
-                                    );
-                                  }),
-                                ),
-                                Expanded(
-                                  child: Align(
-                                    alignment: Alignment.centerRight,
-                                    child: Text(
-                                      '${review.createdAt.day}-${review.createdAt.month}-${review.createdAt.year}',
-                                      style: const TextStyle(fontSize: 16),
-                                    ),
+                SizedBox(
+                  // make height change depend on content
+                  height: 350, // Adjust the height as needed
+                  child: ListView.builder(
+                    itemCount: reviews.length,
+                    itemBuilder: (context, index) {
+                      final review = reviews[index];
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            review.reviewerUsername,
+                            style: const TextStyle(
+                                fontSize: 20, fontWeight: FontWeight.bold),
+                          ),
+                          Row(
+                            children: [
+                              Row(
+                                children: List.generate(5, (index) {
+                                  return Icon(
+                                    index < review.amountOfStars
+                                        ? Icons.star
+                                        : Icons.star_border,
+                                    color: Colors.amber,
+                                    size: 28,
+                                  );
+                                }),
+                              ),
+                              Expanded(
+                                child: Align(
+                                  alignment: Alignment.centerRight,
+                                  child: Text(
+                                    '${review.createdAt.day}-${review.createdAt.month}-${review.createdAt.year}',
+                                    style: const TextStyle(fontSize: 16),
                                   ),
                                 ),
-                              ],
-                            )
-                          ]),
-                      Text(
-                        review.description,
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                      const SizedBox(height: 10),
-                    ],
-                  );
-                }),
+                              ),
+                            ],
+                          ),
+                          ExpandableText(
+                            review.description,
+                            expandText: 'toon meer',
+                            collapseText: 'toon minder',
+                            maxLines: 2,
+                            animation: true,
+                            linkColor: Colors.blue,
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                          const SizedBox(height: 10),
+                        ],
+                      );
+                    },
+                  ),
+                ),
             ],
           );
         }
