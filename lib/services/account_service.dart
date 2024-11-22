@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:frontend/models/accounts/account.dart';
+import 'package:frontend/models/accounts/preference.dart';
 import 'package:frontend/services/api_client.dart';
 
 class AccountService {
@@ -79,6 +80,22 @@ class AccountService {
       if (response.statusCode != 200) {
         throw Exception(
             'Error updating familySize: ${response.statusCode}, ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Error updating familySize: $e');
+    }
+  }
+
+  Future<void> updatePreferences(String userId, List<Preference> newPreferences) async {
+    try {
+      final endpoint = 'api/Account/updateAccount?actionType=updatepreferences';
+
+      final response = await ApiClient().authorizedPut(endpoint, {
+        'Preferences': newPreferences,
+      });
+
+      if (response.statusCode != 200) {
+        throw Exception('Error updating preferences: ${response.statusCode}, ${response.body}');
       }
     } catch (e) {
       throw Exception('Error updating familySize: $e');

@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:frontend/models/accounts/preference.dart';
 import 'package:multi_dropdown/multi_dropdown.dart';
 
 import '../models/accounts/account.dart';
@@ -344,6 +345,27 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
     }
   }
 
+  void _savePreferences() async {
+    try {
+      final userId = await AccountService().getUserId();
+      final selectedPreferences =
+      controller.selectedItems.map((item) => item.value).toList();
+      await AccountService().updatePreferences(userId, selectedPreferences.cast<Preference>());
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Preferences saved!')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to save preferences.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -393,6 +415,7 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
                     return null;
                   },
                   onSelectionChange: (selectedPreferences) {
+                    _savePreferences();
                     debugPrint('OnSelectionChange: $selectedPreferences');
                   },
                 ),
@@ -402,6 +425,7 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
                     onPressed: () {
                       if (_formKey.currentState?.validate() ?? false) {
                         final selectedItems = controller.selectedItems;
+                        _savePreferences();
                         debugPrint(selectedItems.toString());
                       }
                     },
