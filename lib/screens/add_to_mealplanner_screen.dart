@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/meal_planning/PlannedMeal.dart';
+import 'package:frontend/models/accounts/account.dart';
 import 'package:frontend/models/recipes/ingredients/ingredient_quantity.dart';
 import 'package:frontend/models/recipes/ingredients/measurement_type.dart';
 import 'package:frontend/models/recipes/recipe.dart';
 import 'package:frontend/navigation_menu.dart';
 import 'package:frontend/services/planned_meals_service.dart';
+
+import '../services/account_service.dart';
 
 class AddToMealplannerScreen extends StatelessWidget {
   final Recipe recipe;
@@ -39,6 +42,39 @@ class _AddToMealPlanner extends State<AddToMealPlanner> {
   late int initialPeopleCount;
   late Map<String, double> originalQuantities;
   late Recipe recipe;
+
+  final AccountService _accountService = AccountService();
+  late String userId;
+  late Future<void> _initFuture;
+
+  // Initialization for familySize
+  Future<void> _initialize() async {
+    try {
+      userId = await _accountService.getUserId();
+      Account user = await _accountService.fetchUser(userId);
+
+      int userFamilySize = user.familySize > 0 ? user.familySize : recipe.amountOfPeople;
+
+      double scaleFactor = userFamilySize / recipe.amountOfPeople;
+
+      setState(() {
+        numberOfPeople = userFamilySize;
+        initialPeopleCount = recipe.amountOfPeople;
+
+        for (var ingredient in ingredients) {
+          String id = ingredient.ingredientQuantity.ingredientQuantityId;
+          double originalQuantity = originalQuantities[id] ?? ingredient.ingredientQuantity.quantity;
+          ingredient.ingredientQuantity.quantity = originalQuantity * scaleFactor;
+        }
+      });
+    } catch (e) {
+      // When no familySize is installed, use default recipe size
+      setState(() {
+        numberOfPeople = recipe.amountOfPeople;
+        initialPeopleCount = recipe.amountOfPeople;
+      });
+    }
+  }
 
   void _incrementPeople() {
     setState(() {
@@ -140,7 +176,9 @@ class _AddToMealPlanner extends State<AddToMealPlanner> {
   @override
   void initState() {
     super.initState();
+    _initFuture = _initialize();
     // Initialize ingredients and originalQuantities only once
+
     recipe = widget.recipe;
 
     ingredients = recipe.ingredients.map((ingredient) {
@@ -166,6 +204,18 @@ class _AddToMealPlanner extends State<AddToMealPlanner> {
 
   @override
   Widget build(BuildContext context) {
+    return FutureBuilder(
+      future: _initFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator());
+        }
+        return _buildContent(context);
+      },
+    );
+  }
+
+  Widget _buildContent(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: SingleChildScrollView(

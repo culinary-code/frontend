@@ -3,7 +3,6 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:frontend/models/accounts/account.dart';
 import 'package:frontend/services/api_client.dart';
-import 'package:http/http.dart' as http;
 
 class AccountService {
   final FlutterSecureStorage storage = FlutterSecureStorage();
@@ -20,11 +19,9 @@ class AccountService {
         var jsonResponse = json.decode(response.body);
         return Account.fromJson(jsonResponse);
       } catch (e) {
-        print('Error parsing response: $e');
         throw FormatException('Error parsing response: $e');
       }
     } else {
-      print('Error: ${response.statusCode} - ${response.body}');
       throw Exception('Failed to load user: ${response.body}');
     }
   }
@@ -56,7 +53,7 @@ class AccountService {
 
   Future<void> updateUsername(String userId, String newUsername) async {
     try {
-      final endpoint = 'api/Account/updateAccount';
+      final endpoint = 'api/Account/updateAccount?actionType=updateusername';
 
       final response = await ApiClient().authorizedPut(endpoint, {
         'Name': newUsername,
@@ -68,6 +65,23 @@ class AccountService {
       }
     } catch (e) {
       throw Exception('Error updating username: $e');
+    }
+  }
+
+  Future<void> updateFamilySize(String userId, int newFamilySize) async {
+    try {
+      final endpoint = 'api/Account/updateAccount?actionType=updatefamilysize';
+
+      final response = await ApiClient().authorizedPut(endpoint, {
+        'FamilySize': newFamilySize,
+      });
+
+      if (response.statusCode != 200) {
+        throw Exception(
+            'Error updating familySize: ${response.statusCode}, ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Error updating familySize: $e');
     }
   }
 }
