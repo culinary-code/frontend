@@ -51,12 +51,15 @@ class AccountSettings extends StatefulWidget {
 
 class _AccountSettingsState extends State<AccountSettings> {
   final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _familySizeController = TextEditingController();
   final AccountService _accountService = AccountService();
 
   String _currentUsername = '';
+  int _currentFamilySize = 0;
   late String userId;
 
   final storage = FlutterSecureStorage();
+  bool _usernameError = false;
 
   @override
   void initState() {
@@ -71,14 +74,15 @@ class _AccountSettingsState extends State<AccountSettings> {
       setState(() {
         _currentUsername = user.username;
         _usernameController.text = _currentUsername;
+        _currentFamilySize = user.familySize;
+        _familySizeController.text = _currentFamilySize.toString();
       });
     } catch (e) {
-      print('Error initializing account settings: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content:
-                  Text('Account instellingen konden niet geladen worden.')),
+              content: Text('Account instellingen konden niet geladen worden.'),
+              backgroundColor: Colors.red),
         );
       }
     }
@@ -86,11 +90,10 @@ class _AccountSettingsState extends State<AccountSettings> {
 
   Future<void> _saveUsername() async {
     final newUsername = _usernameController.text;
-    if (newUsername.length <= 3) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text('Gebruikersnaam moet minstens  karakters zijn.')),
-      );
+    if (newUsername.length < 3) {
+      setState(() {
+        _usernameError = true;
+      });
       return;
     }
 
@@ -98,6 +101,7 @@ class _AccountSettingsState extends State<AccountSettings> {
       await _accountService.updateUsername(userId, newUsername);
       setState(() {
         _currentUsername = newUsername;
+        _usernameError = false; // Clear error on successful save
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -105,10 +109,43 @@ class _AccountSettingsState extends State<AccountSettings> {
         );
       }
     } catch (e) {
-      print('Error updating username: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gebruikersnaam kon niet opgeslagen worden.')),
+          SnackBar(
+            content: Text('Gebruikersnaam kon niet opgeslagen worden.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _saveFamilySize(int newFamilySize) async {
+    if (newFamilySize < 1) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Mijn gezin moet minstens 1 zijn.')),
+      );
+      return;
+    }
+
+    try {
+      await _accountService.updateFamilySize(userId, newFamilySize);
+      setState(() {
+        _currentFamilySize = newFamilySize;
+        _familySizeController.text = newFamilySize.toString();
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Mijn gezin opgeslagen!')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Mijn gezin kon niet opgeslagen worden.'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
@@ -126,16 +163,143 @@ class _AccountSettingsState extends State<AccountSettings> {
             decoration: BoxDecoration(
               border: Border.all(color: Colors.black, width: 2),
             ),
-            child: TextField(
-              controller: _usernameController,
-              decoration: InputDecoration(
-                  labelText: 'Gebruikersnaam',
-                  floatingLabelBehavior: FloatingLabelBehavior.never,
-                  border: OutlineInputBorder(),
-                  suffixIcon: IconButton(
-                      icon: Icon(Icons.save), onPressed: _saveUsername)),
+            child: Column(
+              children: [
+                TextField(
+                  controller: _usernameController,
+                  decoration: InputDecoration(
+                      labelText: 'Gebruikersnaam',
+                      floatingLabelBehavior: FloatingLabelBehavior.never,
+                      errorText: _usernameError
+                          ? 'Gebruikersnaam moet minstens 3 karakters zijn.'
+                          : null,
+                      border: OutlineInputBorder(),
+                      suffixIcon: IconButton(
+                          icon: Icon(Icons.save), onPressed: _saveUsername)),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              ],
             )),
+        SizedBox(height: 16,),
+        Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.black, width: 2),
+          ),
+          child: MyFamilySelector(
+            familySize: _currentFamilySize,
+            onAdd: _saveFamilySize,
+          ),
+        )
       ]),
+    );
+  }
+}
+
+class MyFamilySelector extends StatefulWidget {
+  final int familySize;
+  final ValueChanged<int> onAdd;
+
+  const MyFamilySelector(
+      {super.key, required this.familySize, required this.onAdd});
+
+  @override
+  State<MyFamilySelector> createState() => _MyFamilySelectorState();
+}
+
+class _MyFamilySelectorState extends State<MyFamilySelector> {
+  late int numberOfPeople;
+
+  void addFamilyMembers() {
+    setState(() {
+      numberOfPeople++;
+    });
+  }
+
+  void removeFamilyMembers() {
+    setState(() {
+      if (numberOfPeople > 1) numberOfPeople--;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    numberOfPeople = widget.familySize;
+  }
+
+  // update familysize
+  @override
+  void didUpdateWidget(covariant MyFamilySelector oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.familySize != oldWidget.familySize) {
+      setState(() {
+        numberOfPeople = widget.familySize;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return
+        Padding(
+          padding: const EdgeInsets.only(left: 6, bottom: 6, top: 6),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.family_restroom,
+                    size: 30,
+                  ),
+                  const SizedBox(
+                    width: 8,
+                  ),
+                  Text(
+                    'Mijn gezin',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(
+                    width: 12,
+                  ),
+                  GestureDetector(
+                    onTap: removeFamilyMembers,
+                    child: CircleAvatar(
+                      radius: 15,
+                      child: Icon(
+                        Icons.remove,
+                        size: 18,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    '$numberOfPeople',
+                    style: const TextStyle(fontSize: 22),
+                  ),
+                  const SizedBox(width: 10),
+                  GestureDetector(
+                    onTap: addFamilyMembers,
+                    child: CircleAvatar(
+                      radius: 15,
+                      child: Icon(
+                        Icons.add,
+                        size: 18,
+                      ),
+                    ),
+                  ),
+                       Spacer(),
+                       SizedBox(width: 25,),
+                       IconButton(
+                          onPressed: () {
+                            widget.onAdd(numberOfPeople);
+                          },
+                          icon: Icon(Icons.save),
+                        ),
+                    ],
+                  )
+                ],
+              ),
     );
   }
 }
