@@ -9,7 +9,7 @@ class IngredientQuantity {
   final Ingredient ingredient;
   Recipe? recipe;
   GroceryList? groceryList;
-  PlannedMeal? plannedMeal;
+  PlannedMealReduced? plannedMeal;
 
   IngredientQuantity(
       {required this.ingredientQuantityId,
