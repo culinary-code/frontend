@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/models/meal_planning/PlannedMeal.dart';
 import 'package:frontend/models/accounts/account.dart';
+import 'package:frontend/models/meal_planning/planned_meal.dart';
 import 'package:frontend/models/recipes/ingredients/ingredient_quantity.dart';
 import 'package:frontend/models/recipes/ingredients/measurement_type.dart';
 import 'package:frontend/models/recipes/recipe.dart';
