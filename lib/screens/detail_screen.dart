@@ -50,7 +50,7 @@ class DetailOverview extends StatefulWidget {
 
 // Deze klasse combineert alle individueel aangemaakte klassen.
 class _DetailOverviewState extends State<DetailOverview> {
-  late final Recipe recipe = widget.recipe;
+  late Recipe recipe = widget.recipe;
   late final List<IngredientQuantity> _ingredients = recipe.ingredients;
   late final List<InstructionStep> _instructionSteps = recipe.instructions;
   late final int cookingTime = recipe.cookingTime;
@@ -141,8 +141,14 @@ class _DetailOverviewState extends State<DetailOverview> {
                                 Timer(const Duration(milliseconds: 500), () {
                               reviews = ReviewService()
                                   .getReviewsByRecipeId(recipe.recipeId);
-                              // force rerender of reviews overview
-                              setState(() {});
+                              // Update recipe to get the new average rating
+                              RecipeService()
+                                  .getRecipeById(recipe.recipeId)
+                                  .then((value) {
+                                setState(() {
+                                  recipe = value;
+                                });
+                              });
                             });
                           });
                         });
@@ -159,7 +165,9 @@ class _DetailOverviewState extends State<DetailOverview> {
             ),
             const SizedBox(height: 16.0),
             ReviewsOverview(
-                reviews: reviews, averageRating: recipe.averageRating),
+                reviews: reviews,
+                averageRating: recipe.averageRating,
+                amountOfRatings: recipe.amountOfRatings),
             const SizedBox(height: 16.0),
           ],
         ),
@@ -196,13 +204,6 @@ class _RecipeHeaderState extends State<RecipeHeader> {
             widget.recipe.imagePath,
             fit: BoxFit.cover,
           ),
-          /*
-          Image.asset(
-            'assets/images/default.jpg',
-            fit: BoxFit.cover,
-          ),
-
-           */
           const SizedBox(height: 16),
           Row(
             children: [
@@ -532,9 +533,13 @@ class InstructionsOverview extends StatelessWidget {
 class ReviewsOverview extends StatelessWidget {
   final Future<List<Review>> reviews;
   final double averageRating;
+  final int amountOfRatings;
 
   const ReviewsOverview(
-      {super.key, required this.reviews, required this.averageRating});
+      {super.key,
+      required this.reviews,
+      required this.averageRating,
+      required this.amountOfRatings});
 
   @override
   Widget build(BuildContext context) {
@@ -574,11 +579,19 @@ class ReviewsOverview extends StatelessWidget {
                                 style: const TextStyle(fontSize: 20),
                               ),
                               if (averageRating > 0 && averageRating < 5)
-                                const Icon(Icons.star_half, size: 35, color: Colors.amber)
+                                const Icon(Icons.star_half,
+                                    size: 35, color: Colors.amber)
                               else if (averageRating == 0)
-                                const Icon(Icons.star_outline, size: 35, color: Colors.amber)
+                                const Icon(Icons.star_outline,
+                                    size: 35, color: Colors.amber)
                               else if (averageRating == 5)
-                                  const Icon(Icons.star, size: 35, color: Colors.amber)
+                                const Icon(Icons.star,
+                                    size: 35, color: Colors.amber),
+                              Text(
+                                '($amountOfRatings)',
+                                style: const TextStyle(
+                                    fontSize: 16, color: Colors.grey),
+                              ),
                             ],
                           ),
                         ),
