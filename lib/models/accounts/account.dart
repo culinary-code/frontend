@@ -4,7 +4,7 @@ class Account {
 
   Account({required this.userId, required this.username});
 
-  factory Account.fromJson(Map<String, dynamic> json) {
+  static Account fromJson(Map<String, dynamic> json) {
     return Account(
       userId: json['accountId'],
       username: json['name'],
