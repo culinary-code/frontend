@@ -1,5 +1,5 @@
 import 'dart:math';
-import 'package:frontend/models/meal_planning/PlannedMeal.dart';
+import 'package:frontend/models/meal_planning/planned_meal.dart';
 import 'package:frontend/models/recipes/recipe.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
