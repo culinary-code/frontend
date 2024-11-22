@@ -159,7 +159,7 @@ class _AddToMealPlanner extends State<AddToMealPlanner> {
             .toList(),
       );
 
-      await PlannedMealsService().createRecipe(plannedMeal);
+      await PlannedMealsService().createPlannedMeal(plannedMeal);
 
       if (!mounted) return;
 

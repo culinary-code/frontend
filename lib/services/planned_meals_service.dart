@@ -38,7 +38,7 @@ class PlannedMealsService {
     return plannedMeals;
   }
 
-  Future<String> createRecipe(PlannedMealFull plannedMeal) async {
+  Future<String> createPlannedMeal(PlannedMealFull plannedMeal) async {
     final response = await ApiClient().authorizedPost(
         'api/MealPlanner/PlannedMeal/Create', plannedMeal.toJson());
 
@@ -47,7 +47,7 @@ class PlannedMealsService {
     }
 
     if (response.statusCode != 200) {
-      throw FormatException('Failed to create recipe: ${response.body}');
+      throw FormatException('Failed to create planned meal: ${response.body}');
     }
 
     if (response.statusCode == 200) {
