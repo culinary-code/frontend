@@ -88,6 +88,21 @@ class AccountService {
     }
   }
 
+  Future<List<PreferenceDto>> getPreferencesByUserId(String userId) async {
+    try {
+      final endpoint = 'api/Account/getPreferences';
+      final response = await ApiClient().authorizedGet(endpoint);
+
+      if (response.statusCode == 200) {
+        List<dynamic> preferencesJson = json.decode(response.body);
+        return preferencesJson.map((p) => PreferenceDto.fromJson(p)).toList();
+      } else {
+        throw Exception('Error fetching preferences: ${response.statusCode}, ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Error fetching preferences: $e');
+    }
+  }
 
   Future<void> addPreference(String userId, PreferenceDto preference) async {
     try {
@@ -107,23 +122,6 @@ class AccountService {
     }
   }
 
-
-  /*Future<void> updateUserPreferences(String userId, List<PreferenceDto> preferences) async {
-    try {
-      final endpoint = 'api/Account/updatePreferences';  // Your backend endpoint
-      final preferencesJson = preferences.map((pref) => pref.toJson()).toList();
-
-      final response = await ApiClient().authorizedPut(endpoint, {'preferences': preferencesJson});
-
-      if (response.statusCode == 200) {
-        print('Preferences updated successfully');
-      } else {
-        throw Exception('Error updating preferences: ${response.statusCode}, ${response.body}');
-      }
-    } catch (e) {
-      throw Exception('Error updating preferences: $e');
-    }
-  }*/
   Future<void> updateUserPreferences(String userId, List<PreferenceDto> preferences) async {
     try {
       // Convert the list of preferences into a map

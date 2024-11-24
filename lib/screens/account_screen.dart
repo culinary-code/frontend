@@ -321,6 +321,13 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
   final _accountService = AccountService();
   var userId = '';
 
+  final Set<String> standardPreferences = {
+    'Vegan',
+    'Vegetarian',
+    'Nut Allergy',
+    'Lactose Intolerant',
+  };
+
   String? selectedValue;
 
   List<DropdownItem<String>> preferences = [
@@ -334,16 +341,28 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
     String newPreference = customPreferenceController.text.trim();
     if (newPreference.isNotEmpty && !preferences.any((item) => item.value == newPreference)) {
       setState(() {
+        // Add new preference to the list
+        preferences.add(DropdownItem(label: newPreference, value: newPreference, selected: true));
+
+        // Select the new preference immediately
+        controller.addItems([
+          DropdownItem(label: newPreference, value: newPreference, selected: true),
+        ]);
+        controller.selectedItems.add(
+          DropdownItem(label: newPreference, value: newPreference, selected: true),
+        );
+
+        // Update selected value to reflect in the UI
         selectedValue = newPreference;
-        preferences.add(DropdownItem(label: newPreference, value: newPreference));
-        controller.addItems([DropdownItem(label: newPreference, value: newPreference)]);
-        controller.selectedItems.add(DropdownItem(label: newPreference, value: newPreference));
       });
+
+      // Close the dialog
       Navigator.pop(context);
     } else {
       debugPrint("Preference was empty or already exists.");
     }
   }
+
 
   void _savePreferences() {
     // Get the list of selected preferences
@@ -352,16 +371,74 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
     if (selectedPreferences.isNotEmpty) {
       // Iterate over the selected preferences and add them to the backend
       for (String preference in selectedPreferences) {
-        _accountService.addPreference(
-          userId,
-          PreferenceDto(preferenceName: preference, standardPreference: false),
-        );
+        if (standardPreferences.map((p) => p.toLowerCase()).contains(preference.toLowerCase())) {
+          _accountService.addPreference(
+            userId,
+            PreferenceDto(preferenceName: preference, standardPreference: true),
+          );
+        } else {
+          _accountService.addPreference(
+            userId,
+            PreferenceDto(preferenceName: preference, standardPreference: false),
+          );
+        }
       }
       debugPrint('Saved preferences: $selectedPreferences');
     } else {
       debugPrint('No preferences selected');
     }
   }
+
+  @override
+  void initState() {
+    super.initState();
+    _initializePreferences();
+  }
+
+  Future<void> _initializePreferences() async {
+    try {
+      userId = await _accountService.getUserId();
+      List<PreferenceDto> userPreferences = await _accountService.getPreferencesByUserId(userId);
+
+      setState(() {
+        // Add user preferences (including custom) to the dropdown list
+        for (var userPreference in userPreferences) {
+          if (!preferences.any((item) => item.value == userPreference.preferenceName)) {
+            preferences.add(
+              DropdownItem(label: userPreference.preferenceName, value: userPreference.preferenceName),
+            );
+          }
+        }
+
+        // Update the selection state for all preferences
+        for (var item in preferences) {
+          item.selected = userPreferences.any((pref) => pref.preferenceName == item.value);
+        }
+
+        // Synchronize controller with the updated list
+        controller.clearAll();
+        controller.addItems(preferences.where((item) => item.selected).toList());
+      });
+    } catch (e) {
+      debugPrint('Failed to load preferences: $e');
+    }
+  }
+
+
+  /*Future<void> _initializePreferences() async {
+    try {
+      userId = await _accountService.getUserId();
+      List<PreferenceDto> userPreferences = await _accountService.getPreferencesByUserId(userId);
+
+      setState(() {
+        for (var item in preferences) {
+          item.selected = userPreferences.any((pref) => pref.preferenceName == item.value);
+        }
+      });
+    } catch (e) {
+      debugPrint('Failed to load preferences: $e');
+    }
+  }*/
 
   @override
   Widget build(BuildContext context) {
