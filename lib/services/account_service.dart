@@ -88,7 +88,27 @@ class AccountService {
     }
   }
 
-  Future<void> updateUserPreferences(String userId, List<PreferenceDto> preferences) async {
+
+  Future<void> addPreference(String userId, PreferenceDto preference) async {
+    try {
+      final endpoint = 'api/Account/addPreference';
+
+      final response = await ApiClient().authorizedPost(endpoint, {
+        'PreferenceName': preference.preferenceName,
+        'StandardPreference': preference.standardPreference,
+      });
+
+      if (response.statusCode != 200) {
+        throw Exception(
+            'Error adding preference: ${response.statusCode}, ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Error adding preference: $e');
+    }
+  }
+
+
+  /*Future<void> updateUserPreferences(String userId, List<PreferenceDto> preferences) async {
     try {
       final endpoint = 'api/Account/updatePreferences';  // Your backend endpoint
       final preferencesJson = preferences.map((pref) => pref.toJson()).toList();
@@ -103,7 +123,50 @@ class AccountService {
     } catch (e) {
       throw Exception('Error updating preferences: $e');
     }
+  }*/
+  Future<void> updateUserPreferences(String userId, List<PreferenceDto> preferences) async {
+    try {
+      // Convert the list of preferences into a map
+      final body = {
+        "preferences": preferences.map((pref) => {
+          "preferenceName": pref.preferenceName
+        }).toList(),
+      };
+
+      // Make the API call
+      final response = await ApiClient().authorizedPut(
+        'api/Account/updatePreferences',
+        body, // Pass the wrapped map here
+      );
+
+      if (response.statusCode == 200) {
+        // Success
+      } else {
+        throw Exception('Failed to update preferences');
+      }
+    } catch (e) {
+      throw Exception('Failed to update preferences');
+    }
   }
+
+
+
+  /*Future<void> updateUserPreferences(String userId, PreferenceDto preference) async {
+    try {
+      final response = await ApiClient().authorizedPut(
+        'api/Account/updatePreferences',
+        {
+          "preferenceName": preference.preferenceName
+        },
+      );
+      if (response.statusCode == 200) {
+      } else {
+        return;
+      }
+    } catch (e) {
+      return;
+    }
+  }*/
 
 
 

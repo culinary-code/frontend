@@ -329,31 +329,6 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
     DropdownItem(label: 'Notenallergie', value: 'Nut Allergy'),
     DropdownItem(label: 'Lactose Intolerant', value: 'Lactose Intolerant'),
   ];
-
-  // Method to update preferences in the backend
-  Future<void> _updatePreferences() async {
-    try {
-      // Get selected preferences as a list
-      List<String> selectedPreferences = controller.selectedItems.map((item) => item.value).toList();
-
-      // Convert the list to a format your backend expects
-      List<PreferenceDto> preferencesToUpdate = selectedPreferences
-          .map((pref) => PreferenceDto(preferenceId: pref, preferenceName: pref))
-          .toList();
-
-      // Get the user ID (either via JWT or another method)
-      String userId = await _accountService.getUserId();
-
-      // Call the update method from AccountService to send the preferences to the backend
-      await _accountService.updateUserPreferences(userId, preferencesToUpdate);
-
-      // Show success message
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Preferences updated successfully')));
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to update preferences')));
-    }
-  }
-
   // Add new preference to dropdown
   void _addPreferenceToDropdown() {
     String newPreference = customPreferenceController.text.trim();
@@ -367,6 +342,24 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
       Navigator.pop(context);
     } else {
       debugPrint("Preference was empty or already exists.");
+    }
+  }
+
+  void _savePreferences() {
+    // Get the list of selected preferences
+    List<String> selectedPreferences = controller.selectedItems.map((item) => item.value).toList();
+
+    if (selectedPreferences.isNotEmpty) {
+      // Iterate over the selected preferences and add them to the backend
+      for (String preference in selectedPreferences) {
+        _accountService.addPreference(
+          userId,
+          PreferenceDto(preferenceName: preference, standardPreference: false),
+        );
+      }
+      debugPrint('Saved preferences: $selectedPreferences');
+    } else {
+      debugPrint('No preferences selected');
     }
   }
 
@@ -425,9 +418,8 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
                 Wrap(spacing: 8, children: [
                   ElevatedButton(
                     onPressed: () {
-                      if (_formKey.currentState?.validate() ?? false) {
-                        _updatePreferences();  // Update preferences when "Opslaan" is pressed
-                      }
+                      _savePreferences();
+                      //_accountService.addPreference(userId, PreferenceDto(preferenceName: preferences[0].value,standardPreference: false));
                     },
                     child: const Text('Opslaan'),
                   ),
