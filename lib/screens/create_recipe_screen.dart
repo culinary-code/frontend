@@ -135,7 +135,7 @@ class _RecipeFormState extends State<RecipeForm> {
                       );
 
                       String response = await RecipeService()
-                          .createRecipe(_recipeNameController.text);
+                          .createRecipe(_recipeNameController.text, filterProvider.filterOptions);
 
                       final uuidRegExp = RegExp(
                         r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
