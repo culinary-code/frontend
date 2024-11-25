@@ -397,7 +397,6 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
         }
       }
 
-
       debugPrint('Saved preferences: $selectedPreferences');
     } else {
       debugPrint('No preferences selected');
@@ -416,8 +415,8 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
 
       List<DropdownItem<String>> tempPreferences = [
         DropdownItem(label: 'Vegan', value: 'Vegan'),
-        DropdownItem(label: 'Vegetarisch', value: 'Vegetarian'),
-        DropdownItem(label: 'Notenallergie', value: 'Nut Allergy'),
+        DropdownItem(label: 'Vegetarisch', value: 'Vegetarisch'),
+        DropdownItem(label: 'Notenallergie', value: 'Notenallergie'),
         DropdownItem(label: 'Lactose Intolerant', value: 'Lactose Intolerant'),
       ];
 
@@ -453,7 +452,6 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white24,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -473,23 +471,17 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
                   chipDecoration: const ChipDecoration(wrap: true, runSpacing: 2, spacing: 10),
                   fieldDecoration: FieldDecoration(
                     hintText: 'Voorkeuren',
-                    hintStyle: const TextStyle(color: Colors.black),
                     prefixIcon: const Icon(CupertinoIcons.flag),
                     showClearIcon: false,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Colors.grey),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                        color: Colors.black,
-                      ),
                     ),
                   ),
                   dropdownItemDecoration: const DropdownItemDecoration(
                     selectedIcon: Icon(Icons.check_box, color: Colors.green),
-                    disabledIcon: Icon(Icons.lock, color: Colors.grey),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -515,12 +507,12 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
                     },
                     child: const Text('Selecteer alles'),
                   ),
-                  ElevatedButton(
+                 /* ElevatedButton(
                     onPressed: () {
                       controller.clearAll();
                     },
                     child: const Text('Verwijder alles'),
-                  ),
+                  ),*/
                   ElevatedButton(
                     onPressed: () {
                       showDialog(
@@ -547,7 +539,7 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
                         ),
                       );
                     },
-                    child: const Text('Andere..'),
+                    child: const Text('\u{2795} Nieuw'),
                   ),
                 ]),
               ],
