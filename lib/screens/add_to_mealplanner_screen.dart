@@ -5,8 +5,11 @@ import 'package:frontend/models/recipes/ingredients/ingredient_quantity.dart';
 import 'package:frontend/models/recipes/ingredients/measurement_type.dart';
 import 'package:frontend/models/recipes/recipe.dart';
 import 'package:frontend/navigation_menu.dart';
+import 'package:frontend/services/grocery_list_service.dart';
 import 'package:frontend/services/planned_meals_service.dart';
 
+import '../models/meal_planning/grocery_list_item.dart';
+import '../models/recipes/ingredients/item_quantity.dart';
 import '../services/account_service.dart';
 
 class AddToMealplannerScreen extends StatelessWidget {
@@ -44,6 +47,7 @@ class _AddToMealPlanner extends State<AddToMealPlanner> {
   late Recipe recipe;
 
   final AccountService _accountService = AccountService();
+  final GroceryListService _groceryListService = GroceryListService();
   late String userId;
   late Future<void> _initFuture;
 
@@ -149,6 +153,12 @@ class _AddToMealPlanner extends State<AddToMealPlanner> {
 
       if (!mounted) return;
 
+      // Filter ingredients to include only those added to the grocery list
+      List<IngredientQuantity> selectedIngredients = ingredients
+          .where((item) => item.isAddedToList) // Filter items with isAddedToList true
+          .map((item) => item.ingredientQuantity) // Map filtered items
+          .toList();
+
       PlannedMealFull plannedMeal = PlannedMealFull(
         amountOfPeople: numberOfPeople,
         recipe: recipe,
@@ -160,6 +170,25 @@ class _AddToMealPlanner extends State<AddToMealPlanner> {
       );
 
       await PlannedMealsService().createPlannedMeal(plannedMeal);
+
+      // Now add ingredients to the grocery list
+      String? groceryListId = await _groceryListService.getGroceryListId();
+      if (groceryListId != null) {
+        for (var ingredientQuantity in selectedIngredients) {
+          // Create ItemQuantity for each ingredient
+          ItemQuantity newItem = ItemQuantity(
+            quantity: ingredientQuantity.quantity,
+            groceryListItem: GroceryListItem(
+              ingredientName: ingredientQuantity.ingredient.ingredientName,
+              measurement: ingredientQuantity.ingredient.measurement,
+              ingredientQuantities: [ingredientQuantity],
+            ),
+          );
+
+          // Add item to grocery list
+          await _groceryListService.addItemToGroceryList(groceryListId, newItem);
+        }
+      }
 
       if (!mounted) return;
 

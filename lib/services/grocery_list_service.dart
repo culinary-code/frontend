@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:frontend/models/recipes/ingredients/ingredient_quantity.dart';
 import 'package:frontend/models/recipes/ingredients/item_quantity.dart';
 import 'package:frontend/services/api_client.dart';
 
@@ -46,6 +47,28 @@ class GroceryListService {
           "ingredient": {
             "ingredientName": item.groceryListItem.ingredientName,
             "measurement": item.groceryListItem.measurement.index,
+          },
+        },
+      );
+      if (response.statusCode == 200) {
+      } else {
+        return;
+      }
+    } catch (e) {
+      return;
+    }
+  }
+
+  Future<void> addIngredientToGroceryList(
+      String groceryListId, IngredientQuantity item) async {
+    try {
+      final response = await ApiClient().authorizedPut(
+        'api/Grocery/$groceryListId/add-item',
+        {
+          "quantity": item.quantity,
+          "ingredient": {
+            "ingredientName": item.ingredient.ingredientName,
+            "measurement": item.ingredient.measurement.index,
           },
         },
       );
