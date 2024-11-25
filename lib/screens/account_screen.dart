@@ -336,15 +336,14 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
     DropdownItem(label: 'Notenallergie', value: 'Nut Allergy'),
     DropdownItem(label: 'Lactose Intolerant', value: 'Lactose Intolerant'),
   ];
-  // Add new preference to dropdown
+
   void _addPreferenceToDropdown() {
     String newPreference = customPreferenceController.text.trim();
     if (newPreference.isNotEmpty && !preferences.any((item) => item.value == newPreference)) {
       setState(() {
-        // Add new preference to the list
         preferences.add(DropdownItem(label: newPreference, value: newPreference, selected: true));
 
-        // Select the new preference immediately
+        // Select new preference when adding it to dropdown
         controller.addItems([
           DropdownItem(label: newPreference, value: newPreference, selected: true),
         ]);
@@ -352,11 +351,9 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
           DropdownItem(label: newPreference, value: newPreference, selected: true),
         );
 
-        // Update selected value to reflect in the UI
         selectedValue = newPreference;
       });
 
-      // Close the dialog
       Navigator.pop(context);
     } else {
       debugPrint("Preference was empty or already exists.");
@@ -365,11 +362,9 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
 
 
   void _savePreferences() {
-    // Get the list of selected preferences
     List<String> selectedPreferences = controller.selectedItems.map((item) => item.value).toList();
 
     if (selectedPreferences.isNotEmpty) {
-      // Iterate over the selected preferences and add them to the backend
       for (String preference in selectedPreferences) {
         if (standardPreferences.map((p) => p.toLowerCase()).contains(preference.toLowerCase())) {
           _accountService.addPreference(
@@ -401,7 +396,6 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
       List<PreferenceDto> userPreferences = await _accountService.getPreferencesByUserId(userId);
 
       setState(() {
-        // Add user preferences (including custom) to the dropdown list
         for (var userPreference in userPreferences) {
           if (!preferences.any((item) => item.value == userPreference.preferenceName)) {
             preferences.add(
@@ -410,12 +404,10 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
           }
         }
 
-        // Update the selection state for all preferences
         for (var item in preferences) {
           item.selected = userPreferences.any((pref) => pref.preferenceName == item.value);
         }
 
-        // Synchronize controller with the updated list
         controller.clearAll();
         controller.addItems(preferences.where((item) => item.selected).toList());
       });
@@ -423,22 +415,6 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
       debugPrint('Failed to load preferences: $e');
     }
   }
-
-
-  /*Future<void> _initializePreferences() async {
-    try {
-      userId = await _accountService.getUserId();
-      List<PreferenceDto> userPreferences = await _accountService.getPreferencesByUserId(userId);
-
-      setState(() {
-        for (var item in preferences) {
-          item.selected = userPreferences.any((pref) => pref.preferenceName == item.value);
-        }
-      });
-    } catch (e) {
-      debugPrint('Failed to load preferences: $e');
-    }
-  }*/
 
   @override
   Widget build(BuildContext context) {
@@ -496,7 +472,6 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
                   ElevatedButton(
                     onPressed: () {
                       _savePreferences();
-                      //_accountService.addPreference(userId, PreferenceDto(preferenceName: preferences[0].value,standardPreference: false));
                     },
                     child: const Text('Opslaan'),
                   ),

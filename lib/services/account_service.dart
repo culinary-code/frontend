@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:frontend/models/accounts/account.dart';
-import 'package:frontend/models/accounts/preference.dart';
 import 'package:frontend/models/accounts/preferencedto.dart';
 import 'package:frontend/services/api_client.dart';
 
@@ -121,89 +120,4 @@ class AccountService {
       throw Exception('Error adding preference: $e');
     }
   }
-
-  Future<void> updateUserPreferences(String userId, List<PreferenceDto> preferences) async {
-    try {
-      // Convert the list of preferences into a map
-      final body = {
-        "preferences": preferences.map((pref) => {
-          "preferenceName": pref.preferenceName
-        }).toList(),
-      };
-
-      // Make the API call
-      final response = await ApiClient().authorizedPut(
-        'api/Account/updatePreferences',
-        body, // Pass the wrapped map here
-      );
-
-      if (response.statusCode == 200) {
-        // Success
-      } else {
-        throw Exception('Failed to update preferences');
-      }
-    } catch (e) {
-      throw Exception('Failed to update preferences');
-    }
-  }
-
-
-
-  /*Future<void> updateUserPreferences(String userId, PreferenceDto preference) async {
-    try {
-      final response = await ApiClient().authorizedPut(
-        'api/Account/updatePreferences',
-        {
-          "preferenceName": preference.preferenceName
-        },
-      );
-      if (response.statusCode == 200) {
-      } else {
-        return;
-      }
-    } catch (e) {
-      return;
-    }
-  }*/
-
-
-
-
-
-
-
-
-
-
-/*Future<void> updatePreferences(String userId, List<Preference> newPreferences) async {
-    try {
-      final endpoint = 'api/Account/updatePreferences';
-
-      final response = await ApiClient().authorizedPut(endpoint, {
-        'Preferences': newPreferences,
-      });
-
-      if (response.statusCode != 200) {
-        throw Exception('Error updating preferences: ${response.statusCode}, ${response.body}');
-      }
-    } catch (e) {
-      throw Exception('Error updating familySize: $e');
-    }
-  }
-
-  Future<List<Preference>> getPreferences() async {
-    try {
-      final endpoint = 'api/Account/getPreferences';
-      final response = await ApiClient().authorizedGet(endpoint);
-
-      if (response.statusCode == 200) {
-        List<dynamic> preferencesJson = json.decode(response.body);
-        return preferencesJson.map((p) => Preference.fromJson(p)).toList();
-      } else {
-        throw Exception('Error fetching preferences: ${response.statusCode}, ${response.body}');
-      }
-    } catch (e) {
-      throw Exception('Error fetching preferences: $e');
-    }
-  }*/
 }
