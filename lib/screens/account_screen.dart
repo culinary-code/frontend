@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -357,28 +358,52 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
     }
   }
 
-  void _savePreferences() {
+  void _savePreferences() async {
     List<String> selectedPreferences = controller.selectedItems.map((item) => item.value).toList();
+
+    List<PreferenceDto> preferencesForDelete = await _accountService.getPreferencesByUserId(userId);
 
     if (selectedPreferences.isNotEmpty) {
       for (String preference in selectedPreferences) {
         if (standardPreferences.map((p) => p.toLowerCase()).contains(preference.toLowerCase())) {
+          // Add standard preference
           _accountService.addPreference(
             userId,
-            PreferenceDto(preferenceName: preference, standardPreference: true),
+            PreferenceDto(preferenceName: preference, standardPreference: true, preferenceId: ''),
           );
         } else {
+          // Add custom preference
           _accountService.addPreference(
             userId,
-            PreferenceDto(preferenceName: preference, standardPreference: false),
+            PreferenceDto(preferenceName: preference, standardPreference: false, preferenceId: ''),
           );
         }
       }
+
+      List<String> currentPreferences = preferences.map((item) => item.value).toList();
+      for (String currentPreference in currentPreferences) {
+        // Check if the current preference is not in the selected preferences list, meaning it's been deselected
+        if (!selectedPreferences.contains(currentPreference)) {
+          // Find the preference ID by matching the preference name
+          final PreferenceDto? preferenceToDelete = preferencesForDelete.firstWhereOrNull(
+                (pref) => pref.preferenceName == currentPreference,
+          );
+
+          if (preferenceToDelete != null) {
+            await _accountService.deletePreference(preferenceToDelete.preferenceId);
+          } else {
+            debugPrint('Preference to delete not found: $currentPreference');
+          }
+        }
+      }
+
+
       debugPrint('Saved preferences: $selectedPreferences');
     } else {
       debugPrint('No preferences selected');
     }
   }
+
 
   @override
   void initState() {

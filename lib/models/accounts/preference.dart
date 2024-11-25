@@ -16,6 +16,13 @@ class Preference {
     this.accounts = const [],
   });
 
+  factory Preference.fromJson(Map<String, dynamic> json) {
+    return Preference(
+      preferenceName: json['preferenceName'] as String,
+      standardPreference: json['standardPreference'] as bool, preferenceId: json['preferenceId'], recipes: [],
+    );
+  }
+
   // Convert Preference to JSON
   Map<String, dynamic> toJson() {
     return {

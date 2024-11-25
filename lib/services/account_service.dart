@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:frontend/models/accounts/account.dart';
@@ -120,4 +121,20 @@ class AccountService {
       throw Exception('Error adding preference: $e');
     }
   }
+
+  Future<void> deletePreference(String preferenceId) async {
+    try {
+      final endpoint = 'api/Account/deletePreference/$preferenceId';
+      final response = await ApiClient().authorizedDelete(endpoint);
+
+      if (response.statusCode == 200) {
+        debugPrint('Preference deleted successfully');
+      } else {
+        throw Exception('Error deleting preference: ${response.statusCode}, ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Error deleting preference: $e');
+    }
+  }
+
 }
