@@ -330,15 +330,12 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
 
   String? selectedValue;
 
-  List<DropdownItem<String>> preferences = [
-    DropdownItem(label: 'Vegan', value: 'Vegan'),
-    DropdownItem(label: 'Vegetarisch', value: 'Vegetarian'),
-    DropdownItem(label: 'Notenallergie', value: 'Nut Allergy'),
-    DropdownItem(label: 'Lactose Intolerant', value: 'Lactose Intolerant'),
-  ];
+  List<DropdownItem<String>> preferences = [];
 
   void _addPreferenceToDropdown() {
     String newPreference = customPreferenceController.text.trim();
+
+    // Check is preference is not empty or not already in the list
     if (newPreference.isNotEmpty && !preferences.any((item) => item.value == newPreference)) {
       setState(() {
         preferences.add(DropdownItem(label: newPreference, value: newPreference, selected: true));
@@ -359,7 +356,6 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
       debugPrint("Preference was empty or already exists.");
     }
   }
-
 
   void _savePreferences() {
     List<String> selectedPreferences = controller.selectedItems.map((item) => item.value).toList();
@@ -392,24 +388,37 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
 
   Future<void> _initializePreferences() async {
     try {
+
+      List<DropdownItem<String>> tempPreferences = [
+        DropdownItem(label: 'Vegan', value: 'Vegan'),
+        DropdownItem(label: 'Vegetarisch', value: 'Vegetarian'),
+        DropdownItem(label: 'Notenallergie', value: 'Nut Allergy'),
+        DropdownItem(label: 'Lactose Intolerant', value: 'Lactose Intolerant'),
+      ];
+
       userId = await _accountService.getUserId();
       List<PreferenceDto> userPreferences = await _accountService.getPreferencesByUserId(userId);
 
       setState(() {
+        // Add userPreference to tempPreference if it's not already in the list
         for (var userPreference in userPreferences) {
-          if (!preferences.any((item) => item.value == userPreference.preferenceName)) {
-            preferences.add(
+          if (!tempPreferences.any((item) => item.value.toLowerCase() == userPreference.preferenceName.toLowerCase())) {
+            tempPreferences.add(
               DropdownItem(label: userPreference.preferenceName, value: userPreference.preferenceName),
             );
           }
         }
 
-        for (var item in preferences) {
+        // Select items user already has
+        for (var item in tempPreferences) {
           item.selected = userPreferences.any((pref) => pref.preferenceName == item.value);
         }
 
+        preferences = tempPreferences;
+
+        // clear controller and add items
         controller.clearAll();
-        controller.addItems(preferences.where((item) => item.selected).toList());
+        controller.addItems(preferences);
       });
     } catch (e) {
       debugPrint('Failed to load preferences: $e');
@@ -467,7 +476,7 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
                     debugPrint('OnSelectionChange: $selectedPreferences');
                   },
                 ),
-                const SizedBox(height: 12),
+              const SizedBox(height: 12),
                 Wrap(spacing: 8, children: [
                   ElevatedButton(
                     onPressed: () {
