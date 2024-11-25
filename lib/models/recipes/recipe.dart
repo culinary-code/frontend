@@ -63,7 +63,7 @@ class Recipe {
       difficulty: intToDifficulty(json['difficulty']),
       imagePath: json['imagePath'],
       createdAt: DateTime.parse(json['createdAt']),
-      averageRating: json['averageRating'],
+      averageRating: json['averageRating'].toDouble(),
       amountOfRatings: json['amountOfRatings'],
       instructions: (json['instructions'] as List<dynamic>?)
               ?.map((instruction) => InstructionStep(
@@ -76,7 +76,7 @@ class Recipe {
       ingredients: (json['ingredients'] as List<dynamic>?)
               ?.map((ingredient) => IngredientQuantity(
                     ingredientQuantityId: ingredient['ingredientQuantityId'],
-                    quantity: ingredient['quantity'],
+                    quantity: ingredient['quantity'].toDouble(),
                     ingredient: Ingredient(
                       ingredientId: ingredient['ingredient']['ingredientId'],
                       ingredientName: ingredient['ingredient']
