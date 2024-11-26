@@ -8,10 +8,12 @@ class FilterPopup extends StatelessWidget {
   final String initialIngredient;
   final RecipeType initialRecipeType;
   final Difficulty initialDifficulty;
+  final String initialCookTime;
   final ValueChanged<FilterType> onFilterSelected;
   final ValueChanged<String> onIngredientEntered;
   final ValueChanged<RecipeType> onRecipeTypeSelected;
   final ValueChanged<Difficulty> onDifficultySelected;
+  final ValueChanged<String> onCookTimeEntered;
   final VoidCallback onSave;
 
   const FilterPopup({
@@ -20,10 +22,12 @@ class FilterPopup extends StatelessWidget {
     required this.initialIngredient,
     required this.initialRecipeType,
     required this.initialDifficulty,
+    required this.initialCookTime,
     required this.onFilterSelected,
     required this.onIngredientEntered,
     required this.onRecipeTypeSelected,
     required this.onDifficultySelected,
+    required this.onCookTimeEntered,
     required this.onSave,
   });
 
@@ -33,6 +37,7 @@ class FilterPopup extends StatelessWidget {
     String tempIngredient = initialIngredient;
     RecipeType tempMealType = initialRecipeType;
     Difficulty tempDifficulty = initialDifficulty;
+    String tempCookTime = initialCookTime;
     FocusNode dropdownFocusNode = FocusNode();
 
     return StatefulBuilder(
@@ -54,6 +59,7 @@ class FilterPopup extends StatelessWidget {
                   FilterType.ingredient,
                   FilterType.mealType,
                   FilterType.difficulty,
+                  FilterType.cookTime
                 ]
                     .map((filterType) => DropdownMenuItem<FilterType>(
                   value: filterType,
@@ -82,6 +88,10 @@ class FilterPopup extends StatelessWidget {
                       (newValue) {
                     tempDifficulty = newValue;
                   },
+                  tempCookTime,
+                      (newValue) {
+                    tempCookTime = newValue;
+                  },
                   dropdownFocusNode,
                   context),
             ],
@@ -100,6 +110,7 @@ class FilterPopup extends StatelessWidget {
                 onIngredientEntered(tempIngredient);
                 onRecipeTypeSelected(tempMealType);
                 onDifficultySelected(tempDifficulty);
+                onCookTimeEntered(tempCookTime);
                 onSave();
                 Navigator.pop(context); // Close the dialog
               }
@@ -127,6 +138,8 @@ class FilterPopup extends StatelessWidget {
       ValueChanged<RecipeType> onRecipeTypeChanged,
       Difficulty selectedDifficulty,
       ValueChanged<Difficulty> onDifficultyChanged,
+      String currentCookTime,
+      ValueChanged<String> onCookTimeChanged,
       FocusNode dropdownFocusNode,
       BuildContext context,
       ) {
@@ -184,6 +197,14 @@ class FilterPopup extends StatelessWidget {
             }
             FocusScope.of(context).requestFocus(FocusNode());
           },
+        );
+      case FilterType.cookTime:
+        return TextField(
+          decoration: InputDecoration(
+            labelText: FilterType.cookTime.description,
+            border: OutlineInputBorder(),
+          ),
+          onChanged: onCookTimeChanged,
         );
       default:
         return Container(); // Empty widget for unsupported or default options

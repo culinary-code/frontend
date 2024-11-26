@@ -30,6 +30,7 @@ Future<void> showFilterDialog(BuildContext context) {
         initialIngredient: '',
         initialRecipeType: RecipeType.snack,
         initialDifficulty: Difficulty.easy,
+        initialCookTime: "0",
         onFilterSelected: (filter) {
           filterProvider.selectedFilter = filter;
         },
@@ -42,6 +43,9 @@ Future<void> showFilterDialog(BuildContext context) {
         onDifficultySelected: (difficulty) {
           filterProvider.recipeDifficultyFilter = difficulty;
         },
+        onCookTimeEntered: (cooktime) {
+          filterProvider.cookTimeFilter = cooktime;
+        },
         onSave: () {
           if (filterProvider.selectedFilter != FilterType.ingredient) filterProvider.removeExistingFilter(filterProvider.selectedFilter);
 
@@ -52,6 +56,7 @@ Future<void> showFilterDialog(BuildContext context) {
               FilterType.ingredient => filterProvider.ingredientFilter,
               FilterType.mealType => filterProvider.recipeTypeFilter.index.toString(),
               FilterType.difficulty => filterProvider.recipeDifficultyFilter.index.toString(),
+              FilterType.cookTime => filterProvider.cookTimeFilter,
             // Add other cases here if needed
               _ => "", // Handle default case gracefully
             },
