@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:frontend/models/meal_planning/grocery_list.dart';
 import 'package:frontend/models/recipes/ingredients/ingredient_quantity.dart';
 import 'package:frontend/models/recipes/ingredients/item_quantity.dart';
 import 'package:frontend/services/api_client.dart';
@@ -37,7 +36,7 @@ class GroceryListService {
     }
   }
 
-  Future<GroceryList?> fetchGroceryListById(String groceryListId) async {
+  Future<Map<String, dynamic>?> fetchGroceryListById(String groceryListId) async {
     try {
       final response = await ApiClient().authorizedGet('api/Grocery/$groceryListId');
 
@@ -46,6 +45,8 @@ class GroceryListService {
       }
 
       if (response.statusCode == 200) {
+        final data = json.decode(response.body); // Decode JSON response
+        print('Grocery List Data: ${json.encode(data)}'); // Print response
         return json.decode(response.body);
       } else {
         print('Failed to fetch grocery list by ID: ${response.statusCode}, Response: ${response.body}');
@@ -68,28 +69,6 @@ class GroceryListService {
           "ingredient": {
             "ingredientName": item.groceryListItem.ingredientName,
             "measurement": item.groceryListItem.measurement.index,
-          },
-        },
-      );
-      if (response.statusCode == 200) {
-      } else {
-        return;
-      }
-    } catch (e) {
-      return;
-    }
-  }
-
-  Future<void> addIngredientToGroceryList(
-      String groceryListId, IngredientQuantity item) async {
-    try {
-      final response = await ApiClient().authorizedPut(
-        'api/Grocery/$groceryListId/add-item',
-        {
-          "quantity": item.quantity,
-          "ingredient": {
-            "ingredientName": item.ingredient.ingredientName,
-            "measurement": item.ingredient.measurement.index,
           },
         },
       );

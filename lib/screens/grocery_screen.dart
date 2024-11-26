@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/models/recipes/ingredients/ingredient_quantity.dart';
 import 'package:frontend/models/recipes/ingredients/item_quantity.dart';
 import 'package:frontend/models/recipes/ingredients/measurement_type.dart';
 import 'package:frontend/services/account_service.dart';
@@ -26,12 +27,8 @@ class GroceryHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Padding(
         padding: EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-        child: Column(children: [
-          SizedBox(
-            height: 16,
-          ),
-          GroceryList()
-        ]));
+        child:
+          GroceryList());
   }
 }
 
@@ -49,6 +46,51 @@ class _GroceryListState extends State<GroceryList> {
   final GroceryListService groceryListService = GroceryListService();
   final KeycloakService keycloakService = KeycloakService();
   final AccountService accountService = AccountService();
+
+  // New Ingredient data list for fetching ingredients from API
+  List<Map<String, dynamic>> ingredientData = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadGroceryList();
+  }
+
+  Future<void> _loadGroceryList() async {
+    var groceryId = await groceryListService.getGroceryListId();
+    var response = await groceryListService.fetchGroceryListById(groceryId.toString());
+
+    if (response != null) {
+      var ingredients = response['ingredients'];
+
+      List<Map<String, dynamic>> parsedData = ingredients.map<Map<String, dynamic>>((ingredient) {
+        var measurement = ingredient['ingredient']['measurement'];
+
+        // Convert measurement integer to MeasurementType enum
+        MeasurementType measurementType;
+        if (measurement is int) {
+          // Map the integer value to the corresponding MeasurementType
+          measurementType = intToMeasurementType(measurement);
+        } else {
+          // If it's not an integer, you may want to handle the case (e.g., return 'unit' or handle other types)
+          measurementType = MeasurementType.kilogram; // Fallback to a default type if needed
+        }
+
+        // Convert MeasurementType to string for display (localized string)
+        String measurementString = measurementTypeToStringNl(measurementType);
+
+        return {
+          'ingredientName': ingredient['ingredient']['ingredientName'],
+          'quantity': ingredient['quantity'],
+          'measurement': measurementString, // Display the correct measurement string
+        };
+      }).toList();
+
+      setState(() {
+        ingredientData = parsedData;
+      });
+    }
+  }
 
   void addItem(ItemQuantity newItem) async {
     setState(() {
@@ -69,6 +111,22 @@ class _GroceryListState extends State<GroceryList> {
     });
   }
 
+  List<Map<String, dynamic>> get combinedData {
+    List<Map<String, dynamic>> combinedList = [];
+
+    combinedList.addAll(ingredientData);
+
+    combinedList.addAll(groceryList.map((item) {
+      return {
+        'ingredientName': item.groceryListItem.ingredientName,
+        'quantity': item.quantity,
+        'measurement': item.groceryListItem.measurement.name,
+      };
+    }).toList());
+
+    return combinedList;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -77,110 +135,118 @@ class _GroceryListState extends State<GroceryList> {
         padding: const EdgeInsets.all(8.0),
         child: Column(
           children: [
+            // Using Table instead of DataTable to have Dismissible rows
             Table(
               border: TableBorder.all(color: Colors.black),
               defaultVerticalAlignment: TableCellVerticalAlignment.middle,
               children: [
                 TableRow(
-                    decoration: BoxDecoration(
-                      color: Colors.blueGrey[200],
-                    ),
-                    children: const [
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.middle,
-                        child: Padding(
-                          padding: EdgeInsets.all(8.0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Align(
-                                alignment: Alignment.center,
-                                child: Text(
-                                  'Boodschappenlijst',
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold, fontSize: 25)
-                                ),
+                  decoration: BoxDecoration(
+                    color: Colors.blueGrey[200],
+                  ),
+                  children: const [
+                    TableCell(
+                      verticalAlignment: TableCellVerticalAlignment.middle,
+                      child: Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Align(
+                              alignment: Alignment.center,
+                              child: Text(
+                                'Boodschappenlijst',
+                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25),
                               ),
-                              Icon(Icons.shopping_cart, size: 30,)
-                            ],
-                          ),
+                            ),
+                            Icon(Icons.shopping_cart, size: 30)
+                          ],
                         ),
                       ),
-                    ]),
-                ...groceryList.map((item) {
+                    ),
+                  ],
+                ),
+                ...combinedData.map((ingredient) {
                   return TableRow(
                     children: [
                       Dismissible(
                         background: Container(
                           color: Colors.red,
                         ),
-                        key: Key(item.groceryListItem.ingredientName + item.groceryListItem.measurement.name + item.quantity.toString()),
+                        key: Key(ingredient['ingredientName'] + ingredient['quantity'].toString()),
                         direction: DismissDirection.endToStart,
                         onDismissed: (direction) {
-                          deleteItem(item);
-                          ScaffoldMessenger.of(context)
-                              .showSnackBar(SnackBar(
-                            content: Text('$item is verwijderd'),
-                            action: SnackBarAction(
+                          // Handle item deletion when dismissed
+                          if (ingredient['type'] == 'manual') {
+                            // Manually added item
+                            deleteItem(groceryList.firstWhere((item) =>
+                            item.groceryListItem.ingredientName == ingredient['ingredientName']));
+                          } else {
+                            // Fetched item from API, handle accordingly
+                          }
+
+                          // Show Snackbar with Undo option
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('${ingredient['ingredientName']} is verwijderd'),
+                              action: SnackBarAction(
                                 label: "Ongedaan maken",
                                 onPressed: () {
-                                  isUndoPressed = true;
                                   setState(() {
                                     isDeleting = false;
-                                    groceryList.add(item);
+                                    groceryList.add(ItemQuantity(
+                                      quantity: ingredient['quantity'],
+                                      groceryListItem: GroceryListItem(
+                                        ingredientName: ingredient['ingredientName'],
+                                        measurement: ingredient['measurement'],
+                                        ingredientQuantities: [],
+                                      ),
+                                    ));
                                   });
-                                }),
-                          ));
+                                },
+                              ),
+                            ),
+                          );
                         },
                         child: Table(
                           children: [
                             TableRow(
                               children: [
                                 TableCell(
-                                  verticalAlignment:
-                                  TableCellVerticalAlignment.middle,
+                                  verticalAlignment: TableCellVerticalAlignment.middle,
                                   child: Padding(
                                     padding: const EdgeInsets.all(8.0),
                                     child: Text(
-                                      item.groceryListItem.ingredientName,
-                                      style: const TextStyle(fontSize: 22),
-                                    ),
-                                  ),
-                                ),
-                                TableCell(
-                                  verticalAlignment:
-                                  TableCellVerticalAlignment.middle,
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Text(
-                                      item.groceryListItem != null
-                                          ? measurementTypeToStringMultipleNl(item.groceryListItem.measurement)
-                                          : measurementTypeToStringNl(item.groceryListItem.measurement),
-                                      style: const TextStyle(fontSize: 22),
-                                    ),
-                                  ),
-                                ),
-                                TableCell(
-                                  verticalAlignment:
-                                  TableCellVerticalAlignment.middle,
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Text(
-                                      item.quantity.toString(),
+                                      ingredient['ingredientName'],
                                       style: const TextStyle(fontSize: 22),
                                     ),
                                   ),
                                 ),
                                 TableCell(
                                   verticalAlignment: TableCellVerticalAlignment.middle,
-                                  child: Container(
-                                    color: Colors.red,
-                                    child: const Row(
-                                      children: [
-                                        Icon(Icons.keyboard_arrow_left, size: 30,),
-                                        Icon(Icons.delete, color: Colors.black, size: 30,)
-                                      ],
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Text(
+                                      ingredient['measurement'],
+                                      style: const TextStyle(fontSize: 22),
                                     ),
+                                  ),
+                                ),
+                                TableCell(
+                                  verticalAlignment: TableCellVerticalAlignment.middle,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Text(
+                                      ingredient['quantity'].toString(),
+                                      style: const TextStyle(fontSize: 22),
+                                    ),
+                                  ),
+                                ),
+                                TableCell(
+                                  verticalAlignment: TableCellVerticalAlignment.middle,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Icon(Icons.delete, color: Colors.black, size: 30),
                                   ),
                                 ),
                               ],
@@ -190,7 +256,7 @@ class _GroceryListState extends State<GroceryList> {
                       ),
                     ],
                   );
-                })
+                }).toList(),
               ],
             ),
             Padding(
@@ -221,13 +287,14 @@ class _GroceryListState extends State<GroceryList> {
                   )
                 ],
               ),
-            )
+            ),
           ],
         ),
       ),
     );
   }
 }
+
 
 class DialogInputGrocery extends StatefulWidget {
   final Function(String, double, MeasurementType) onAdd;
