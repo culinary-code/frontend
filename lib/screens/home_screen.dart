@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:frontend/models/recipes/recipe.dart';
-import 'package:frontend/models/recipes/recipe_filter.dart';
 import 'package:frontend/screens/create_recipe_screen.dart';
 import 'package:frontend/state/recipe_filter_options_provider.dart';
 import 'package:frontend/widgets/filter/filter_button.dart';
@@ -46,20 +45,6 @@ class _RecipeOverviewState extends State<RecipeOverview> {
     _searchController.addListener(() {
       filterProvider.recipeName = _searchController.text;
     });
-
-    filterProvider.filterOptions.add(FilterOption(value: "lkdjsmqkdjmqlkjdmq", type: FilterType.ingredient));
-    filterProvider.filterOptions.add(FilterOption(value: "lkdjsmqkdjmqlkjdmq", type: FilterType.ingredient));
-    filterProvider.filterOptions.add(FilterOption(value: "lkdjsmqkdjmqlkjdmq", type: FilterType.ingredient));
-    filterProvider.filterOptions.add(FilterOption(value: "lkdjsmqkdjmqlkjdmq", type: FilterType.ingredient));
-    filterProvider.filterOptions.add(FilterOption(value: "lkdjsmqkdjmqlkjdmq", type: FilterType.ingredient));
-    filterProvider.filterOptions.add(FilterOption(value: "lkdjsmqkdjmqlkjdmq", type: FilterType.ingredient));
-    filterProvider.filterOptions.add(FilterOption(value: "lkdjsmqkdjmqlkjdmq", type: FilterType.ingredient));
-    filterProvider.filterOptions.add(FilterOption(value: "lkdjsmqkdjmqlkjdmq", type: FilterType.ingredient));
-    filterProvider.filterOptions.add(FilterOption(value: "lkdjsmqkdjmqlkjdmq", type: FilterType.ingredient));
-    filterProvider.filterOptions.add(FilterOption(value: "lkdjsmqkdjmqlkjdmq", type: FilterType.ingredient));
-    filterProvider.filterOptions.add(FilterOption(value: "lkdjsmqkdjmqlkjdmq", type: FilterType.ingredient));
-    filterProvider.filterOptions.add(FilterOption(value: "lkdjsmqkdjmqlkjdmq", type: FilterType.ingredient));
-    filterProvider.filterOptions.add(FilterOption(value: "lkdjsmqkdjmqlkjdmq", type: FilterType.ingredient));
   }
 
   @override
