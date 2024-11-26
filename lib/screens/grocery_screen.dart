@@ -62,6 +62,7 @@ class _GroceryListState extends State<GroceryList> {
 
     if (response != null) {
       var ingredients = response['ingredients'];
+      var items = response['items'];
 
       List<Map<String, dynamic>> parsedData = ingredients.map<Map<String, dynamic>>((ingredient) {
         var measurement = ingredient['ingredient']['measurement'];
@@ -86,9 +87,34 @@ class _GroceryListState extends State<GroceryList> {
         };
       }).toList();
 
+      List<Map<String, dynamic>> parsedDataItems = items.map<Map<String, dynamic>>((ingredient) {
+        var measurement = ingredient['ingredient']['measurement'];
+
+        // Convert measurement integer to MeasurementType enum
+        MeasurementType measurementType;
+        if (measurement is int) {
+          // Map the integer value to the corresponding MeasurementType
+          measurementType = intToMeasurementType(measurement);
+        } else {
+          // If it's not an integer, you may want to handle the case (e.g., return 'unit' or handle other types)
+          measurementType = MeasurementType.kilogram; // Fallback to a default type if needed
+        }
+
+        // Convert MeasurementType to string for display (localized string)
+        String measurementString = measurementTypeToStringNl(measurementType);
+
+        return {
+          'ingredientName': ingredient['ingredient']['ingredientName'],
+          'quantity': ingredient['quantity'],
+          'measurement': measurementString, // Display the correct measurement string
+        };
+      }).toList();
+
       setState(() {
-        ingredientData = parsedData;
+        ingredientData = parsedData;  // Reassign with parsed ingredients
+        ingredientData.addAll(parsedDataItems);  // Add items to ingredientData
       });
+
     }
   }
 
@@ -176,37 +202,43 @@ class _GroceryListState extends State<GroceryList> {
                         key: Key(ingredient['ingredientName'] + ingredient['quantity'].toString()),
                         direction: DismissDirection.endToStart,
                         onDismissed: (direction) {
-                          // Handle item deletion when dismissed
-                          if (ingredient['type'] == 'manual') {
-                            // Manually added item
-                            deleteItem(groceryList.firstWhere((item) =>
-                            item.groceryListItem.ingredientName == ingredient['ingredientName']));
-                          } else {
-                            // Fetched item from API, handle accordingly
-                          }
+                          setState(() {
+                            if (ingredient['type'] == 'manual') {
+                              // Manually added item
+                              groceryList.removeWhere((item) =>
+                              item.groceryListItem.ingredientName == ingredient['ingredientName']);
+                            } else {
+                              // Fetched item from API, handle accordingly
+                              ingredientData.removeWhere((item) =>
+                              item['ingredientName'] == ingredient['ingredientName']);
+                            }
+                            isDeleting = true;
+                          });
 
-                          // Show Snackbar with Undo option
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('${ingredient['ingredientName']} is verwijderd'),
-                              action: SnackBarAction(
-                                label: "Ongedaan maken",
-                                onPressed: () {
-                                  setState(() {
-                                    isDeleting = false;
-                                    groceryList.add(ItemQuantity(
-                                      quantity: ingredient['quantity'],
-                                      groceryListItem: GroceryListItem(
-                                        ingredientName: ingredient['ingredientName'],
-                                        measurement: ingredient['measurement'],
-                                        ingredientQuantities: [],
-                                      ),
-                                    ));
-                                  });
-                                },
+                          // Delay adding a new item until the item is fully removed from the list.
+                          Future.delayed(Duration(milliseconds: 300), () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('${ingredient['ingredientName']} is verwijderd'),
+                                action: SnackBarAction(
+                                  label: "Ongedaan maken",
+                                  onPressed: () {
+                                    setState(() {
+                                      isDeleting = false;
+                                      groceryList.add(ItemQuantity(
+                                        quantity: ingredient['quantity'],
+                                        groceryListItem: GroceryListItem(
+                                          ingredientName: ingredient['ingredientName'],
+                                          measurement: ingredient['measurement'],
+                                          ingredientQuantities: [],
+                                        ),
+                                      ));
+                                    });
+                                  },
+                                ),
                               ),
-                            ),
-                          );
+                            );
+                          });
                         },
                         child: Table(
                           children: [
