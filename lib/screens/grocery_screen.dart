@@ -47,6 +47,8 @@ class _GroceryListState extends State<GroceryList> {
   final KeycloakService keycloakService = KeycloakService();
   final AccountService accountService = AccountService();
 
+  String? groceryListId; // Store the grocery list ID here
+
   // New Ingredient data list for fetching ingredients from API
   List<Map<String, dynamic>> ingredientData = [];
 
@@ -59,6 +61,7 @@ class _GroceryListState extends State<GroceryList> {
   Future<void> _loadGroceryList() async {
     var groceryId = await groceryListService.getGroceryListId();
     var response = await groceryListService.fetchGroceryListById(groceryId.toString());
+    groceryListId = await groceryListService.getGroceryListId(); // Fetch and store the grocery list ID
 
     if (response != null) {
       var ingredients = response['ingredients'];
@@ -81,6 +84,7 @@ class _GroceryListState extends State<GroceryList> {
         String measurementString = measurementTypeToStringNl(measurementType);
 
         return {
+          'ingredientQuantityId': ingredient['ingredientQuantityId'],
           'ingredientName': ingredient['ingredient']['ingredientName'],
           'quantity': ingredient['quantity'],
           'measurement': measurementString, // Display the correct measurement string
@@ -104,6 +108,7 @@ class _GroceryListState extends State<GroceryList> {
         String measurementString = measurementTypeToStringNl(measurementType);
 
         return {
+          'ingredientQuantityId': ingredient['ingredientQuantityId'],
           'ingredientName': ingredient['ingredient']['ingredientName'],
           'quantity': ingredient['quantity'],
           'measurement': measurementString, // Display the correct measurement string
@@ -131,37 +136,6 @@ class _GroceryListState extends State<GroceryList> {
     groceryListService.deleteItemFromGroceryList("1d78e45d-0205-4150-bb66-48d8d7b10e5f", "a2b3c9a3-9040-49c0-b3b7-a1efc418a4ad");
   }
 
-  void deleteItem(ItemQuantity item) async {
-    setState(() {
-      groceryList.remove(item);  // Remove from local list
-      isDeleting = true;
-    });
-
-    String? groceryListId = await groceryListService.getGroceryListId();
-    if (groceryListId == null) {
-      return;
-    }
-
-    // Call backend to delete the item
-    await groceryListService.deleteItemFromGroceryList(groceryListId, item.itemQuantityId.toString());
-
-    // Show the snackbar with an undo option
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${item.groceryListItem.ingredientName} is verwijderd'),
-        action: SnackBarAction(
-          label: "Ongedaan maken",
-          onPressed: () {
-            setState(() {
-              groceryList.add(item); // Undo the delete by re-adding the item
-              isDeleting = false;
-            });
-          },
-        ),
-      ),
-    );
-  }
-
   List<Map<String, dynamic>> get combinedData {
     List<Map<String, dynamic>> combinedList = [];
 
@@ -169,6 +143,7 @@ class _GroceryListState extends State<GroceryList> {
 
     combinedList.addAll(groceryList.map((item) {
       return {
+        'ingredientQuantityId': item.itemQuantityId,
         'ingredientName': item.groceryListItem.ingredientName,
         'quantity': item.quantity,
         'measurement': item.groceryListItem.measurement.name,
@@ -176,6 +151,10 @@ class _GroceryListState extends State<GroceryList> {
     }).toList());
 
     return combinedList;
+  }
+
+  void deleteItem(String id) {
+    groceryListService.deleteItemFromGroceryList(groceryListId!, id);
   }
 
   @override
@@ -224,7 +203,7 @@ class _GroceryListState extends State<GroceryList> {
                         background: Container(
                           color: Colors.red,
                         ),
-                        key: Key(ingredient['ingredientName'] + ingredient['quantity'].toString()),
+                        key: Key(ingredient['ingredientQuantityId']),
                         direction: DismissDirection.endToStart,
                         onDismissed: (direction) {
                           setState(() {
@@ -237,6 +216,7 @@ class _GroceryListState extends State<GroceryList> {
                               ingredientData.removeWhere((item) =>
                               item['ingredientName'] == ingredient['ingredientName']);
                             }
+                            deleteItem(ingredient['ingredientQuantityId']);
                             isDeleting = true;
                           });
 
