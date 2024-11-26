@@ -15,31 +15,36 @@ import 'package:provider/provider.dart';
 void main() async {
   await dotenv.load(fileName: ".env");
   await Settings.init(cacheProvider: SharePreferenceCache());
-  // runApp(const MyApp());
 
-  runApp(
-      MultiProvider(
+  bool developmentMode;
+  if (dotenv.env['DEVELOPMENT_MODE'] != null) {
+    String? val = dotenv.env['DEVELOPMENT_MODE'];
+    developmentMode = bool.parse(val!);
+  } else {
+    developmentMode = false;
+  }
+
+  if (developmentMode) {
+    runApp(MultiProvider(
         providers: [
-          ChangeNotifierProvider(create: (context) => RecipeFilterOptionsProvider()),
+          ChangeNotifierProvider(
+              create: (context) => RecipeFilterOptionsProvider()),
           ChangeNotifierProvider(create: (context) => ApiSelectionProvider()),
         ],
-        child:
-      DevicePreview(
-    enabled: !kReleaseMode,
-    builder: (context) => MyApp(),
-  )));
-
-  /*
-  runApp(
-      MultiProvider(
-        providers: [
-          ChangeNotifierProvider(create: (context) => RecipeFilterOptionsProvider()),)),
-          ChangeNotifierProvider(create: (context) => ApiSelectionProvider()),
-        ],
-        child: MyApp(),
-      )
-  );
-  */
+        child: DevicePreview(
+          enabled: !kReleaseMode,
+          builder: (context) => MyApp(),
+        )));
+  } else {
+    runApp(MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+            create: (context) => RecipeFilterOptionsProvider()),
+        ChangeNotifierProvider(create: (context) => ApiSelectionProvider()),
+      ],
+      child: MyApp(),
+    ));
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -81,6 +86,7 @@ class Main extends StatefulWidget {
 
 class _MainState extends State<Main> {
   bool _isLoggedIn = false;
+  bool _isCheckingLoginStatus = true;
 
   @override
   void initState() {
@@ -98,15 +104,42 @@ class _MainState extends State<Main> {
       setState(() {
         _isLoggedIn = false;
       });
+    } finally {
+      setState(() {
+        _isCheckingLoginStatus = false;
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoggedIn) {
+    if (_isCheckingLoginStatus) {
+      return const SplashScreen();
+    } else if (_isLoggedIn) {
       return const NavigationMenu();
     } else {
       return const LoginPage();
     }
+  }
+}
+
+class SplashScreen extends StatelessWidget {
+  const SplashScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+          child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Image.asset('assets/images/culinarycode_logo.png'),
+          const SizedBox(height: 20),
+          CircularProgressIndicator(),
+          Text('Culinary Code',
+              style: Theme.of(context).textTheme.headlineLarge),
+        ],
+      )),
+    );
   }
 }
