@@ -1,0 +1,29 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
+class ApiSelectionProvider with ChangeNotifier {
+  final FlutterSecureStorage storage = const FlutterSecureStorage();
+
+  String backendUrlEnv = dotenv.env['BACKEND_BASE_URL'] ??
+      (throw Exception('Environment variable BACKEND_BASE_URL not found'));
+
+  String keycloakUrlEnv = dotenv.env['KEYCLOAK_BASE_URL'] ??
+      (throw Exception('Environment variable KEYCLOAK_BASE_URL not found'));
+
+  Future<String> get backendUrl async =>
+      await storage.read(key: 'api') ?? backendUrlEnv;
+
+  Future<String> get keycloakUrl async =>
+      await storage.read(key: 'keycloak') ?? keycloakUrlEnv;
+
+  Future<void> setSelectedApi(String newApiUrl) async {
+    await storage.write(key: 'api', value: newApiUrl);
+    notifyListeners();
+  }
+
+  Future<void> setSelectedKeycloak(String newKeycloakUrl) async {
+    await storage.write(key: 'keycloak', value: newKeycloakUrl);
+    notifyListeners();
+  }
+}

@@ -12,7 +12,8 @@ class AccountService {
           (throw Exception('Environment variable BACKEND_BASE_URL not found'));
 
   Future<Account> fetchUser(String accountId) async {
-    final response = await ApiClient().authorizedGet('api/Account/$accountId');
+    final apiClient = await ApiClient.create();
+    final response = await apiClient.authorizedGet('api/Account/$accountId');
 
     if (response.statusCode == 200) {
       try {
@@ -55,7 +56,8 @@ class AccountService {
     try {
       final endpoint = 'api/Account/updateAccount?actionType=updateusername';
 
-      final response = await ApiClient().authorizedPut(endpoint, {
+      final apiClient = await ApiClient.create();
+      final response = await apiClient.authorizedPut(endpoint, {
         'Name': newUsername,
       });
 
@@ -72,7 +74,8 @@ class AccountService {
     try {
       final endpoint = 'api/Account/updateAccount?actionType=updatefamilysize';
 
-      final response = await ApiClient().authorizedPut(endpoint, {
+      final apiClient = await ApiClient.create();
+      final response = await apiClient.authorizedPut(endpoint, {
         'FamilySize': newFamilySize,
       });
 

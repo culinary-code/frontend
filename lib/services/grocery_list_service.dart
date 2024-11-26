@@ -14,8 +14,8 @@ class GroceryListService {
 
   Future<String?> getGroceryListId() async {
     try {
-      final response =
-          await ApiClient().authorizedGet('api/Grocery/account/grocery-list');
+      final apiClient = await ApiClient.create();
+      final response = await apiClient.authorizedGet('api/Grocery/account/grocery-list');
 
       if (response == null) {
         return null;
@@ -39,7 +39,8 @@ class GroceryListService {
   Future<void> addItemToGroceryList(
       String groceryListId, ItemQuantity item) async {
     try {
-      final response = await ApiClient().authorizedPut(
+      final apiClient = await ApiClient.create();
+      final response = await apiClient.authorizedPut(
         'api/Grocery/$groceryListId/add-item',
         {
           "quantity": item.quantity,

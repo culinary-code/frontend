@@ -8,7 +8,8 @@ class RecipeService {
     final String searchQuery = "o";
     final String searchEndpoint = "Recipe/Collection/ByName/$searchQuery";
 
-    final response = await ApiClient().authorizedGet(searchEndpoint);
+    final apiClient = await ApiClient.create();
+    final response = await apiClient.authorizedGet(searchEndpoint);
 
     if (response.statusCode != 200) {
       throw FormatException('Failed to load recipes: ${response.body}');
@@ -27,7 +28,8 @@ class RecipeService {
       String recipename, List<FilterOption> filterOptions) async {
     final String searchEndpoint = "Recipe/Collection/Filtered";
 
-    final response = await ApiClient().authorizedPost(searchEndpoint,
+    final apiClient = await ApiClient.create();
+    final response = await apiClient.authorizedPost(searchEndpoint,
         _buildFilterOptionPayload(recipename, filterOptions));
 
     if (response.statusCode != 200) {
@@ -44,8 +46,8 @@ class RecipeService {
   }
 
   Future<List<Recipe>> getRecipesByName(String query) async {
-    final response =
-        await ApiClient().authorizedGet('Recipe/Collection/ByName/$query');
+    final apiClient = await ApiClient.create();
+    final response = await apiClient.authorizedGet('Recipe/Collection/ByName/$query');
 
     if (response.statusCode == 404) {
       return [];
@@ -61,7 +63,8 @@ class RecipeService {
   }
 
   Future<Recipe> getRecipeById(String id) async {
-    final response = await ApiClient().authorizedGet('Recipe/$id');
+    final apiClient = await ApiClient.create();
+    final response = await apiClient.authorizedGet('Recipe/$id');
 
     if (response.statusCode != 200) {
       throw FormatException('Failed to load recipe: ${response.body}');
@@ -73,7 +76,8 @@ class RecipeService {
   }
 
   Future<String> createRecipe(String recipename, List<FilterOption> filterOptions) async {
-    final response = await ApiClient().authorizedPost('Recipe/Create',
+    final apiClient = await ApiClient.create();
+    final response = await apiClient.authorizedPost('Recipe/Create',
         _buildFilterOptionPayload(recipename, filterOptions));
 
     if (response.statusCode == 400) {

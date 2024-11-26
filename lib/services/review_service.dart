@@ -6,7 +6,8 @@ import 'package:frontend/services/api_client.dart';
 class ReviewService {
 
   Future<List<Review>> getReviewsByRecipeId(String recipeId) async {
-    final response = await ApiClient().authorizedGet('Review/ByRecipeId/$recipeId');
+    final apiClient = await ApiClient.create();
+    final response = await apiClient.authorizedGet('Review/ByRecipeId/$recipeId');
 
     if (response.statusCode != 200) {
       throw FormatException('Failed to load reviews: ${response.body}');
@@ -29,7 +30,8 @@ class ReviewService {
   }
 
   Future<Map<bool, String>> submitReview(String recipeId, int rating, String description) async {
-    final response = await ApiClient().authorizedPost('Review/CreateReview', {
+    final apiClient = await ApiClient.create();
+    final response = await apiClient.authorizedPost('Review/CreateReview', {
       'recipeId': recipeId,
       'amountOfStars': rating,
       'description': description,
