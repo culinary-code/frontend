@@ -153,12 +153,6 @@ class _AddToMealPlanner extends State<AddToMealPlanner> {
 
       if (!mounted) return;
 
-      // Filter ingredients to include only those added to the grocery list
-      List<IngredientQuantity> selectedIngredients = ingredients
-          .where((item) => item.isAddedToList) // Filter items with isAddedToList true
-          .map((item) => item.ingredientQuantity) // Map filtered items
-          .toList();
-
       PlannedMealFull plannedMeal = PlannedMealFull(
         amountOfPeople: numberOfPeople,
         recipe: recipe,
@@ -170,25 +164,6 @@ class _AddToMealPlanner extends State<AddToMealPlanner> {
       );
 
       await PlannedMealsService().createPlannedMeal(plannedMeal);
-
-      // Now add ingredients to the grocery list
-      String? groceryListId = await _groceryListService.getGroceryListId();
-      if (groceryListId != null) {
-        for (var ingredientQuantity in selectedIngredients) {
-          // Create ItemQuantity for each ingredient
-          ItemQuantity newItem = ItemQuantity(
-            quantity: ingredientQuantity.quantity,
-            groceryListItem: GroceryListItem(
-              ingredientName: ingredientQuantity.ingredient.ingredientName,
-              measurement: ingredientQuantity.ingredient.measurement,
-              ingredientQuantities: [ingredientQuantity],
-            ),
-          );
-
-          // Add item to grocery list
-          await _groceryListService.addItemToGroceryList(groceryListId, newItem);
-        }
-      }
 
       if (!mounted) return;
 

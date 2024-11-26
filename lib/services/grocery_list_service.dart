@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:frontend/models/meal_planning/grocery_list.dart';
 import 'package:frontend/models/recipes/ingredients/ingredient_quantity.dart';
 import 'package:frontend/models/recipes/ingredients/item_quantity.dart';
 import 'package:frontend/services/api_client.dart';
@@ -32,6 +33,26 @@ class GroceryListService {
         return null;
       }
     } catch (e) {
+      return null;
+    }
+  }
+
+  Future<GroceryList?> fetchGroceryListById(String groceryListId) async {
+    try {
+      final response = await ApiClient().authorizedGet('api/Grocery/$groceryListId');
+
+      if (response == null) {
+        return null;
+      }
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        print('Failed to fetch grocery list by ID: ${response.statusCode}, Response: ${response.body}');
+        return null;
+      }
+    } catch (e) {
+      print('An error occurred while fetching the grocery list: $e');
       return null;
     }
   }
