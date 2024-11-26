@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:frontend/models/recipes/recipe.dart';
+import 'package:frontend/models/recipes/recipe_filter.dart';
 import 'package:frontend/screens/create_recipe_screen.dart';
 import 'package:frontend/state/recipe_filter_options_provider.dart';
 import 'package:frontend/widgets/filter/filter_button.dart';
@@ -45,6 +46,20 @@ class _RecipeOverviewState extends State<RecipeOverview> {
     _searchController.addListener(() {
       filterProvider.recipeName = _searchController.text;
     });
+
+    filterProvider.filterOptions.add(FilterOption(value: "lkdjsmqkdjmqlkjdmq", type: FilterType.ingredient));
+    filterProvider.filterOptions.add(FilterOption(value: "lkdjsmqkdjmqlkjdmq", type: FilterType.ingredient));
+    filterProvider.filterOptions.add(FilterOption(value: "lkdjsmqkdjmqlkjdmq", type: FilterType.ingredient));
+    filterProvider.filterOptions.add(FilterOption(value: "lkdjsmqkdjmqlkjdmq", type: FilterType.ingredient));
+    filterProvider.filterOptions.add(FilterOption(value: "lkdjsmqkdjmqlkjdmq", type: FilterType.ingredient));
+    filterProvider.filterOptions.add(FilterOption(value: "lkdjsmqkdjmqlkjdmq", type: FilterType.ingredient));
+    filterProvider.filterOptions.add(FilterOption(value: "lkdjsmqkdjmqlkjdmq", type: FilterType.ingredient));
+    filterProvider.filterOptions.add(FilterOption(value: "lkdjsmqkdjmqlkjdmq", type: FilterType.ingredient));
+    filterProvider.filterOptions.add(FilterOption(value: "lkdjsmqkdjmqlkjdmq", type: FilterType.ingredient));
+    filterProvider.filterOptions.add(FilterOption(value: "lkdjsmqkdjmqlkjdmq", type: FilterType.ingredient));
+    filterProvider.filterOptions.add(FilterOption(value: "lkdjsmqkdjmqlkjdmq", type: FilterType.ingredient));
+    filterProvider.filterOptions.add(FilterOption(value: "lkdjsmqkdjmqlkjdmq", type: FilterType.ingredient));
+    filterProvider.filterOptions.add(FilterOption(value: "lkdjsmqkdjmqlkjdmq", type: FilterType.ingredient));
   }
 
   @override
@@ -117,38 +132,52 @@ class _RecipeOverviewState extends State<RecipeOverview> {
                 } else if (snapshot.hasError) {
                   return Center(child: Text('Error: ${snapshot.error}'));
                 } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return Column(
-                    children: [
-                      FilterOptionsDisplayWidget(),
-                      const SizedBox(
-                        height: 8.0,
-                      ),
-                      const Center(
-                        child: Text(
-                          'Geen recepten gevonden!',
-                          style: TextStyle(fontSize: 20),
+                  return LayoutBuilder(
+                    builder: (context, constraints) {
+                      return SingleChildScrollView(
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            minHeight: constraints.maxHeight, // Use the constraints here
+                          ),
+                          child: IntrinsicHeight(
+                            child: Column(
+                              children: [
+                                FilterOptionsDisplayWidget(),
+                                const SizedBox(height: 8.0),
+                                const Center(
+                                  child: Text(
+                                    'Geen recepten gevonden!',
+                                    style: TextStyle(fontSize: 20),
+                                  ),
+                                ),
+                                const Center(
+                                  child: Text(
+                                    'Recept met jouw zoekterm aanmaken?',
+                                    style: TextStyle(fontSize: 14),
+                                  ),
+                                ),
+                                const SizedBox(height: 10),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    String query = _searchController.text;
+                                    // Navigate to the CreateRecipeScreen
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => CreateRecipeScreen(
+                                          preloadedRecipeName: query,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  child: const Text('Maak een recept aan'),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
-                      ),
-                      const Center(
-                        child: Text(
-                          'Recept met jouw zoekterm aanmaken?',
-                          style: TextStyle(fontSize: 14),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      ElevatedButton(
-                        onPressed: () {
-                          String query = _searchController.text;
-                          // _searchController.clear();
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => CreateRecipeScreen(
-                                      preloadedRecipeName: query)));
-                        },
-                        child: const Text('Maak een recept aan'),
-                      ),
-                    ],
+                      );
+                    },
                   );
                 } else {
                   final recipes = snapshot.data!;
@@ -156,26 +185,7 @@ class _RecipeOverviewState extends State<RecipeOverview> {
                     slivers: [
                       // Sliver that contains the Wrap (it will scroll with the rest)
                       SliverToBoxAdapter(
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          // Center the entire Wrap
-                          child: Wrap(
-                            spacing: 0,
-                            // Horizontal space between chips
-                            runSpacing: 0,
-                            // Vertical space between rows
-                            alignment: WrapAlignment.start,
-                            // Center items in each row
-                            children: filterProvider.filterOptions.map((filter) {
-                              return FilterOptionChip(
-                                filter: filter,
-                                onDelete: () => setState(() {
-                                  filterProvider.deleteFilter(filter);
-                                }),
-                              );
-                            }).toList(),
-                          ),
-                        ),
+                        child: FilterOptionsDisplayWidget(),
                       ),
                       const SliverToBoxAdapter(
                         child: SizedBox(

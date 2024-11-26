@@ -62,109 +62,126 @@ class _RecipeFormState extends State<RecipeForm> {
     final filterProvider =
         Provider.of<RecipeFilterOptionsProvider>(context, listen: true);
 
-    return Form(
-      key: _formKey,
-      child: Column(
-        children: [
-          Text(
-              "Hier kun je de naam van het recept invullen. Je kunt ook een beschrijving toevoegen en een lijst van ingrediënten die je graag in het recept wilt hebben. Wij zullen dan proberen om een recept voor je te maken. Dit kan enkele seconden (tot 30 seconden) duren."),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              // Constrain the TextFormField to take the available space
-              Expanded(
-                child: TextFormField(
-                  minLines: 1,
-                  maxLines: 10,
-                  decoration: const InputDecoration(
-                    labelText: 'Receptnaam',
-                    isDense: true,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(8.0)),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: constraints.maxHeight,
+            ),
+            child: IntrinsicHeight(
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    Text(
+                        "Hier kun je de naam van het recept invullen. Je kunt ook een beschrijving toevoegen en een lijst van ingrediënten die je graag in het recept wilt hebben. Wij zullen dan proberen om een recept voor je te maken. Dit kan enkele seconden (tot 30 seconden) duren."),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Constrain the TextFormField to take the available space
+                        Expanded(
+                          child: TextFormField(
+                            minLines: 1,
+                            maxLines: 10,
+                            decoration: const InputDecoration(
+                              labelText: 'Receptnaam',
+                              isDense: true,
+                              border: OutlineInputBorder(
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(8.0)),
+                              ),
+                              suffixIcon: Icon(Icons.food_bank_outlined),
+                            ),
+                            validator: (value) {
+                              if ((value == null || value.isEmpty) &&
+                                  filterProvider.filterOptions.isEmpty) {
+                                return 'Voer een receptnaam of specificaties in';
+                              }
+                              return null;
+                            },
+                            controller: _recipeNameController,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        // Add spacing between the TextFormField and button
+                        FilterButton(),
+                      ],
                     ),
-                    suffixIcon: Icon(Icons.food_bank_outlined),
-                  ),
-                  validator: (value) {
-                    if ((value == null || value.isEmpty) &&
-                        filterProvider.filterOptions.isEmpty) {
-                      return 'Voer een receptnaam of specificaties in';
-                    }
-                    return null;
-                  },
-                  controller: _recipeNameController,
+                    SizedBox(
+                      height: 8,
+                    ),
+                    FilterOptionsDisplayWidget(),
+                    const SizedBox(height: 12),
+                    _isLoading
+                        ? CircularProgressIndicator()
+                        : ElevatedButton(
+                            onPressed: () async {
+                              if (_formKey.currentState!.validate()) {
+                                setState(() {
+                                  _isLoading = true;
+                                });
+
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content: Text('Recept aangevraagd')),
+                                );
+
+                                String response = await RecipeService()
+                                    .createRecipe(_recipeNameController.text,
+                                        filterProvider.filterOptions);
+
+                                final uuidRegExp = RegExp(
+                                  r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
+                                );
+
+                                if (!uuidRegExp.hasMatch(response)) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text(response)),
+                                  );
+                                  setState(() {
+                                    _isLoading = false;
+                                    _isRecipeInvalid = true;
+                                    _recipeInvalidReason = response;
+                                  });
+                                  await Future.delayed(Duration(seconds: 7));
+                                  setState(() {
+                                    _isRecipeInvalid = false;
+                                    _recipeInvalidReason = '';
+                                  });
+
+                                  return;
+                                }
+
+                                setState(() {
+                                  _isLoading = false;
+                                });
+
+                                Navigator.pop(context);
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        DetailScreen(recipeId: response),
+                                  ),
+                                );
+                              }
+                            },
+                            child: const Text('Aanvragen'),
+                          ),
+                    if (_isRecipeInvalid)
+                      Text(
+                        'Recept kon niet aangemaakt worden om deze reden: $_recipeInvalidReason',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                  ],
                 ),
               ),
-              const SizedBox(width: 8),
-              // Add spacing between the TextFormField and button
-              FilterButton(),
-            ],
-          ),
-          SizedBox(height: 8,),
-          FilterOptionsDisplayWidget(),
-          const SizedBox(height: 12),
-          _isLoading
-              ? CircularProgressIndicator()
-              : ElevatedButton(
-                  onPressed: () async {
-                    if (_formKey.currentState!.validate()) {
-                      setState(() {
-                        _isLoading = true;
-                      });
-
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Recept aangevraagd')),
-                      );
-
-                      String response = await RecipeService().createRecipe(
-                          _recipeNameController.text,
-                          filterProvider.filterOptions);
-
-                      final uuidRegExp = RegExp(
-                        r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
-                      );
-
-                      if (!uuidRegExp.hasMatch(response)) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(response)),
-                        );
-                        setState(() {
-                          _isLoading = false;
-                          _isRecipeInvalid = true;
-                          _recipeInvalidReason = response;
-                        });
-                        await Future.delayed(Duration(seconds: 7));
-                        setState(() {
-                          _isRecipeInvalid = false;
-                          _recipeInvalidReason = '';
-                        });
-
-                        return;
-                      }
-
-                      setState(() {
-                        _isLoading = false;
-                      });
-
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              DetailScreen(recipeId: response),
-                        ),
-                      );
-                    }
-                  },
-                  child: const Text('Aanvragen'),
-                ),
-          if (_isRecipeInvalid)
-            Text(
-              'Recept kon niet aangemaakt worden om deze reden: $_recipeInvalidReason',
-              style: TextStyle(color: Colors.red),
             ),
-        ],
-      ),
+          ),
+        );
+      },
     );
   }
 }
