@@ -42,6 +42,7 @@ class _RecipeFormState extends State<RecipeForm> {
   bool _isLoading = false;
   bool _isRecipeInvalid = false;
   String _recipeInvalidReason = '';
+  bool showAllFilterOptions = false;
 
   @override
   void initState() {
@@ -60,6 +61,7 @@ class _RecipeFormState extends State<RecipeForm> {
   Widget build(BuildContext context) {
     final filterProvider =
         Provider.of<RecipeFilterOptionsProvider>(context, listen: true);
+
     return Form(
       key: _formKey,
       child: Column(
@@ -67,59 +69,39 @@ class _RecipeFormState extends State<RecipeForm> {
           Text(
               "Hier kun je de naam van het recept invullen. Je kunt ook een beschrijving toevoegen en een lijst van ingrediënten die je graag in het recept wilt hebben. Wij zullen dan proberen om een recept voor je te maken. Dit kan enkele seconden (tot 30 seconden) duren."),
           const SizedBox(height: 12),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Constrain the TextFormField to take the available space
-                Expanded(
-                  child: TextFormField(
-                    minLines: 1,
-                    maxLines: 10,
-                    decoration: const InputDecoration(
-                      labelText: 'Receptnaam',
-                      isDense: true,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(8.0)),
-                      ),
-                      suffixIcon: Icon(Icons.food_bank_outlined),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Constrain the TextFormField to take the available space
+              Expanded(
+                child: TextFormField(
+                  minLines: 1,
+                  maxLines: 10,
+                  decoration: const InputDecoration(
+                    labelText: 'Receptnaam',
+                    isDense: true,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(8.0)),
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Voer een receptnaam in';
-                      }
-                      return null;
-                    },
-                    controller: _recipeNameController,
+                    suffixIcon: Icon(Icons.food_bank_outlined),
                   ),
+                  validator: (value) {
+                    if ((value == null || value.isEmpty) &&
+                        filterProvider.filterOptions.isEmpty) {
+                      return 'Voer een receptnaam of specificaties in';
+                    }
+                    return null;
+                  },
+                  controller: _recipeNameController,
                 ),
-                const SizedBox(width: 8), // Add spacing between the TextFormField and button
-                FilterButton(),
-              ],
-            ),
+              ),
+              const SizedBox(width: 8),
+              // Add spacing between the TextFormField and button
+              FilterButton(),
+            ],
           ),
-
-          Align(
-            alignment: Alignment.centerLeft,
-            // Center the entire Wrap
-            child: Wrap(
-              spacing: 0,
-              // Horizontal space between chips
-              runSpacing: 0,
-              // Vertical space between rows
-              alignment: WrapAlignment.start,
-              // Center items in each row
-              children: filterProvider.filterOptions.map((filter) {
-                return FilterOptionChip(
-                  filter: filter,
-                  onDelete: () => setState(() {
-                    filterProvider.deleteFilter(filter);
-                  }),
-                );
-              }).toList(),
-            ),
-          ),
+          SizedBox(height: 8,),
+          FilterOptionsDisplayWidget(),
           const SizedBox(height: 12),
           _isLoading
               ? CircularProgressIndicator()
@@ -134,8 +116,9 @@ class _RecipeFormState extends State<RecipeForm> {
                         const SnackBar(content: Text('Recept aangevraagd')),
                       );
 
-                      String response = await RecipeService()
-                          .createRecipe(_recipeNameController.text, filterProvider.filterOptions);
+                      String response = await RecipeService().createRecipe(
+                          _recipeNameController.text,
+                          filterProvider.filterOptions);
 
                       final uuidRegExp = RegExp(
                         r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',

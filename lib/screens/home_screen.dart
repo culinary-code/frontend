@@ -119,26 +119,7 @@ class _RecipeOverviewState extends State<RecipeOverview> {
                 } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
                   return Column(
                     children: [
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        // Center the entire Wrap
-                        child: Wrap(
-                          spacing: 0,
-                          // Horizontal space between chips
-                          runSpacing: 0,
-                          // Vertical space between rows
-                          alignment: WrapAlignment.start,
-                          // Center items in each row
-                          children: filterProvider.filterOptions.map((filter) {
-                            return FilterOptionChip(
-                              filter: filter,
-                              onDelete: () => setState(() {
-                                filterProvider.deleteFilter(filter);
-                              }),
-                            );
-                          }).toList(),
-                        ),
-                      ),
+                      FilterOptionsDisplayWidget(),
                       const SizedBox(
                         height: 8.0,
                       ),
