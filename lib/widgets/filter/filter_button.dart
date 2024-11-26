@@ -30,7 +30,7 @@ Future<void> showFilterDialog(BuildContext context) {
         initialIngredient: '',
         initialRecipeType: RecipeType.snack,
         initialDifficulty: Difficulty.easy,
-        initialCookTime: "0",
+        initialCookTime: "10",
         onFilterSelected: (filter) {
           filterProvider.selectedFilter = filter;
         },
