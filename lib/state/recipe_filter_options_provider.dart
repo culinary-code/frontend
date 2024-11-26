@@ -14,6 +14,7 @@ class RecipeFilterOptionsProvider with ChangeNotifier {
   String _ingredientFilter = '';
   RecipeType _recipeTypeFilter = RecipeType.snack;
   Difficulty _recipeDifficultyFilter = Difficulty.easy;
+  String _cookTimeFilter = '';
 
   // constructor
   RecipeFilterOptionsProvider() {
@@ -34,6 +35,8 @@ class RecipeFilterOptionsProvider with ChangeNotifier {
   RecipeType get recipeTypeFilter => _recipeTypeFilter;
 
   Difficulty get recipeDifficultyFilter => _recipeDifficultyFilter;
+
+  String get cookTimeFilter => _cookTimeFilter;
 
   //setters
   set recipeName(String newName) {
@@ -73,6 +76,11 @@ class RecipeFilterOptionsProvider with ChangeNotifier {
 
   set recipeDifficultyFilter(Difficulty difficulty) {
     _recipeDifficultyFilter = difficulty;
+    notifyListeners();
+  }
+
+  set cookTimeFilter(String newCookTime) {
+    _cookTimeFilter = newCookTime;
     notifyListeners();
   }
 
