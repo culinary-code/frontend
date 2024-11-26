@@ -80,4 +80,23 @@ class GroceryListService {
       return;
     }
   }
+
+  // Method to delete an item from the grocery list
+  Future<void> deleteItemFromGroceryList(
+      String groceryListId, String itemQuantityId) async {
+    try {
+      final response = await ApiClient().authorizedDelete(
+        'api/Grocery/$groceryListId/items/$itemQuantityId',
+      );
+
+      if (response.statusCode == 200) {
+        print('Item deleted successfully');
+      } else {
+        print(
+            'Failed to delete item: ${response.statusCode}, Response: ${response.body}');
+      }
+    } catch (e) {
+      print('An error occurred while deleting the item: $e');
+    }
+  }
 }

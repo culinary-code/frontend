@@ -128,13 +128,38 @@ class _GroceryListState extends State<GroceryList> {
       return;
     }
     groceryListService.addItemToGroceryList(groceryListId, newItem);
+    groceryListService.deleteItemFromGroceryList("1d78e45d-0205-4150-bb66-48d8d7b10e5f", "a2b3c9a3-9040-49c0-b3b7-a1efc418a4ad");
   }
 
-  void deleteItem(ItemQuantity item) {
+  void deleteItem(ItemQuantity item) async {
     setState(() {
-      groceryList.remove(item);
+      groceryList.remove(item);  // Remove from local list
       isDeleting = true;
     });
+
+    String? groceryListId = await groceryListService.getGroceryListId();
+    if (groceryListId == null) {
+      return;
+    }
+
+    // Call backend to delete the item
+    await groceryListService.deleteItemFromGroceryList(groceryListId, item.itemQuantityId.toString());
+
+    // Show the snackbar with an undo option
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('${item.groceryListItem.ingredientName} is verwijderd'),
+        action: SnackBarAction(
+          label: "Ongedaan maken",
+          onPressed: () {
+            setState(() {
+              groceryList.add(item); // Undo the delete by re-adding the item
+              isDeleting = false;
+            });
+          },
+        ),
+      ),
+    );
   }
 
   List<Map<String, dynamic>> get combinedData {
@@ -226,6 +251,7 @@ class _GroceryListState extends State<GroceryList> {
                                     setState(() {
                                       isDeleting = false;
                                       groceryList.add(ItemQuantity(
+                                        itemQuantityId: '',
                                         quantity: ingredient['quantity'],
                                         groceryListItem: GroceryListItem(
                                           ingredientName: ingredient['ingredientName'],
@@ -303,6 +329,7 @@ class _GroceryListState extends State<GroceryList> {
                         builder: (context) {
                           return DialogInputGrocery(onAdd: (name, quantity, measurement) {
                             final newItem = ItemQuantity(
+                              itemQuantityId: '',
                               quantity: quantity,
                               groceryListItem: GroceryListItem(
                                 ingredientName: name,
