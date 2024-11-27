@@ -2,12 +2,11 @@ import 'package:collection/collection.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:frontend/models/accounts/preference.dart';
+import 'package:frontend/models/accounts/account.dart';
+import 'package:frontend/models/accounts/preferencedto.dart';
+import 'package:frontend/services/account_service.dart';
 import 'package:multi_dropdown/multi_dropdown.dart';
 
-import '../models/accounts/account.dart';
-import '../models/accounts/preferencedto.dart';
-import '../services/account_service.dart';
 
 class AccountScreen extends StatelessWidget {
   const AccountScreen({super.key});
@@ -30,22 +29,29 @@ class AccountOverview extends StatefulWidget {
 
 class _AccountOverviewState extends State<AccountOverview> {
   final GlobalKey<_AccountSettingsState> _accountSettingsKey = GlobalKey();
-  final GlobalKey<_PreferencesSettingsState> _preferenceSettingsKey = GlobalKey();
+  final GlobalKey<_PreferencesSettingsState> _preferenceSettingsKey =
+      GlobalKey();
 
   @override
   Widget build(BuildContext context) {
-    return
-      Column(
+    return Column(
       children: [
         AccountSettings(key: _accountSettingsKey),
         SizedBox(
           height: 16,
         ),
-        Expanded(
-          child: PreferencesSettings(key: _preferenceSettingsKey),
-        ),
+        PreferencesSettings(key: _preferenceSettingsKey),
         SizedBox(height: 16),
-        ElevatedButton(onPressed: _saveAll, child: Text('Opslaan'))
+        ElevatedButton(
+            onPressed: _saveAll,
+            style: ElevatedButton.styleFrom(
+              elevation: 5,
+              padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+            ),
+            child: Text(
+              'Opslaan',
+              style: TextStyle(fontSize: 20),
+            ))
       ],
     );
   }
@@ -187,13 +193,13 @@ class _AccountSettingsState extends State<AccountSettings> {
                 TextField(
                   controller: _usernameController,
                   decoration: InputDecoration(
-                      labelText: 'Gebruikersnaam',
-                      floatingLabelBehavior: FloatingLabelBehavior.never,
-                      errorText: _usernameError
-                          ? 'Gebruikersnaam moet minstens 3 karakters zijn.'
-                          : null,
-                      border: OutlineInputBorder(),
-                      /*suffixIcon: IconButton(
+                    labelText: 'Gebruikersnaam',
+                    floatingLabelBehavior: FloatingLabelBehavior.never,
+                    errorText: _usernameError
+                        ? 'Gebruikersnaam moet minstens 3 karakters zijn.'
+                        : null,
+                    border: OutlineInputBorder(),
+                    /*suffixIcon: IconButton(
                           icon: Icon(Icons.save), onPressed: _saveUsername)*/
                   ),
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -381,7 +387,6 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
     }
   }
 
-
   void _savePreferences() async {
     List<String> selectedPreferences =
         controller.selectedItems.map((item) => item.value).toList();
@@ -440,7 +445,6 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
     }
   }
 
-
   @override
   void initState() {
     super.initState();
@@ -492,13 +496,14 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
+    return SafeArea(
+      child: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Form(
             key: _formKey,
-            child: ListView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
                   'Voorkeuren',
