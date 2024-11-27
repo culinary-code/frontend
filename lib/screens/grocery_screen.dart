@@ -61,7 +61,7 @@ class _GroceryListState extends State<GroceryList> {
     var response =
         await groceryListService.fetchGroceryListById(groceryId.toString());
     groceryListId = await groceryListService
-        .getGroceryListId(); // Fetch and store the grocery list ID
+        .getGroceryListId();
 
     if (response != null) {
       var ingredients = response['ingredients'];
@@ -77,9 +77,8 @@ class _GroceryListState extends State<GroceryList> {
           // Map the integer value to the corresponding MeasurementType
           measurementType = intToMeasurementType(measurement);
         } else {
-          // If it's not an integer, you may want to handle the case (e.g., return 'unit' or handle other types)
           measurementType =
-              MeasurementType.kilogram; // Fallback to a default type if needed
+              MeasurementType.kilogram;
         }
 
         // Convert MeasurementType to string for display (localized string)
@@ -90,7 +89,6 @@ class _GroceryListState extends State<GroceryList> {
           'ingredientName': ingredient['ingredient']['ingredientName'],
           'quantity': ingredient['quantity'],
           'measurement': measurementString,
-          // Display the correct measurement string
         };
       }).toList();
 
@@ -98,7 +96,6 @@ class _GroceryListState extends State<GroceryList> {
           items.map<Map<String, dynamic>>((ingredient) {
         var measurement = ingredient['ingredient']['measurement'];
 
-        // Convert measurement integer to MeasurementType enum
         MeasurementType measurementType;
         if (measurement is int) {
           measurementType = intToMeasurementType(measurement);
@@ -107,7 +104,6 @@ class _GroceryListState extends State<GroceryList> {
               MeasurementType.kilogram;
         }
 
-        // Convert MeasurementType to string for display (localized string)
         String measurementString = measurementTypeToStringNl(measurementType);
 
         return {
@@ -126,15 +122,12 @@ class _GroceryListState extends State<GroceryList> {
   }
 
   void addItem(ItemQuantity newItem) async {
-    setState(() {
-      groceryList.add(newItem);
-    });
-
     String? groceryListId = await groceryListService.getGroceryListId();
     if (groceryListId == null) {
       return;
     }
-    groceryListService.addItemToGroceryList(groceryListId, newItem);
+    await groceryListService.addItemToGroceryList(groceryListId, newItem);
+    await _loadGroceryList();
   }
 
   List<Map<String, dynamic>> get combinedData {
@@ -147,7 +140,7 @@ class _GroceryListState extends State<GroceryList> {
         'ingredientQuantityId': item.itemQuantityId,
         'ingredientName': item.groceryListItem.ingredientName,
         'quantity': item.quantity,
-        'measurement': item.groceryListItem.measurement.name,
+        'measurement': measurementTypeToStringNl(item.groceryListItem.measurement),
       };
     }).toList());
     return combinedList;
@@ -209,14 +202,16 @@ class _GroceryListState extends State<GroceryList> {
                           final dismissedItem = ingredient;
 
                           setState(() {
+                            print('Before removing: $ingredientData');
                             ingredientData.removeWhere((item) =>
                                 item['ingredientQuantityId'] ==
                                 ingredient['ingredientQuantityId']);
+                            print('\nAfter removing: $ingredientData');
                             isDeleting = true;
                           });
 
                           // Delay when deleting item
-                          Future.delayed(Duration(milliseconds: 300), () {
+                          Future.delayed(Duration(milliseconds: 200), () {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(
@@ -232,7 +227,7 @@ class _GroceryListState extends State<GroceryList> {
                                 ),
                               ),
                             );
-                            // Delay actual deletion to allow for undo
+                            // Delay actual deletion to allow undo
                             Future.delayed(Duration(milliseconds: 3000), () {
                               if (isDeleting) {
                                 // Perform deletion only if not undone
@@ -294,7 +289,7 @@ class _GroceryListState extends State<GroceryList> {
                       ),
                     ],
                   );
-                }).toList(),
+                }),
               ],
             ),
             Padding(
@@ -400,28 +395,6 @@ class _DialogInputGroceryState extends State<DialogInputGrocery> {
             },
             child: const Text('Voeg toe'))
       ],
-
-      /*
-      content: TextField(
-        controller: controller,
-      ),
-      actions: [
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-          child: const Text('Annuleer'),
-        ),
-        TextButton(
-            onPressed: () {
-              final String newItem = controller.text.trim();
-              if (newItem.isNotEmpty) {
-                widget.onAdd(newItem);
-              }
-              Navigator.of(context).pop();
-            },
-            child: const Text('Voeg toe'))
-      ],*/
     );
   }
 }

@@ -27,7 +27,7 @@ class GroceryListService {
         String? groceryId = responseBody['groceryListId'];
         return groceryId;
       } else {
-            'Failed to fetch grocery list: ${response.statusCode}, Response: ${response.body}';
+        'Failed to fetch grocery list: ${response.statusCode}, Response: ${response.body}';
         return null;
       }
     } catch (e) {
@@ -35,26 +35,19 @@ class GroceryListService {
     }
   }
 
-  Future<Map<String, dynamic>?> fetchGroceryListById(String groceryListId) async {
+  Future<Map<String, dynamic>?> fetchGroceryListById(
+      String groceryListId) async {
     try {
-      final response = await ApiClient().authorizedGet('api/Grocery/$groceryListId');
-
-      if (response == null) {
-        return null;
-      }
+      final response =
+          await ApiClient().authorizedGet('api/Grocery/$groceryListId');
 
       if (response.statusCode == 200) {
-        final data = json.decode(response.body); // Decode JSON response
-        print('Grocery List Data: ${json.encode(data)}'); // Print response
         return json.decode(response.body);
-      } else {
-        print('Failed to fetch grocery list by ID: ${response.statusCode}, Response: ${response.body}');
-        return null;
       }
     } catch (e) {
-      print('An error occurred while fetching the grocery list: $e');
       return null;
     }
+    return null;
   }
 
   Future<void> addItemToGroceryList(
@@ -86,14 +79,11 @@ class GroceryListService {
         'api/Grocery/$groceryListId/items/$itemQuantityId',
       );
 
-      if (response.statusCode == 200) {
-        print('Item deleted successfully');
-      } else {
-        print(
-            'Failed to delete item: ${response.statusCode}, Response: ${response.body}');
+      if (response.statusCode != 200) {
+        throw Exception('Item could not be deleted');
       }
     } catch (e) {
-      print('An error occurred while deleting the item: $e');
+      throw Exception('An error occurred while deleting the item: $e');
     }
   }
 }
