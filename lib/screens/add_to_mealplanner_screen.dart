@@ -47,7 +47,6 @@ class _AddToMealPlanner extends State<AddToMealPlanner> {
   late Recipe recipe;
 
   final AccountService _accountService = AccountService();
-  final GroceryListService _groceryListService = GroceryListService();
   late String userId;
   late Future<void> _initFuture;
 

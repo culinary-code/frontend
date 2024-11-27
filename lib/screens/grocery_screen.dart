@@ -80,7 +80,6 @@ class _GroceryListState extends State<GroceryList> {
           measurementType =
               MeasurementType.kilogram;
         }
-
         // Convert MeasurementType to string for display (localized string)
         String measurementString = measurementTypeToStringNl(measurementType);
 
@@ -103,7 +102,6 @@ class _GroceryListState extends State<GroceryList> {
           measurementType =
               MeasurementType.kilogram;
         }
-
         String measurementString = measurementTypeToStringNl(measurementType);
 
         return {
@@ -202,11 +200,9 @@ class _GroceryListState extends State<GroceryList> {
                           final dismissedItem = ingredient;
 
                           setState(() {
-                            print('Before removing: $ingredientData');
                             ingredientData.removeWhere((item) =>
                                 item['ingredientQuantityId'] ==
                                 ingredient['ingredientQuantityId']);
-                            print('\nAfter removing: $ingredientData');
                             isDeleting = true;
                           });
 
@@ -257,18 +253,18 @@ class _GroceryListState extends State<GroceryList> {
                                   child: Padding(
                                     padding: const EdgeInsets.all(8.0),
                                     child: Text(
-                                      ingredient['measurement'],
+                                      ingredient['quantity'].toString(),
                                       style: const TextStyle(fontSize: 22),
                                     ),
                                   ),
                                 ),
                                 TableCell(
                                   verticalAlignment:
-                                      TableCellVerticalAlignment.middle,
+                                  TableCellVerticalAlignment.middle,
                                   child: Padding(
                                     padding: const EdgeInsets.all(8.0),
                                     child: Text(
-                                      ingredient['quantity'].toString(),
+                                      ingredient['measurement'],
                                       style: const TextStyle(fontSize: 22),
                                     ),
                                   ),
