@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:frontend/models/recipes/ingredients/ingredient_quantity.dart';
 import 'package:frontend/models/recipes/ingredients/item_quantity.dart';
 import 'package:frontend/services/api_client.dart';
 
@@ -58,7 +57,6 @@ class GroceryListService {
     }
   }
 
-
   Future<void> addItemToGroceryList(
       String groceryListId, ItemQuantity item) async {
     try {
@@ -81,7 +79,6 @@ class GroceryListService {
     }
   }
 
-  // Method to delete an item from the grocery list
   Future<void> deleteItemFromGroceryList(
       String groceryListId, String itemQuantityId) async {
     try {

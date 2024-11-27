@@ -214,7 +214,7 @@ class _GroceryListState extends State<GroceryList> {
                             } else {
                               // Fetched item from API, handle accordingly
                               ingredientData.removeWhere((item) =>
-                              item['ingredientName'] == ingredient['ingredientName']);
+                              item['ingredientQuantityId'] == ingredient['ingredientQuantityId']);
                             }
                             deleteItem(ingredient['ingredientQuantityId']);
                             isDeleting = true;
