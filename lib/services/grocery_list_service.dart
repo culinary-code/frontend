@@ -38,8 +38,8 @@ class GroceryListService {
   Future<Map<String, dynamic>?> fetchGroceryListById(
       String groceryListId) async {
     try {
-      final response =
-          await ApiClient().authorizedGet('api/Grocery/$groceryListId');
+      final apiClient = await ApiClient.create();
+      final response = await apiClient.authorizedGet('api/Grocery/$groceryListId');
 
       if (response.statusCode == 200) {
         return json.decode(response.body);
@@ -77,7 +77,8 @@ class GroceryListService {
   Future<void> deleteItemFromGroceryList(
       String groceryListId, String itemQuantityId) async {
     try {
-      final response = await ApiClient().authorizedDelete(
+      final apiClient = await ApiClient.create();
+      final response = await apiClient.authorizedDelete(
         'api/Grocery/$groceryListId/items/$itemQuantityId',
       );
 
