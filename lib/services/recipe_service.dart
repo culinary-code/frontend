@@ -25,12 +25,12 @@ class RecipeService {
   }
 
   Future<List<Recipe>> getFilteredRecipes(
-      String recipename, List<FilterOption> filterOptions) async {
+      String recipeName, List<FilterOption> filterOptions) async {
     final String searchEndpoint = "Recipe/Collection/Filtered";
 
     final apiClient = await ApiClient.create();
     final response = await apiClient.authorizedPost(searchEndpoint,
-        _buildFilterOptionPayload(recipename, filterOptions));
+        _buildFilterOptionPayload(recipeName, filterOptions));
 
     if (response.statusCode != 200) {
       throw FormatException('Failed to load recipes: ${response.body}');
