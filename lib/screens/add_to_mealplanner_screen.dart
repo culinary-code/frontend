@@ -5,9 +5,8 @@ import 'package:frontend/models/recipes/ingredients/ingredient_quantity.dart';
 import 'package:frontend/models/recipes/ingredients/measurement_type.dart';
 import 'package:frontend/models/recipes/recipe.dart';
 import 'package:frontend/navigation_menu.dart';
+import 'package:frontend/services/account_service.dart';
 import 'package:frontend/services/planned_meals_service.dart';
-
-import '../services/account_service.dart';
 
 class AddToMealplannerScreen extends StatelessWidget {
   final Recipe recipe;

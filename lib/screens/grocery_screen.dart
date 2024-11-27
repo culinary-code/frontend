@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/models/recipes/ingredients/ingredient_quantity.dart';
 import 'package:frontend/models/recipes/ingredients/item_quantity.dart';
 import 'package:frontend/models/recipes/ingredients/measurement_type.dart';
 import 'package:frontend/services/account_service.dart';
@@ -26,12 +27,7 @@ class GroceryHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Padding(
         padding: EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-        child: Column(children: [
-          SizedBox(
-            height: 16,
-          ),
-          GroceryList()
-        ]));
+        child: GroceryList());
   }
 }
 
@@ -50,23 +46,106 @@ class _GroceryListState extends State<GroceryList> {
   final KeycloakService keycloakService = KeycloakService();
   final AccountService accountService = AccountService();
 
-  void addItem(ItemQuantity newItem) async {
-    setState(() {
-      groceryList.add(newItem);
-    });
+  String? groceryListId;
 
+  List<Map<String, dynamic>> ingredientData = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadGroceryList();
+  }
+
+  Future<void> _loadGroceryList() async {
+    var groceryId = await groceryListService.getGroceryListId();
+    var response =
+        await groceryListService.fetchGroceryListById(groceryId.toString());
+    groceryListId = await groceryListService
+        .getGroceryListId();
+
+    if (response != null) {
+      var ingredients = response['ingredients'];
+      var items = response['items'];
+
+      List<Map<String, dynamic>> parsedData =
+          ingredients.map<Map<String, dynamic>>((ingredient) {
+        var measurement = ingredient['ingredient']['measurement'];
+
+        // Convert measurement integer to MeasurementType enum
+        MeasurementType measurementType;
+        if (measurement is int) {
+          // Map the integer value to the corresponding MeasurementType
+          measurementType = intToMeasurementType(measurement);
+        } else {
+          measurementType =
+              MeasurementType.kilogram;
+        }
+        // Convert MeasurementType to string for display (localized string)
+        String measurementString = measurementTypeToStringNl(measurementType);
+
+        return {
+          'ingredientQuantityId': ingredient['ingredientQuantityId'],
+          'ingredientName': ingredient['ingredient']['ingredientName'],
+          'quantity': ingredient['quantity'],
+          'measurement': measurementString,
+        };
+      }).toList();
+
+      List<Map<String, dynamic>> parsedDataItems =
+          items.map<Map<String, dynamic>>((ingredient) {
+        var measurement = ingredient['ingredient']['measurement'];
+
+        MeasurementType measurementType;
+        if (measurement is int) {
+          measurementType = intToMeasurementType(measurement);
+        } else {
+          measurementType =
+              MeasurementType.kilogram;
+        }
+        String measurementString = measurementTypeToStringNl(measurementType);
+
+        return {
+          'ingredientQuantityId': ingredient['ingredientQuantityId'],
+          'ingredientName': ingredient['ingredient']['ingredientName'],
+          'quantity': ingredient['quantity'],
+          'measurement': measurementString,
+        };
+      }).toList();
+
+      setState(() {
+        ingredientData = parsedData;
+        ingredientData.addAll(parsedDataItems);
+      });
+    }
+  }
+
+  void addItem(ItemQuantity newItem) async {
     String? groceryListId = await groceryListService.getGroceryListId();
     if (groceryListId == null) {
       return;
     }
-    groceryListService.addItemToGroceryList(groceryListId, newItem);
+    await groceryListService.addItemToGroceryList(groceryListId, newItem);
+    await _loadGroceryList();
   }
 
-  void deleteItem(ItemQuantity item) {
-    setState(() {
-      groceryList.remove(item);
-      isDeleting = true;
-    });
+  List<Map<String, dynamic>> get combinedData {
+    List<Map<String, dynamic>> combinedList = [];
+
+    combinedList.addAll(ingredientData);
+
+    combinedList.addAll(groceryList.map((item) {
+      return {
+        'ingredientQuantityId': item.itemQuantityId,
+        'ingredientName': item.groceryListItem.ingredientName,
+        'quantity': item.quantity,
+        'measurement': measurementTypeToStringNl(item.groceryListItem.measurement),
+      };
+    }).toList());
+    return combinedList;
+  }
+
+  void deleteItem(String id) {
+    groceryListService.deleteItemFromGroceryList(groceryListId!, id);
   }
 
   @override
@@ -82,55 +161,76 @@ class _GroceryListState extends State<GroceryList> {
               defaultVerticalAlignment: TableCellVerticalAlignment.middle,
               children: [
                 TableRow(
-                    decoration: BoxDecoration(
-                      color: Colors.blueGrey[200],
-                    ),
-                    children: const [
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.middle,
-                        child: Padding(
-                          padding: EdgeInsets.all(8.0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Align(
-                                alignment: Alignment.center,
-                                child: Text(
-                                  'Boodschappenlijst',
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold, fontSize: 25)
-                                ),
+                  decoration: BoxDecoration(
+                    color: Colors.blueGrey[200],
+                  ),
+                  children: const [
+                    TableCell(
+                      verticalAlignment: TableCellVerticalAlignment.middle,
+                      child: Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Align(
+                              alignment: Alignment.center,
+                              child: Text(
+                                'Boodschappenlijst',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold, fontSize: 25),
                               ),
-                              Icon(Icons.shopping_cart, size: 30,)
-                            ],
-                          ),
+                            ),
+                            Icon(Icons.shopping_cart, size: 30)
+                          ],
                         ),
                       ),
-                    ]),
-                ...groceryList.map((item) {
+                    ),
+                  ],
+                ),
+                ...combinedData.map((ingredient) {
                   return TableRow(
                     children: [
                       Dismissible(
                         background: Container(
                           color: Colors.red,
                         ),
-                        key: Key(item.groceryListItem.ingredientName + item.groceryListItem.measurement.name + item.quantity.toString()),
+                        key: Key(ingredient['ingredientQuantityId']),
                         direction: DismissDirection.endToStart,
                         onDismissed: (direction) {
-                          deleteItem(item);
-                          ScaffoldMessenger.of(context)
-                              .showSnackBar(SnackBar(
-                            content: Text('$item is verwijderd'),
-                            action: SnackBarAction(
-                                label: "Ongedaan maken",
-                                onPressed: () {
-                                  isUndoPressed = true;
-                                  setState(() {
-                                    isDeleting = false;
-                                    groceryList.add(item);
-                                  });
-                                }),
-                          ));
+                          final dismissedItem = ingredient;
+
+                          setState(() {
+                            ingredientData.removeWhere((item) =>
+                                item['ingredientQuantityId'] ==
+                                ingredient['ingredientQuantityId']);
+                            isDeleting = true;
+                          });
+
+                          // Delay when deleting item
+                          Future.delayed(Duration(milliseconds: 200), () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                    '${ingredient['ingredientName']} is verwijderd'),
+                                action: SnackBarAction(
+                                  label: "Ongedaan maken",
+                                  onPressed: () {
+                                    setState(() {
+                                      isDeleting = false;
+                                      ingredientData.add(dismissedItem);
+                                    });
+                                  },
+                                ),
+                              ),
+                            );
+                            // Delay actual deletion to allow undo
+                            Future.delayed(Duration(milliseconds: 3000), () {
+                              if (isDeleting) {
+                                // Perform deletion only if not undone
+                                deleteItem(ingredient['ingredientQuantityId']);
+                              }
+                            });
+                          });
                         },
                         child: Table(
                           children: [
@@ -138,11 +238,22 @@ class _GroceryListState extends State<GroceryList> {
                               children: [
                                 TableCell(
                                   verticalAlignment:
-                                  TableCellVerticalAlignment.middle,
+                                      TableCellVerticalAlignment.middle,
                                   child: Padding(
                                     padding: const EdgeInsets.all(8.0),
                                     child: Text(
-                                      item.groceryListItem.ingredientName,
+                                      ingredient['ingredientName'],
+                                      style: const TextStyle(fontSize: 22),
+                                    ),
+                                  ),
+                                ),
+                                TableCell(
+                                  verticalAlignment:
+                                      TableCellVerticalAlignment.middle,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Text(
+                                      ingredient['quantity'].toString(),
                                       style: const TextStyle(fontSize: 22),
                                     ),
                                   ),
@@ -153,34 +264,18 @@ class _GroceryListState extends State<GroceryList> {
                                   child: Padding(
                                     padding: const EdgeInsets.all(8.0),
                                     child: Text(
-                                      item.groceryListItem != null
-                                          ? measurementTypeToStringMultipleNl(item.groceryListItem.measurement)
-                                          : measurementTypeToStringNl(item.groceryListItem.measurement),
+                                      ingredient['measurement'],
                                       style: const TextStyle(fontSize: 22),
                                     ),
                                   ),
                                 ),
                                 TableCell(
                                   verticalAlignment:
-                                  TableCellVerticalAlignment.middle,
+                                      TableCellVerticalAlignment.middle,
                                   child: Padding(
                                     padding: const EdgeInsets.all(8.0),
-                                    child: Text(
-                                      item.quantity.toString(),
-                                      style: const TextStyle(fontSize: 22),
-                                    ),
-                                  ),
-                                ),
-                                TableCell(
-                                  verticalAlignment: TableCellVerticalAlignment.middle,
-                                  child: Container(
-                                    color: Colors.red,
-                                    child: const Row(
-                                      children: [
-                                        Icon(Icons.keyboard_arrow_left, size: 30,),
-                                        Icon(Icons.delete, color: Colors.black, size: 30,)
-                                      ],
-                                    ),
+                                    child: Icon(Icons.delete,
+                                        color: Colors.black, size: 30),
                                   ),
                                 ),
                               ],
@@ -190,7 +285,7 @@ class _GroceryListState extends State<GroceryList> {
                       ),
                     ],
                   );
-                })
+                }),
               ],
             ),
             Padding(
@@ -203,8 +298,10 @@ class _GroceryListState extends State<GroceryList> {
                       showDialog(
                         context: context,
                         builder: (context) {
-                          return DialogInputGrocery(onAdd: (name, quantity, measurement) {
+                          return DialogInputGrocery(
+                              onAdd: (name, quantity, measurement) {
                             final newItem = ItemQuantity(
+                              itemQuantityId: '',
                               quantity: quantity,
                               groceryListItem: GroceryListItem(
                                 ingredientName: name,
@@ -221,7 +318,7 @@ class _GroceryListState extends State<GroceryList> {
                   )
                 ],
               ),
-            )
+            ),
           ],
         ),
       ),
@@ -280,43 +377,20 @@ class _DialogInputGroceryState extends State<DialogInputGrocery> {
             onPressed: () {
               Navigator.of(context).pop();
             },
-            child: const Text('Annuleer')
-        ),
+            child: const Text('Annuleer')),
         TextButton(
             onPressed: () {
               final name = nameController.text.trim();
-              final quantity = double.tryParse(quantityController.text.trim()) ?? 1.0;
+              final quantity =
+                  double.tryParse(quantityController.text.trim()) ?? 1.0;
 
               if (name.isNotEmpty && quantity > 0) {
                 widget.onAdd(name, quantity, selectedMeasurement);
               }
               Navigator.of(context).pop();
             },
-            child: const Text('Voeg toe')
-        )
-      ],
-
-      /*
-      content: TextField(
-        controller: controller,
-      ),
-      actions: [
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-          child: const Text('Annuleer'),
-        ),
-        TextButton(
-            onPressed: () {
-              final String newItem = controller.text.trim();
-              if (newItem.isNotEmpty) {
-                widget.onAdd(newItem);
-              }
-              Navigator.of(context).pop();
-            },
             child: const Text('Voeg toe'))
-      ],*/
+      ],
     );
   }
 }

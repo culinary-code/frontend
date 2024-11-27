@@ -27,7 +27,7 @@ class GroceryListService {
         String? groceryId = responseBody['groceryListId'];
         return groceryId;
       } else {
-            'Failed to fetch grocery list: ${response.statusCode}, Response: ${response.body}';
+        'Failed to fetch grocery list: ${response.statusCode}, Response: ${response.body}';
         return null;
       }
     } catch (e) {
@@ -35,6 +35,20 @@ class GroceryListService {
     }
   }
 
+  Future<Map<String, dynamic>?> fetchGroceryListById(
+      String groceryListId) async {
+    try {
+      final response =
+          await ApiClient().authorizedGet('api/Grocery/$groceryListId');
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      }
+    } catch (e) {
+      return null;
+    }
+    return null;
+  }
 
   Future<void> addItemToGroceryList(
       String groceryListId, ItemQuantity item) async {
@@ -49,12 +63,28 @@ class GroceryListService {
           },
         },
       );
+
       if (response.statusCode == 200) {
       } else {
         return;
       }
     } catch (e) {
       return;
+    }
+  }
+
+  Future<void> deleteItemFromGroceryList(
+      String groceryListId, String itemQuantityId) async {
+    try {
+      final response = await ApiClient().authorizedDelete(
+        'api/Grocery/$groceryListId/items/$itemQuantityId',
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Item could not be deleted');
+      }
+    } catch (e) {
+      throw Exception('An error occurred while deleting the item: $e');
     }
   }
 }
