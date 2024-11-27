@@ -63,7 +63,7 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       resizeToAvoidBottomInset: true,
       body: SafeArea(
-        //child: SingleChildScrollView(
+        child: SingleChildScrollView(
           child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -176,7 +176,7 @@ class _LoginPageState extends State<LoginPage> {
             ],
           ),
         ),
-        //),
+        ),
       ),
     );
   }

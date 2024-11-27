@@ -68,8 +68,6 @@ class RegistrationScreenState extends State<RegistrationScreen> {
     try {
       final keycloakService = KeycloakService();
 
-      print("register user");
-
       await keycloakService.createUser(
         username: _usernameController.text,
         email: _emailController.text,
@@ -125,7 +123,7 @@ class RegistrationScreenState extends State<RegistrationScreen> {
   void setApiUrl() {
     if (_apiUrlController.text.isEmpty) {
       setState(() {
-        _apiErrorMessage = 'Error: API URL is verplicht in te vullen.';
+        _apiErrorMessage = 'Vul een URL in.';
       });
       return;
     }
