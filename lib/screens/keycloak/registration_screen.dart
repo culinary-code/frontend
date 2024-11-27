@@ -139,15 +139,15 @@ class RegistrationScreenState extends State<RegistrationScreen> {
     });
 
     // check if the url is reachable
-    ApiCheckerService().checkApi(apiUrl).then((value) {
+    ApiCheckerService().checkApi(apiUrl).then((value) async {
       setState(() {
         _isCheckingApi = false;
       });
 
       if (value.keys.first) {
         var keycloakUrl = value.values.first;
-        apiSelectionProvider.setSelectedApi(apiUrl);
-        apiSelectionProvider.setSelectedKeycloak(keycloakUrl);
+        await apiSelectionProvider.setSelectedApi(apiUrl);
+        await apiSelectionProvider.setSelectedKeycloak(keycloakUrl);
         setState(() {
           _ownApiSet = true;
           _apiErrorMessage = '';
