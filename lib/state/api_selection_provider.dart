@@ -11,11 +11,15 @@ class ApiSelectionProvider with ChangeNotifier {
   String keycloakUrlEnv = dotenv.env['KEYCLOAK_BASE_URL'] ??
       (throw Exception('Environment variable KEYCLOAK_BASE_URL not found'));
 
-  Future<String> get backendUrl async =>
-      await storage.read(key: 'api') ?? backendUrlEnv;
+  Future<String> get backendUrl async {
+    String? storedUrl = await storage.read(key: 'api');
+    return storedUrl ?? backendUrlEnv;
+  }
 
-  Future<String> get keycloakUrl async =>
-      await storage.read(key: 'keycloak') ?? keycloakUrlEnv;
+  Future<String> get keycloakUrl async {
+    String? storedUrl = await storage.read(key: 'keycloak');
+    return storedUrl ?? keycloakUrlEnv;
+  }
 
   Future<void> setSelectedApi(String newApiUrl) async {
     await storage.write(key: 'api', value: newApiUrl);
@@ -25,5 +29,9 @@ class ApiSelectionProvider with ChangeNotifier {
   Future<void> setSelectedKeycloak(String newKeycloakUrl) async {
     await storage.write(key: 'keycloak', value: newKeycloakUrl);
     notifyListeners();
+  }
+
+  Future<bool> isSelectedApiSet() async {
+    return await storage.read(key: 'api') != backendUrlEnv;
   }
 }
