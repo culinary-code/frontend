@@ -29,19 +29,30 @@ class AccountOverview extends StatefulWidget {
 }
 
 class _AccountOverviewState extends State<AccountOverview> {
+  final GlobalKey<_AccountSettingsState> _accountSettingsKey = GlobalKey();
+  final GlobalKey<_PreferencesSettingsState> _preferenceSettingsKey = GlobalKey();
+
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return
+      Column(
       children: [
-        AccountSettings(),
+        AccountSettings(key: _accountSettingsKey),
         SizedBox(
           height: 16,
         ),
         Expanded(
-          child: PreferencesSettings(),
+          child: PreferencesSettings(key: _preferenceSettingsKey),
         ),
+        SizedBox(height: 16),
+        ElevatedButton(onPressed: _saveAll, child: Text('Opslaan'))
       ],
     );
+  }
+
+  void _saveAll() {
+    _accountSettingsKey.currentState?.saveData();
+    _preferenceSettingsKey.currentState?._savePreferences();
   }
 }
 
@@ -89,6 +100,11 @@ class _AccountSettingsState extends State<AccountSettings> {
         );
       }
     }
+  }
+
+  void saveData() async {
+    await _saveUsername();
+    await _saveFamilySize(_currentFamilySize);
   }
 
   Future<void> _saveUsername() async {
@@ -177,13 +193,16 @@ class _AccountSettingsState extends State<AccountSettings> {
                           ? 'Gebruikersnaam moet minstens 3 karakters zijn.'
                           : null,
                       border: OutlineInputBorder(),
-                      suffixIcon: IconButton(
-                          icon: Icon(Icons.save), onPressed: _saveUsername)),
+                      /*suffixIcon: IconButton(
+                          icon: Icon(Icons.save), onPressed: _saveUsername)*/
+                  ),
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ],
             )),
-        SizedBox(height: 16,),
+        SizedBox(
+          height: 16,
+        ),
         Container(
           decoration: BoxDecoration(
             border: Border.all(color: Colors.black, width: 2),
@@ -243,66 +262,67 @@ class _MyFamilySelectorState extends State<MyFamilySelector> {
 
   @override
   Widget build(BuildContext context) {
-    return
-        Padding(
-          padding: const EdgeInsets.only(left: 6, bottom: 6, top: 6),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
+    return Padding(
+      padding: const EdgeInsets.only(left: 6, bottom: 6, top: 6),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Row(
             children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.family_restroom,
-                    size: 30,
-                  ),
-                  const SizedBox(
-                    width: 8,
-                  ),
-                  Text(
-                    'Mijn gezin',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(
-                    width: 12,
-                  ),
-                  GestureDetector(
-                    onTap: removeFamilyMembers,
-                    child: CircleAvatar(
-                      radius: 15,
-                      child: Icon(
-                        Icons.remove,
-                        size: 18,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Text(
-                    '$numberOfPeople',
-                    style: const TextStyle(fontSize: 22),
-                  ),
-                  const SizedBox(width: 10),
-                  GestureDetector(
-                    onTap: addFamilyMembers,
-                    child: CircleAvatar(
-                      radius: 15,
-                      child: Icon(
-                        Icons.add,
-                        size: 18,
-                      ),
-                    ),
-                  ),
-                       Spacer(),
-                       SizedBox(width: 25,),
-                       IconButton(
-                          onPressed: () {
-                            widget.onAdd(numberOfPeople);
-                          },
-                          icon: Icon(Icons.save),
-                        ),
-                    ],
-                  )
-                ],
+              Icon(
+                Icons.family_restroom,
+                size: 30,
               ),
+              const SizedBox(
+                width: 8,
+              ),
+              Text(
+                'Mijn gezin',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(
+                width: 12,
+              ),
+              GestureDetector(
+                onTap: removeFamilyMembers,
+                child: CircleAvatar(
+                  radius: 15,
+                  child: Icon(
+                    Icons.remove,
+                    size: 18,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                '$numberOfPeople',
+                style: const TextStyle(fontSize: 22),
+              ),
+              const SizedBox(width: 10),
+              GestureDetector(
+                onTap: addFamilyMembers,
+                child: CircleAvatar(
+                  radius: 15,
+                  child: Icon(
+                    Icons.add,
+                    size: 18,
+                  ),
+                ),
+              ),
+              Spacer(),
+              SizedBox(
+                width: 25,
+              ),
+              /*IconButton(
+                onPressed: () {
+                  widget.onAdd(numberOfPeople);
+                },
+                icon: Icon(Icons.save),
+              ),*/
+            ],
+          )
+        ],
+      ),
     );
   }
 }
@@ -317,7 +337,8 @@ class PreferencesSettings extends StatefulWidget {
 class _PreferencesSettingsState extends State<PreferencesSettings> {
   final _formKey = GlobalKey<FormState>();
   final controller = MultiSelectController<String>();
-  final TextEditingController customPreferenceController = TextEditingController();
+  final TextEditingController customPreferenceController =
+      TextEditingController();
 
   final _accountService = AccountService();
   var userId = '';
@@ -337,18 +358,20 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
     String newPreference = customPreferenceController.text.trim();
 
     // Check is preference is not empty or not already in the list
-    if (newPreference.isNotEmpty && !preferences.any((item) => item.value == newPreference)) {
+    if (newPreference.isNotEmpty &&
+        !preferences.any((item) => item.value == newPreference)) {
       setState(() {
-        preferences.add(DropdownItem(label: newPreference, value: newPreference, selected: true));
-
+        preferences.add(DropdownItem(
+            label: newPreference, value: newPreference, selected: true));
         // Select new preference when adding it to dropdown
         controller.addItems([
-          DropdownItem(label: newPreference, value: newPreference, selected: true),
+          DropdownItem(
+              label: newPreference, value: newPreference, selected: true),
         ]);
         controller.selectedItems.add(
-          DropdownItem(label: newPreference, value: newPreference, selected: true),
+          DropdownItem(
+              label: newPreference, value: newPreference, selected: true),
         );
-
         selectedValue = newPreference;
       });
 
@@ -358,39 +381,53 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
     }
   }
 
-  void _savePreferences() async {
-    List<String> selectedPreferences = controller.selectedItems.map((item) => item.value).toList();
 
-    List<PreferenceDto> preferencesForDelete = await _accountService.getPreferencesByUserId(userId);
+  void _savePreferences() async {
+    List<String> selectedPreferences =
+        controller.selectedItems.map((item) => item.value).toList();
+
+    List<PreferenceDto> preferencesForDelete =
+        await _accountService.getPreferencesByUserId(userId);
 
     if (selectedPreferences.isNotEmpty) {
       for (String preference in selectedPreferences) {
-        if (standardPreferences.map((p) => p.toLowerCase()).contains(preference.toLowerCase())) {
+        if (standardPreferences
+            .map((p) => p.toLowerCase())
+            .contains(preference.toLowerCase())) {
           // Add standard preference
           _accountService.addPreference(
             userId,
-            PreferenceDto(preferenceName: preference, standardPreference: true, preferenceId: ''),
+            PreferenceDto(
+                preferenceName: preference,
+                standardPreference: true,
+                preferenceId: ''),
           );
         } else {
           // Add custom preference
           _accountService.addPreference(
             userId,
-            PreferenceDto(preferenceName: preference, standardPreference: false, preferenceId: ''),
+            PreferenceDto(
+                preferenceName: preference,
+                standardPreference: false,
+                preferenceId: ''),
           );
         }
       }
 
-      List<String> currentPreferences = preferences.map((item) => item.value).toList();
+      List<String> currentPreferences =
+          preferences.map((item) => item.value).toList();
       for (String currentPreference in currentPreferences) {
         // Check if the current preference is not in the selected preferences list, meaning it's been deselected
         if (!selectedPreferences.contains(currentPreference)) {
           // Find the preference ID by matching the preference name
-          final PreferenceDto? preferenceToDelete = preferencesForDelete.firstWhereOrNull(
-                (pref) => pref.preferenceName == currentPreference,
+          final PreferenceDto? preferenceToDelete =
+              preferencesForDelete.firstWhereOrNull(
+            (pref) => pref.preferenceName == currentPreference,
           );
 
           if (preferenceToDelete != null) {
-            await _accountService.deletePreference(preferenceToDelete.preferenceId);
+            await _accountService
+                .deletePreference(preferenceToDelete.preferenceId);
           } else {
             debugPrint('Preference to delete not found: $currentPreference');
           }
@@ -412,7 +449,6 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
 
   Future<void> _initializePreferences() async {
     try {
-
       List<DropdownItem<String>> tempPreferences = [
         DropdownItem(label: 'Vegan', value: 'Vegan'),
         DropdownItem(label: 'Vegetarisch', value: 'Vegetarisch'),
@@ -421,23 +457,28 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
       ];
 
       userId = await _accountService.getUserId();
-      List<PreferenceDto> userPreferences = await _accountService.getPreferencesByUserId(userId);
+      List<PreferenceDto> userPreferences =
+          await _accountService.getPreferencesByUserId(userId);
 
       setState(() {
         // Add userPreference to tempPreference if it's not already in the list
         for (var userPreference in userPreferences) {
-          if (!tempPreferences.any((item) => item.value.toLowerCase() == userPreference.preferenceName.toLowerCase())) {
+          if (!tempPreferences.any((item) =>
+              item.value.toLowerCase() ==
+              userPreference.preferenceName.toLowerCase())) {
             tempPreferences.add(
-              DropdownItem(label: userPreference.preferenceName, value: userPreference.preferenceName),
+              DropdownItem(
+                  label: userPreference.preferenceName,
+                  value: userPreference.preferenceName),
             );
           }
         }
 
         // Select items user already has
         for (var item in tempPreferences) {
-          item.selected = userPreferences.any((pref) => pref.preferenceName == item.value);
+          item.selected =
+              userPreferences.any((pref) => pref.preferenceName == item.value);
         }
-
         preferences = tempPreferences;
 
         // clear controller and add items
@@ -463,55 +504,69 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
                   'Voorkeuren',
                   style: TextStyle(fontSize: 30),
                 ),
-                MultiDropdown<String>(
-                  items: preferences,
-                  controller: controller,
-                  enabled: true,
-                  searchEnabled: true,
-                  chipDecoration: const ChipDecoration(wrap: true, runSpacing: 2, spacing: 10),
-                  fieldDecoration: FieldDecoration(
-                    hintText: 'Voorkeuren',
-                    prefixIcon: const Icon(CupertinoIcons.flag),
-                    showClearIcon: false,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                Row(children: [
+                  Expanded(
+                    child: MultiDropdown<String>(
+                      items: preferences,
+                      controller: controller,
+                      enabled: true,
+                      searchEnabled: true,
+                      chipDecoration: const ChipDecoration(
+                          wrap: true, runSpacing: 2, spacing: 10),
+                      fieldDecoration: FieldDecoration(
+                        hintText: 'Voorkeuren',
+                        prefixIcon: const Icon(CupertinoIcons.flag),
+                        showClearIcon: false,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      dropdownItemDecoration: const DropdownItemDecoration(
+                        selectedIcon:
+                            Icon(Icons.check_box, color: Colors.green),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Kies een voorkeur';
+                        }
+                        return null;
+                      },
+                      onSelectionChange: (selectedPreferences) {
+                        debugPrint('OnSelectionChange: $selectedPreferences');
+                      },
                     ),
                   ),
-                  dropdownItemDecoration: const DropdownItemDecoration(
-                    selectedIcon: Icon(Icons.check_box, color: Colors.green),
+                  PopupMenuButton<String>(
+                    icon: const Icon(Icons.more_vert),
+                    onSelected: (value) {
+                      if (value == 'select_all') {
+                        controller.selectAll();
+                      } else if (value == 'unselect_all') {
+                        controller.clearAll();
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      const PopupMenuItem<String>(
+                        value: 'select_all',
+                        child: Text('Selecteer alles'),
+                      ),
+                      const PopupMenuItem<String>(
+                        value: 'unselect_all',
+                        child: Text('Verwijder alles'),
+                      )
+                    ],
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Kies een voorkeur';
-                    }
-                    return null;
-                  },
-                  onSelectionChange: (selectedPreferences) {
-                    debugPrint('OnSelectionChange: $selectedPreferences');
-                  },
-                ),
-              const SizedBox(height: 12),
+                ]),
+                const SizedBox(height: 12),
                 Wrap(spacing: 8, children: [
-                  ElevatedButton(
+                  /*ElevatedButton(
                     onPressed: () {
                       _savePreferences();
                     },
                     child: const Text('Opslaan'),
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      controller.selectAll();
-                    },
-                    child: const Text('Selecteer alles'),
-                  ),
-                 /* ElevatedButton(
-                    onPressed: () {
-                      controller.clearAll();
-                    },
-                    child: const Text('Verwijder alles'),
                   ),*/
                   ElevatedButton(
                     onPressed: () {
@@ -522,7 +577,8 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
                           content: TextField(
                             controller: customPreferenceController,
                             maxLength: 25,
-                            decoration: const InputDecoration(labelText: "Eigen voorkeur"),
+                            decoration: const InputDecoration(
+                                labelText: "Eigen voorkeur"),
                           ),
                           actions: [
                             TextButton(
