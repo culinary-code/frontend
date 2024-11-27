@@ -1,14 +1,12 @@
 import 'dart:convert';
+import 'package:frontend/services/api_client.dart';
+import 'package:frontend/state/api_selection_provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class KeycloakService {
   final FlutterSecureStorage storage = const FlutterSecureStorage();
-
-  String get idpBaseUrl =>
-      dotenv.env['KEYCLOAK_BASE_URL'] ??
-      (throw Exception('Environment variable KEYCLOAK_BASE_URL not found'));
 
   String get clientId =>
       dotenv.env['KEYCLOAK_CLIENT_ID'] ??
@@ -18,25 +16,20 @@ class KeycloakService {
       dotenv.env['KEYCLOAK_REALM'] ??
       (throw Exception('Environment variable KEYCLOAK_REALM not found'));
 
-  String get backendUrl =>
-      dotenv.env['BACKEND_BASE_URL'] ??
-      (throw Exception('Environment variable BACKEND_BASE_URL not found'));
-
   // Step 2: Create new user in Keycloak
   Future<void> createUser({
     required String username,
     required String email,
     required String password,
   }) async {
-    final response = await http.post(
-      Uri.parse('$backendUrl/KeyCloak/register'),
-      headers: {'Content-Type': 'application/json', 'Accept': '*/*'},
-      body: json.encode({
-        'username': username,
-        'email': email,
-        'password': password,
-      }),
-    );
+    final apiClient = await ApiClient.create();
+    final response = await apiClient.unauthorizedPost(
+        'KeyCloak/register',
+        {
+          'username': username,
+          'email': email,
+          'password': password,
+        });
 
     if (response.statusCode != 200) {
       throw FormatException('gebruiker aanmaken mislukt: ${response.body}');
@@ -44,6 +37,7 @@ class KeycloakService {
   }
 
   Future<bool> login(String username, String password) async {
+    final idpBaseUrl = await ApiSelectionProvider().keycloakUrl;
     final response = await http.post(
       Uri.parse('$idpBaseUrl/realms/$realm/protocol/openid-connect/token'),
       headers: {
@@ -78,7 +72,7 @@ class KeycloakService {
     final accessToken = await storage.read(key: 'access_token');
 
     if (accessToken == null) {
-      throw Exception('Access token not found');
+      throw FormatException('Access token not found');
     }
 
     if (_isTokenExpired(accessToken)) {
@@ -89,6 +83,7 @@ class KeycloakService {
   }
 
   Future<String?> refreshToken() async {
+    final idpBaseUrl = await ApiSelectionProvider().keycloakUrl;
     final refreshToken = await storage.read(key: 'refresh_token');
     final response = await http.post(
       Uri.parse('$idpBaseUrl/realms/$realm/protocol/openid-connect/token'),

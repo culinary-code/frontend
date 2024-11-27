@@ -39,7 +39,8 @@ class PlannedMealsService {
   }
 
   Future<String> createPlannedMeal(PlannedMealFull plannedMeal) async {
-    final response = await ApiClient().authorizedPost(
+    final apiClient = await ApiClient.create();
+    final response = await apiClient.authorizedPost(
         'api/MealPlanner/PlannedMeal/Create', plannedMeal.toJson());
 
     if (response.statusCode == 400) {
@@ -59,8 +60,8 @@ class PlannedMealsService {
 
   Future<List<PlannedMealReduced>> getPlannedMealsByDate(
       DateTime dateTime) async {
-    final response =
-        await ApiClient().authorizedGet('api/MealPlanner/$dateTime');
+    final apiClient = await ApiClient.create();
+    final response = await apiClient.authorizedGet('api/MealPlanner/$dateTime');
 
     if (response.statusCode == 404) {
       return [];
