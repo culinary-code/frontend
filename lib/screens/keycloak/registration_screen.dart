@@ -10,10 +10,10 @@ class RegistrationScreen extends StatefulWidget {
   const RegistrationScreen({super.key});
 
   @override
-  _RegistrationScreenState createState() => _RegistrationScreenState();
+  RegistrationScreenState createState() => RegistrationScreenState();
 }
 
-class _RegistrationScreenState extends State<RegistrationScreen> {
+class RegistrationScreenState extends State<RegistrationScreen> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -22,7 +22,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   bool _obscureText = true;
 
   final TextEditingController _apiUrlController = TextEditingController();
+  final TextEditingController _apiUrlPrefixController =
+      TextEditingController(text: 'http://');
   bool _useOwnAPI = false;
+  bool _isCheckingApi = false;
   String _apiErrorMessage = '';
   bool _ownApiSet = false;
 
@@ -51,6 +54,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
   // Method to register user
   void _registerUser() async {
+    final apiSelectionProvider =
+        Provider.of<ApiSelectionProvider>(context, listen: false);
+
+    _ownApiSet = await apiSelectionProvider.isSelectedApiSet();
+
     // prevent register if setting up url is set to true and the url hasn't been set yet
     if (_useOwnAPI && !_ownApiSet) {
       updateStatusMessage("Api");
@@ -59,6 +67,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
     try {
       final keycloakService = KeycloakService();
+
+      print("register user");
 
       await keycloakService.createUser(
         username: _usernameController.text,
@@ -123,11 +133,19 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     final apiSelectionProvider =
         Provider.of<ApiSelectionProvider>(context, listen: false);
 
-    String apiUrl = _apiUrlController.text;
+    String apiUrl = _apiUrlPrefixController.text + _apiUrlController.text;
     apiUrl = stripTrailingSlash(apiUrl);
+
+    setState(() {
+      _isCheckingApi = true;
+    });
 
     // check if the url is reachable
     ApiCheckerService().checkApi(apiUrl).then((value) {
+      setState(() {
+        _isCheckingApi = false;
+      });
+
       if (value.keys.first) {
         var keycloakUrl = value.values.first;
         apiSelectionProvider.setSelectedApi(apiUrl);
@@ -276,18 +294,50 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                         ),
                       )
                     : Column(children: [
-                        // input field for a url or IP address
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                          child: TextField(
-                            controller: _apiUrlController,
-                            decoration: InputDecoration(
-                              labelText: 'API URL',
-                              border: OutlineInputBorder(),
-                              prefixIcon: Icon(Icons.link),
-                              hintText: 'http://',
-                            ),
-                            keyboardType: TextInputType.url,
+                        SizedBox(
+                          width: double.infinity,
+                          child: Row(
+                            children: [
+                              // dropdown menu to swap between http:// and https://
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(8, 0, 2, 0),
+                                child: DropdownButton<String>(
+                                  value: _apiUrlPrefixController.text,
+                                  isDense: false,
+                                  alignment: Alignment.centerRight,
+                                  borderRadius: BorderRadius.circular(5),
+                                  items: <String>['http://', 'https://']
+                                      .map<DropdownMenuItem<String>>(
+                                          (String value) {
+                                    return DropdownMenuItem<String>(
+                                      value: value,
+                                      child: Text(value),
+                                    );
+                                  }).toList(),
+                                  onChanged: (String? value) {
+                                    setState(() {
+                                      _apiUrlPrefixController.text = value!;
+                                    });
+                                  },
+                                ),
+                              ),
+                              // input field for a url or IP address
+                              Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8.0),
+                                  child: TextField(
+                                    controller: _apiUrlController,
+                                    decoration: InputDecoration(
+                                      labelText: 'API URL',
+                                      border: OutlineInputBorder(),
+                                      suffixIcon: Icon(Icons.link),
+                                    ),
+                                    keyboardType: TextInputType.url,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                         Padding(
@@ -309,7 +359,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                   const EdgeInsets.symmetric(horizontal: 8.0),
                               child: ElevatedButton(
                                 style: ElevatedButton.styleFrom(
-                                  foregroundColor: _ownApiSet ? Colors.grey : null,
+                                  foregroundColor:
+                                      _ownApiSet ? Colors.grey : null,
                                 ),
                                 onPressed: () {
                                   setState(() {
@@ -336,10 +387,18 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                   onPressed: () {
                                     setApiUrl();
                                   },
-                                  child: Icon(
-                                    Icons.check,
-                                    size: 30,
-                                  )),
+                                  child: _isCheckingApi
+                                      ? SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
+                                        )
+                                      : Icon(
+                                          Icons.check,
+                                          size: 30,
+                                        )),
                             ),
                           ],
                         ),
