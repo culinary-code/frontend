@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/screens/keycloak/registration_screen.dart';
-import '../../Services/keycloak_service.dart';
+import '../../services/keycloak_service_rework.dart';
 import '../../navigation_menu.dart';
 
 class LoginPage extends StatefulWidget {
@@ -22,8 +22,6 @@ class _LoginPageState extends State<LoginPage> {
   void _login() async {
     try {
       final success = await _keycloakService.login(
-        _usernameController.text,
-        _passwordController.text,
       );
 
       if (!mounted) return;
