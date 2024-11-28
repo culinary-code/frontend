@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:frontend/Services/keycloak_service.dart';
+import 'package:frontend/Services/keycloak_service_rework.dart';
 import 'package:frontend/navigation_menu.dart';
 import 'package:frontend/state/api_selection_provider.dart';
 import 'package:frontend/state/recipe_filter_options_provider.dart';

@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:frontend/services/keycloak_service.dart';
+import 'package:frontend/services/keycloak_service_rework.dart';
 import 'package:frontend/state/api_selection_provider.dart';
 import 'package:http/http.dart' as http;
 
@@ -16,7 +16,9 @@ class ApiClient {
   }
 
   Future<http.Response> authorizedGet(String endpoint) async {
+    print("GET request to $_backendUrl/$endpoint");
     final accesstoken = await KeycloakService().getAccessToken();
+    print("Access token: $accesstoken");
     final response = await http.get(
       Uri.parse('$_backendUrl/$endpoint'),
       headers: {

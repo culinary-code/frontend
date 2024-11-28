@@ -46,6 +46,25 @@ class KeycloakService {
 
 
 
+  // Step 2: Create new user in Keycloak
+  Future<void> createUser({
+    required String username,
+    required String email,
+    required String password,
+  }) async {
+    final apiClient = await ApiClient.create();
+    final response = await apiClient.unauthorizedPost(
+        'KeyCloak/register',
+        {
+          'username': username,
+          'email': email,
+          'password': password,
+        });
+
+    if (response.statusCode != 200) {
+      throw FormatException('gebruiker aanmaken mislukt: ${response.body}');
+    }
+  }
 
 
 
@@ -56,6 +75,7 @@ class KeycloakService {
   }
 
   Future<String?> getAccessToken() async {
+    print("Getting access token");
     final accessToken = await storage.read(key: 'access_token');
 
     if (accessToken == null) {
@@ -118,7 +138,7 @@ class KeycloakService {
   bool _isTokenExpired(String token) {
     final Map<String, dynamic> decodedToken = _decodeJwt(token);
     final exp = decodedToken['exp'];
-    final expirationTime = DateTime.fromMillisecondsSinceEpoch(exp * 1000);
-    return DateTime.now().isAfter(expirationTime);
+    final expirationTime = DateTime.fromMillisecondsSinceEpoch(exp * 1000).toUtc();
+    return DateTime.now().toUtc().isAfter(expirationTime);
   }
 }
