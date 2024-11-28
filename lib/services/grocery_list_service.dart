@@ -14,8 +14,8 @@ class GroceryListService {
 
   Future<String?> getGroceryListId() async {
     try {
-      final response =
-          await ApiClient().authorizedGet('api/Grocery/account/grocery-list');
+      final apiClient = await ApiClient.create();
+      final response = await apiClient.authorizedGet('api/Grocery/account/grocery-list');
 
       if (response == null) {
         return null;
@@ -27,7 +27,7 @@ class GroceryListService {
         String? groceryId = responseBody['groceryListId'];
         return groceryId;
       } else {
-            'Failed to fetch grocery list: ${response.statusCode}, Response: ${response.body}';
+        'Failed to fetch grocery list: ${response.statusCode}, Response: ${response.body}';
         return null;
       }
     } catch (e) {
@@ -35,11 +35,26 @@ class GroceryListService {
     }
   }
 
+  Future<Map<String, dynamic>?> fetchGroceryListById(
+      String groceryListId) async {
+    try {
+      final apiClient = await ApiClient.create();
+      final response = await apiClient.authorizedGet('api/Grocery/$groceryListId');
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      }
+    } catch (e) {
+      return null;
+    }
+    return null;
+  }
 
   Future<void> addItemToGroceryList(
       String groceryListId, ItemQuantity item) async {
     try {
-      final response = await ApiClient().authorizedPut(
+      final apiClient = await ApiClient.create();
+      final response = await apiClient.authorizedPut(
         'api/Grocery/$groceryListId/add-item',
         {
           "quantity": item.quantity,
@@ -49,12 +64,29 @@ class GroceryListService {
           },
         },
       );
+
       if (response.statusCode == 200) {
       } else {
         return;
       }
     } catch (e) {
       return;
+    }
+  }
+
+  Future<void> deleteItemFromGroceryList(
+      String groceryListId, String itemQuantityId) async {
+    try {
+      final apiClient = await ApiClient.create();
+      final response = await apiClient.authorizedDelete(
+        'api/Grocery/$groceryListId/items/$itemQuantityId',
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Item could not be deleted');
+      }
+    } catch (e) {
+      throw Exception('An error occurred while deleting the item: $e');
     }
   }
 }

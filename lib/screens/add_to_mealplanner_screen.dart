@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/accounts/account.dart';
+import 'package:frontend/models/meal_planning/planned_meal.dart';
 import 'package:frontend/models/recipes/ingredients/ingredient_quantity.dart';
 import 'package:frontend/models/recipes/ingredients/measurement_type.dart';
 import 'package:frontend/models/recipes/recipe.dart';
 import 'package:frontend/navigation_menu.dart';
-
-import '../services/account_service.dart';
+import 'package:frontend/services/account_service.dart';
+import 'package:frontend/services/planned_meals_service.dart';
 
 class AddToMealplannerScreen extends StatelessWidget {
   final Recipe recipe;
@@ -144,7 +145,20 @@ class _AddToMealPlanner extends State<AddToMealPlanner> {
 
     // Optional: handle the selected date
     if (selectedDate != null) {
-      //TODO: when implementing the backend method for saving a meal to the mealplanner: add call to backend here
+
+      if (!mounted) return;
+
+      PlannedMealFull plannedMeal = PlannedMealFull(
+        amountOfPeople: numberOfPeople,
+        recipe: recipe,
+        plannedDay: selectedDate,
+        ingredients: ingredients
+            .where((item) => item.isAddedToList) // Filter items with isAddedToList true
+            .map((item) => item.ingredientQuantity) // Map filtered items
+            .toList(),
+      );
+
+      await PlannedMealsService().createPlannedMeal(plannedMeal);
 
       if (!mounted) return;
 

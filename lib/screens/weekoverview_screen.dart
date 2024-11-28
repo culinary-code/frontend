@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/models/meal_planning/PlannedMeal.dart';
+import 'package:frontend/models/meal_planning/planned_meal.dart';
 import 'package:frontend/screens/detail_screen.dart';
 import 'package:frontend/services/planned_meals_service.dart';
 import 'package:http/http.dart' as http;
@@ -25,7 +25,7 @@ class WeekOverview extends StatefulWidget {
 }
 
 class _WeekOverviewState extends State<WeekOverview> {
-  late Future<List<PlannedMeal>> _plannedMealsFuture;
+  late Future<List<PlannedMealReduced>> _plannedMealsFuture;
   late DateTime _selectedDate;
 
   @override
@@ -33,7 +33,7 @@ class _WeekOverviewState extends State<WeekOverview> {
     super.initState();
     _selectedDate = DateTime.now();
     _plannedMealsFuture =
-        PlannedMealsService().getDummyPlannedMeals(_selectedDate);
+        PlannedMealsService().getPlannedMealsByDate(_selectedDate);
   }
 
   static const List<String> daysOfWeek = [
@@ -72,7 +72,7 @@ class _WeekOverviewState extends State<WeekOverview> {
       setState(() {
         _selectedDate = selectedDate;
         _plannedMealsFuture =
-            PlannedMealsService().getDummyPlannedMeals(_selectedDate);
+            PlannedMealsService().getPlannedMealsByDate(_selectedDate);
       });
     }
   }
@@ -81,7 +81,7 @@ class _WeekOverviewState extends State<WeekOverview> {
     setState(() {
       _selectedDate = _selectedDate.add(Duration(days: daysExtra));
       _plannedMealsFuture =
-          PlannedMealsService().getDummyPlannedMeals(_selectedDate);
+          PlannedMealsService().getPlannedMealsByDate(_selectedDate);
     });
   }
 
@@ -134,7 +134,7 @@ class _WeekOverviewState extends State<WeekOverview> {
             ),
           ],
         ),
-        body: FutureBuilder<List<PlannedMeal>>(
+        body: FutureBuilder<List<PlannedMealReduced>>(
           future: _plannedMealsFuture,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
@@ -157,7 +157,7 @@ class _WeekOverviewState extends State<WeekOverview> {
                 itemBuilder: (context, index) {
                   DateTime currentDate = weekDates[index];
 
-                  PlannedMeal? mealForDate;
+                  PlannedMealReduced? mealForDate;
                   try {
                     mealForDate = plannedMeals.firstWhere(
                       (meal) => isSameDate(meal.plannedDay, currentDate),
@@ -229,7 +229,7 @@ class EmptyPlannedMealWidget extends StatelessWidget {
 
 class PlannedMealWidget extends StatelessWidget {
   final String weekday;
-  final PlannedMeal plannedMeal;
+  final PlannedMealReduced plannedMeal;
   final VoidCallback onButtonPressed;
 
   const PlannedMealWidget({

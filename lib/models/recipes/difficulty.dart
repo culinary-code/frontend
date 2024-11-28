@@ -35,3 +35,6 @@ String difficultyToStringNl(Difficulty difficulty) {
   }
 }
 
+String recipeDifficultyToStringNlFromIntString(String integerValueString) {
+  return difficultyToStringNl(intToDifficulty(int.parse(integerValueString)));
+}
