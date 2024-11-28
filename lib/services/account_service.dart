@@ -92,7 +92,8 @@ class AccountService {
   Future<List<PreferenceDto>> getPreferencesByUserId(String userId) async {
     try {
       final endpoint = 'api/Account/getPreferences';
-      final response = await ApiClient().authorizedGet(endpoint);
+      final apiClient = await ApiClient.create();
+      final response = await apiClient.authorizedGet(endpoint);
 
       if (response.statusCode == 200) {
         List<dynamic> preferencesJson = json.decode(response.body);
@@ -108,8 +109,9 @@ class AccountService {
   Future<void> addPreference(String userId, PreferenceDto preference) async {
     try {
       final endpoint = 'api/Account/addPreference';
+      final apiClient = await ApiClient.create();
 
-      final response = await ApiClient().authorizedPost(endpoint, {
+      final response = await apiClient.authorizedPost(endpoint, {
         'PreferenceName': preference.preferenceName,
         'StandardPreference': preference.standardPreference,
       });
@@ -126,7 +128,9 @@ class AccountService {
   Future<void> deletePreference(String preferenceId) async {
     try {
       final endpoint = 'api/Account/deletePreference/$preferenceId';
-      final response = await ApiClient().authorizedDelete(endpoint);
+      final apiClient = await ApiClient.create();
+
+      final response = await apiClient.authorizedDelete(endpoint);
 
       if (response.statusCode != 200) {
         throw Exception('Error deleting preference: ${response.statusCode}, ${response.body}');

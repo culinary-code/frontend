@@ -389,45 +389,53 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
 
   void _savePreferences() async {
     List<String> selectedPreferences =
-        controller.selectedItems.map((item) => item.value).toList();
+    controller.selectedItems.map((item) => item.value).toList();
 
+    // Fetch current user preferences to avoid duplicates
     List<PreferenceDto> preferencesForDelete =
-        await _accountService.getPreferencesByUserId(userId);
+    await _accountService.getPreferencesByUserId(userId);
 
     if (selectedPreferences.isNotEmpty) {
       for (String preference in selectedPreferences) {
-        if (standardPreferences
-            .map((p) => p.toLowerCase())
-            .contains(preference.toLowerCase())) {
-          // Add standard preference
-          _accountService.addPreference(
-            userId,
-            PreferenceDto(
-                preferenceName: preference,
-                standardPreference: true,
-                preferenceId: ''),
-          );
-        } else {
-          // Add custom preference
-          _accountService.addPreference(
-            userId,
-            PreferenceDto(
-                preferenceName: preference,
-                standardPreference: false,
-                preferenceId: ''),
-          );
+        bool isExistingPreference = preferencesForDelete.any(
+                (pref) => pref.preferenceName.toLowerCase() == preference.toLowerCase()
+        );
+
+        if (!isExistingPreference) {
+          if (standardPreferences
+              .map((p) => p.toLowerCase())
+              .contains(preference.toLowerCase())) {
+            // Add standard preference
+            _accountService.addPreference(
+              userId,
+              PreferenceDto(
+                  preferenceName: preference,
+                  standardPreference: true,
+                  preferenceId: ''),
+            );
+          } else {
+            // Add custom preference
+            _accountService.addPreference(
+              userId,
+              PreferenceDto(
+                  preferenceName: preference,
+                  standardPreference: false,
+                  preferenceId: ''),
+            );
+          }
         }
       }
 
+      // Now handle preferences to delete (those that were unselected)
       List<String> currentPreferences =
-          preferences.map((item) => item.value).toList();
+      preferences.map((item) => item.value).toList();
       for (String currentPreference in currentPreferences) {
         // Check if the current preference is not in the selected preferences list, meaning it's been deselected
         if (!selectedPreferences.contains(currentPreference)) {
           // Find the preference ID by matching the preference name
           final PreferenceDto? preferenceToDelete =
-              preferencesForDelete.firstWhereOrNull(
-            (pref) => pref.preferenceName == currentPreference,
+          preferencesForDelete.firstWhereOrNull(
+                (pref) => pref.preferenceName == currentPreference,
           );
 
           if (preferenceToDelete != null) {
@@ -439,6 +447,7 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
     }
   }
 
+
   @override
   void initState() {
     super.initState();
@@ -447,46 +456,52 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
 
   Future<void> _initializePreferences() async {
     try {
-      List<DropdownItem<String>> tempPreferences = [
-        DropdownItem(label: 'Vegan', value: 'Vegan'),
-        DropdownItem(label: 'Vegetarisch', value: 'Vegetarisch'),
-        DropdownItem(label: 'Notenallergie', value: 'Notenallergie'),
-        DropdownItem(label: 'Lactose Intolerant', value: 'Lactose Intolerant'),
-      ];
+      List<DropdownItem<String>> tempPreferences = [];
+
+      // Fetch standard preferences from the backend
+      var pref = await _preferenceService.getStandardPreferences();
+      print(pref);
+
+      // Ensure you're converting the data to DropdownItem objects
+      tempPreferences = pref.map((preference) {
+        return DropdownItem(
+          label: preference.preferenceName,
+          value: preference.preferenceName,
+          selected: false,
+        );
+      }).toList();
 
       userId = await _accountService.getUserId();
       List<PreferenceDto> userPreferences =
-          await _accountService.getPreferencesByUserId(userId);
+      await _accountService.getPreferencesByUserId(userId);
 
       setState(() {
-        // Add userPreference to tempPreference if it's not already in the list
+        // Add userPreferences to tempPreferences if they're not already present
         for (var userPreference in userPreferences) {
           if (!tempPreferences.any((item) =>
-              item.value.toLowerCase() ==
-              userPreference.preferenceName.toLowerCase())) {
-            tempPreferences.add(
-              DropdownItem(
-                  label: userPreference.preferenceName,
-                  value: userPreference.preferenceName),
-            );
+          item.value.toLowerCase() == userPreference.preferenceName.toLowerCase())) {
+            tempPreferences.add(DropdownItem(
+              label: userPreference.preferenceName,
+              value: userPreference.preferenceName,
+            ));
           }
         }
 
-        // Select items user already has
+        // Select items the user already has
         for (var item in tempPreferences) {
-          item.selected =
-              userPreferences.any((pref) => pref.preferenceName == item.value);
+          item.selected = userPreferences.any((pref) => pref.preferenceName == item.value);
         }
         preferences = tempPreferences;
 
-        // clear controller and add items
+        // Clear the controller and add items to it
         controller.clearAll();
         controller.addItems(preferences);
       });
     } catch (e) {
-      Exception('Failed to load preferences: $e');
+      print('Failed to load preferences: $e');
     }
   }
+
 
   @override
   Widget build(BuildContext context) {

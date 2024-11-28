@@ -128,7 +128,7 @@ class RecipeCard extends StatelessWidget {
                         else if (score < 2)
                           const Icon(Icons.star_outline,
                               size: 26, color: Colors.amber)
-                        else if (score <= 4)
+                        else if (score >= 4)
                           const Icon(Icons.star, size: 26, color: Colors.amber)
                       ],
                     )
