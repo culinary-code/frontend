@@ -107,7 +107,6 @@ class AccountService {
   }
 
   Future<void> addPreference(String userId, PreferenceDto preference) async {
-    try {
       final endpoint = 'api/Account/addPreference';
       final apiClient = await ApiClient.create();
 
@@ -120,10 +119,7 @@ class AccountService {
         throw Exception(
             'Error adding preference: ${response.statusCode}, ${response.body}');
       }
-    } catch (e) {
-      throw Exception('Error adding preference: $e');
     }
-  }
 
   Future<void> deletePreference(String preferenceId) async {
     try {
@@ -139,5 +135,4 @@ class AccountService {
       throw Exception('Error deleting preference: $e');
     }
   }
-
 }
