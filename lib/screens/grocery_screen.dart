@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/models/recipes/ingredients/ingredient_quantity.dart';
+import 'package:frontend/Services/keycloak_service.dart';
+import 'package:frontend/models/meal_planning/grocery_list_item.dart';
 import 'package:frontend/models/recipes/ingredients/item_quantity.dart';
 import 'package:frontend/models/recipes/ingredients/measurement_type.dart';
 import 'package:frontend/services/account_service.dart';
-
-import '../Services/keycloak_service.dart';
-import '../models/meal_planning/grocery_list_item.dart';
-import '../services/grocery_list_service.dart';
+import 'package:frontend/services/grocery_list_service.dart';
 
 class GroceryScreen extends StatelessWidget {
   const GroceryScreen({super.key});
@@ -41,6 +39,7 @@ class GroceryList extends StatefulWidget {
 class _GroceryListState extends State<GroceryList> {
   bool isDeleting = false;
   bool isUndoPressed = false;
+  bool isEditDialogOpen = false;
   late List<ItemQuantity> groceryList = [];
   final GroceryListService groceryListService = GroceryListService();
   final KeycloakService keycloakService = KeycloakService();
@@ -78,7 +77,7 @@ class _GroceryListState extends State<GroceryList> {
         } else {
           measurementType = MeasurementType.kilogram;
         }
-        // Convert MeasurementType to string for display (localized string)
+        // Convert MeasurementType to string for display
         String measurementString = measurementTypeToStringNl(measurementType);
 
         return {
@@ -123,37 +122,42 @@ class _GroceryListState extends State<GroceryList> {
     }
 
     bool itemExists = combinedData.any((item) =>
-        item['ingredientName'].toString().toLowerCase() == newItem.groceryListItem.ingredientName.toLowerCase());
+        item['ingredientName'].toString().toLowerCase() ==
+        newItem.groceryListItem.ingredientName.toLowerCase());
 
     if (itemExists) {
       final existingItem = combinedData.firstWhere((item) =>
-          item['ingredientName'].toString().toLowerCase() == newItem.groceryListItem.ingredientName.toLowerCase());
+          item['ingredientName'].toString().toLowerCase() ==
+          newItem.groceryListItem.ingredientName.toLowerCase());
 
-      showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return DialogEditItem(
-              initialQuantity: existingItem['quantity'],
-              ingredientName: existingItem['ingredientName'],
-              onQuantityUpdated: (updatedQuantity) {
-                setState(
-                  () {
-                    // Update the quantity of the existing item
-                    final updatedItem = ItemQuantity(
-                      itemQuantityId: existingItem['ingredientQuantityId'],
-                      quantity: updatedQuantity,
-                      groceryListItem: newItem.groceryListItem,
-                    );
+      if (isEditDialogOpen == false) {
+        showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return DialogEditItem(
+                initialQuantity: existingItem['quantity'],
+                ingredientName: existingItem['ingredientName'],
+                measurementType: existingItem['measurement'],
+                onQuantityUpdated: (updatedQuantity) {
+                  setState(
+                    () {
+                      // Update the quantity of the existing item
+                      final updatedItem = ItemQuantity(
+                        itemQuantityId: existingItem['ingredientQuantityId'],
+                        quantity: updatedQuantity,
+                        groceryListItem: newItem.groceryListItem,
+                      );
 
-                    // Update the existing item in the list
-                    groceryListService.addItemToGroceryList(
-                        groceryListId, updatedItem);
-                    _loadGroceryList();
-                  },
-                );
-              },
-            );
-          });
+                      // Update the existing item in the list
+                      groceryListService.addItemToGroceryList(
+                          groceryListId, updatedItem);
+                      _loadGroceryList();
+                    },
+                  );
+                },
+              );
+            });
+      }
     }
     await groceryListService.addItemToGroceryList(groceryListId, newItem);
     await _loadGroceryList();
@@ -264,34 +268,50 @@ class _GroceryListState extends State<GroceryList> {
                           });
                         },
                         child: GestureDetector(
-                          onTap: () => showDialog(
-                              context: context,
-                              builder: (BuildContext context) {
-                                return DialogEditItem(
-                                    initialQuantity: ingredient['quantity'],
-                                    ingredientName:
-                                        ingredient['ingredientName'],
-                                    onQuantityUpdated: (updatedQuantity) {
-                                      setState(() {
-                                        ingredient['quantity'] =
-                                            updatedQuantity;
-                                        final updatedItem = ItemQuantity(
-                                          itemQuantityId: ingredient[
-                                              'ingredientQuantityId'],
-                                          quantity: updatedQuantity,
-                                          groceryListItem: GroceryListItem(
-                                            ingredientName:
-                                                ingredient['ingredientName'],
-                                            measurement:
-                                                stringToMeasurementType(
-                                                    ingredient['measurement']),
-                                            ingredientQuantities: [],
-                                          ),
-                                        );
-                                        addItem(updatedItem);
-                                      });
-                                    });
-                              }),
+                          onTap: () {
+                            if (!isEditDialogOpen) {
+                              setState(() {
+                                isEditDialogOpen = true;
+                              });
+                              showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return DialogEditItem(
+                                        initialQuantity: ingredient['quantity'],
+                                        ingredientName:
+                                            ingredient['ingredientName'],
+                                        measurementType:
+                                            ingredient['measurement'],
+                                        onQuantityUpdated: (updatedQuantity) {
+                                          setState(() {
+                                            ingredient['quantity'] =
+                                                updatedQuantity;
+                                            final updatedItem = ItemQuantity(
+                                              itemQuantityId: ingredient[
+                                                  'ingredientQuantityId'],
+                                              quantity: updatedQuantity,
+                                              groceryListItem: GroceryListItem(
+                                                ingredientName: ingredient[
+                                                    'ingredientName'],
+                                                measurement:
+                                                    stringToMeasurementType(
+                                                        ingredient[
+                                                            'measurement']),
+                                                ingredientQuantities: [],
+                                              ),
+                                            );
+                                            addItem(updatedItem);
+                                          });
+                                        });
+                                  }).then((_) {
+                                Future.delayed(Duration(milliseconds: 100), () {
+                                  setState(() {
+                                    isEditDialogOpen = false;
+                                  });
+                                });
+                              });
+                            }
+                          },
                           child: Table(
                             children: [
                               TableRow(
@@ -304,6 +324,8 @@ class _GroceryListState extends State<GroceryList> {
                                       child: Text(
                                         ingredient['ingredientName'],
                                         style: const TextStyle(fontSize: 16),
+                                        overflow: TextOverflow.ellipsis,
+                                        softWrap: false,
                                       ),
                                     ),
                                   ),
@@ -315,6 +337,8 @@ class _GroceryListState extends State<GroceryList> {
                                       child: Text(
                                         "${ingredient['quantity'].toString()} ${ingredient['measurement']}",
                                         style: const TextStyle(fontSize: 16),
+                                        overflow: TextOverflow.ellipsis,
+                                        softWrap: false,
                                       ),
                                     ),
                                   ),
@@ -326,6 +350,8 @@ class _GroceryListState extends State<GroceryList> {
                                       child: Padding(
                                           padding: const EdgeInsets.all(8.0),
                                           child: Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.end,
                                             children: [
                                               Icon(Icons.keyboard_arrow_left,
                                                   color: Colors.black,
@@ -335,8 +361,7 @@ class _GroceryListState extends State<GroceryList> {
                                                   size: 30),
                                             ],
                                           )),
-                                    )
-                                    ,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -388,15 +413,17 @@ class _GroceryListState extends State<GroceryList> {
 }
 
 class DialogEditItem extends StatefulWidget {
-  final String ingredientName; // Add ingredientName parameter
+  final String ingredientName;
   final double initialQuantity;
+  final String measurementType;
   final Function(double) onQuantityUpdated;
 
   const DialogEditItem(
       {super.key,
       required this.initialQuantity,
       required this.onQuantityUpdated,
-      required this.ingredientName});
+      required this.ingredientName,
+      required this.measurementType});
 
   @override
   State<DialogEditItem> createState() => _DialogEditItemState();
@@ -421,7 +448,15 @@ class _DialogEditItemState extends State<DialogEditItem> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('Bewerk de hoeveelheid van ${widget.ingredientName}'),
+      title: Column(
+        children: [
+          Text('Wijzig ${widget.ingredientName}'),
+          Text(
+            '${widget.ingredientName} bedraagt momenteel ${widget.initialQuantity} ${widget.measurementType}, hoeveel wil je er van maken?',
+            style: TextStyle(fontSize: 16),
+          ),
+        ],
+      ),
       content: TextField(
         controller: _quantityController,
         keyboardType: TextInputType.number,
