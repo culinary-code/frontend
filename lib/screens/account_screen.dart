@@ -5,6 +5,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:frontend/models/accounts/account.dart';
 import 'package:frontend/models/accounts/preferencedto.dart';
 import 'package:frontend/services/account_service.dart';
+import 'package:frontend/services/preference_service.dart';
 import 'package:multi_dropdown/multi_dropdown.dart';
 
 
@@ -347,6 +348,7 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
       TextEditingController();
 
   final _accountService = AccountService();
+  final _preferenceService = PreferenceService();
   var userId = '';
 
   final Set<String> standardPreferences = {
@@ -382,8 +384,6 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
       });
 
       Navigator.pop(context);
-    } else {
-      debugPrint("Preference was empty or already exists.");
     }
   }
 
@@ -433,15 +433,9 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
           if (preferenceToDelete != null) {
             await _accountService
                 .deletePreference(preferenceToDelete.preferenceId);
-          } else {
-            debugPrint('Preference to delete not found: $currentPreference');
           }
         }
       }
-
-      debugPrint('Saved preferences: $selectedPreferences');
-    } else {
-      debugPrint('No preferences selected');
     }
   }
 
@@ -490,7 +484,7 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
         controller.addItems(preferences);
       });
     } catch (e) {
-      debugPrint('Failed to load preferences: $e');
+      Exception('Failed to load preferences: $e');
     }
   }
 
@@ -538,9 +532,6 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
                           return 'Kies een voorkeur';
                         }
                         return null;
-                      },
-                      onSelectionChange: (selectedPreferences) {
-                        debugPrint('OnSelectionChange: $selectedPreferences');
                       },
                     ),
                   ),

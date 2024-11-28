@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:frontend/models/accounts/account.dart';
@@ -19,7 +18,6 @@ class AccountService {
     if (response.statusCode == 200) {
       try {
         var jsonResponse = json.decode(response.body);
-        print(jsonResponse);
         return Account.fromJson(jsonResponse);
       } catch (e) {
         throw FormatException('Error parsing response: $e');
@@ -127,9 +125,7 @@ class AccountService {
       final endpoint = 'api/Account/deletePreference/$preferenceId';
       final response = await ApiClient().authorizedDelete(endpoint);
 
-      if (response.statusCode == 200) {
-        debugPrint('Preference deleted successfully');
-      } else {
+      if (response.statusCode != 200) {
         throw Exception('Error deleting preference: ${response.statusCode}, ${response.body}');
       }
     } catch (e) {
