@@ -85,34 +85,3 @@ String measurementTypeToStringMultipleNl(MeasurementType type) {
       return measurementTypeToStringNl(type);
   }
 }
-
-MeasurementType stringToMeasurementType(String value) {
-  switch (value) {
-    case 'kg':
-      return MeasurementType.kilogram;
-    case 'l':
-      return MeasurementType.litre;
-    case 'pond':
-      return MeasurementType.pound;
-    case 'ounce':
-      return MeasurementType.ounce;
-    case 'tl':
-      return MeasurementType.teaspoon;
-    case 'el':
-      return MeasurementType.tablespoon;
-    case 'stuk':
-      return MeasurementType.piece;
-    case 'ml':
-      return MeasurementType.millilitre;
-    case 'g':
-      return MeasurementType.gram;
-    case 'snufje':
-      return MeasurementType.pinch;
-    case 'naar smaak':
-      return MeasurementType.toTaste;
-    case 'teentje':
-      return MeasurementType.clove;
-    default:
-      throw ArgumentError('Invalid string value for MeasurementType');
-  }
-}

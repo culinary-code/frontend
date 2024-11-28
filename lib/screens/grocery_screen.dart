@@ -57,8 +57,7 @@ class _GroceryListState extends State<GroceryList> {
 
   Future<void> _loadGroceryList() async {
     var groceryId = await groceryListService.getGroceryListId();
-    var response =
-        await groceryListService.fetchGroceryListById(groceryId.toString());
+    var response = await groceryListService.fetchGroceryListById(groceryId.toString());
     groceryListId = await groceryListService.getGroceryListId();
 
     if (response != null) {
@@ -77,14 +76,14 @@ class _GroceryListState extends State<GroceryList> {
         } else {
           measurementType = MeasurementType.kilogram;
         }
-        // Convert MeasurementType to string for display
-        String measurementString = measurementTypeToStringNl(measurementType);
+        // Convert MeasurementType to string for display (localized string)
+        //String measurementString = measurementTypeToStringNl(measurementType);
 
         return {
           'ingredientQuantityId': ingredient['ingredientQuantityId'],
           'ingredientName': ingredient['ingredient']['ingredientName'],
           'quantity': ingredient['quantity'],
-          'measurement': measurementString,
+          'measurement': measurementType,
         };
       }).toList();
 
@@ -98,13 +97,13 @@ class _GroceryListState extends State<GroceryList> {
         } else {
           measurementType = MeasurementType.kilogram;
         }
-        String measurementString = measurementTypeToStringNl(measurementType);
+        //String measurementString = measurementTypeToStringNl(measurementType);
 
         return {
           'ingredientQuantityId': ingredient['ingredientQuantityId'],
           'ingredientName': ingredient['ingredient']['ingredientName'],
           'quantity': ingredient['quantity'],
-          'measurement': measurementString,
+          'measurement': measurementType,
         };
       }).toList();
 
@@ -121,11 +120,14 @@ class _GroceryListState extends State<GroceryList> {
       return;
     }
 
-    bool itemExists = combinedData.any((item) =>
-        item['ingredientName'].toString().toLowerCase() ==
-        newItem.groceryListItem.ingredientName.toLowerCase());
+    final existingItem = combinedData.firstWhere(
+          (item) =>
+      item['ingredientName'].toString().toLowerCase() ==
+          newItem.groceryListItem.ingredientName.toLowerCase(),
+      orElse: () => {},
+    );
 
-    if (itemExists) {
+    if (existingItem.isNotEmpty) {
       final existingItem = combinedData.firstWhere((item) =>
           item['ingredientName'].toString().toLowerCase() ==
           newItem.groceryListItem.ingredientName.toLowerCase());
@@ -173,8 +175,7 @@ class _GroceryListState extends State<GroceryList> {
         'ingredientQuantityId': item.itemQuantityId,
         'ingredientName': item.groceryListItem.ingredientName,
         'quantity': item.quantity,
-        'measurement':
-            measurementTypeToStringNl(item.groceryListItem.measurement),
+        'measurement': item.groceryListItem.measurement,
       };
     }).toList());
     return combinedList;
@@ -186,11 +187,7 @@ class _GroceryListState extends State<GroceryList> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 0),
-      child: Padding(
-        padding: const EdgeInsets.all(0.0),
-        child: Column(
+    return Column(
           children: [
             Table(
               border: TableBorder.all(color: Colors.black),
@@ -278,10 +275,8 @@ class _GroceryListState extends State<GroceryList> {
                                   builder: (BuildContext context) {
                                     return DialogEditItem(
                                         initialQuantity: ingredient['quantity'],
-                                        ingredientName:
-                                            ingredient['ingredientName'],
-                                        measurementType:
-                                            ingredient['measurement'],
+                                        ingredientName: ingredient['ingredientName'],
+                                        measurementType: ingredient['measurement'],
                                         onQuantityUpdated: (updatedQuantity) {
                                           setState(() {
                                             ingredient['quantity'] =
@@ -293,10 +288,7 @@ class _GroceryListState extends State<GroceryList> {
                                               groceryListItem: GroceryListItem(
                                                 ingredientName: ingredient[
                                                     'ingredientName'],
-                                                measurement:
-                                                    stringToMeasurementType(
-                                                        ingredient[
-                                                            'measurement']),
+                                                measurement: ingredient['measurement'],
                                                 ingredientQuantities: [],
                                               ),
                                             );
@@ -335,7 +327,7 @@ class _GroceryListState extends State<GroceryList> {
                                     child: Padding(
                                       padding: const EdgeInsets.all(4.0),
                                       child: Text(
-                                        "${ingredient['quantity'].toString()} ${ingredient['measurement']}",
+                                        "${ingredient['quantity'].toString()} ${measurementTypeToStringNl( ingredient['measurement'])}",
                                         style: const TextStyle(fontSize: 16),
                                         overflow: TextOverflow.ellipsis,
                                         softWrap: false,
@@ -406,8 +398,6 @@ class _GroceryListState extends State<GroceryList> {
               ),
             ),
           ],
-        ),
-      ),
     );
   }
 }
@@ -415,7 +405,7 @@ class _GroceryListState extends State<GroceryList> {
 class DialogEditItem extends StatefulWidget {
   final String ingredientName;
   final double initialQuantity;
-  final String measurementType;
+  final MeasurementType measurementType;
   final Function(double) onQuantityUpdated;
 
   const DialogEditItem(
@@ -452,7 +442,7 @@ class _DialogEditItemState extends State<DialogEditItem> {
         children: [
           Text('Wijzig ${widget.ingredientName}'),
           Text(
-            '${widget.ingredientName} bedraagt momenteel ${widget.initialQuantity} ${widget.measurementType}, hoeveel wil je er van maken?',
+            '${widget.ingredientName} bedraagt momenteel ${widget.initialQuantity} ${measurementTypeToStringNl(widget.measurementType)}, hoeveel wil je er van maken?',
             style: TextStyle(fontSize: 16),
           ),
         ],
