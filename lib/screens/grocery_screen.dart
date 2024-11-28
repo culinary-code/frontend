@@ -122,17 +122,13 @@ class _GroceryListState extends State<GroceryList> {
       return;
     }
 
-    // TODO: Hoofdletters moeten niet uitmaken
-    // First, check if the item already exists in the list
     bool itemExists = combinedData.any((item) =>
-        item['ingredientName'] == newItem.groceryListItem.ingredientName);
+        item['ingredientName'].toString().toLowerCase() == newItem.groceryListItem.ingredientName.toLowerCase());
 
     if (itemExists) {
-      // Find the existing item by its unique ingredientName (or another unique identifier if available)
       final existingItem = combinedData.firstWhere((item) =>
-          item['ingredientName'] == newItem.groceryListItem.ingredientName);
+          item['ingredientName'].toString().toLowerCase() == newItem.groceryListItem.ingredientName.toLowerCase());
 
-      // Open dialog to update the quantity
       showDialog(
           context: context,
           builder: (BuildContext context) {
@@ -145,16 +141,11 @@ class _GroceryListState extends State<GroceryList> {
                     // Update the quantity of the existing item
                     final updatedItem = ItemQuantity(
                       itemQuantityId: existingItem['ingredientQuantityId'],
-                      // Using existing ID
                       quantity: updatedQuantity,
-                      // Add the updated quantity to existing quantity
                       groceryListItem: newItem.groceryListItem,
                     );
 
                     // Update the existing item in the list
-                    int index = groceryList.indexWhere((item) =>
-                        item.itemQuantityId ==
-                        existingItem['ingredientQuantityId']);
                     groceryListService.addItemToGroceryList(
                         groceryListId, updatedItem);
                     _loadGroceryList();
@@ -192,9 +183,9 @@ class _GroceryListState extends State<GroceryList> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 0),
       child: Padding(
-        padding: const EdgeInsets.all(8.0),
+        padding: const EdgeInsets.all(0.0),
         child: Column(
           children: [
             Table(
@@ -278,7 +269,8 @@ class _GroceryListState extends State<GroceryList> {
                               builder: (BuildContext context) {
                                 return DialogEditItem(
                                     initialQuantity: ingredient['quantity'],
-                                    ingredientName: ingredient['ingredientName'],
+                                    ingredientName:
+                                        ingredient['ingredientName'],
                                     onQuantityUpdated: (updatedQuantity) {
                                       setState(() {
                                         ingredient['quantity'] =
@@ -308,10 +300,10 @@ class _GroceryListState extends State<GroceryList> {
                                     verticalAlignment:
                                         TableCellVerticalAlignment.middle,
                                     child: Padding(
-                                      padding: const EdgeInsets.all(8.0),
+                                      padding: const EdgeInsets.all(4.0),
                                       child: Text(
                                         ingredient['ingredientName'],
-                                        style: const TextStyle(fontSize: 22),
+                                        style: const TextStyle(fontSize: 16),
                                       ),
                                     ),
                                   ),
@@ -319,32 +311,32 @@ class _GroceryListState extends State<GroceryList> {
                                     verticalAlignment:
                                         TableCellVerticalAlignment.middle,
                                     child: Padding(
-                                      padding: const EdgeInsets.all(8.0),
+                                      padding: const EdgeInsets.all(4.0),
                                       child: Text(
-                                        ingredient['quantity'].toString(),
-                                        style: const TextStyle(fontSize: 22),
+                                        "${ingredient['quantity'].toString()} ${ingredient['measurement']}",
+                                        style: const TextStyle(fontSize: 16),
                                       ),
                                     ),
                                   ),
                                   TableCell(
                                     verticalAlignment:
                                         TableCellVerticalAlignment.middle,
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: Text(
-                                        ingredient['measurement'],
-                                        style: const TextStyle(fontSize: 22),
-                                      ),
-                                    ),
-                                  ),
-                                  TableCell(
-                                    verticalAlignment:
-                                        TableCellVerticalAlignment.middle,
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: Icon(Icons.delete,
-                                          color: Colors.black, size: 30),
-                                    ),
+                                    child: Container(
+                                      color: Colors.red,
+                                      child: Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: Row(
+                                            children: [
+                                              Icon(Icons.keyboard_arrow_left,
+                                                  color: Colors.black,
+                                                  size: 30),
+                                              Icon(Icons.delete,
+                                                  color: Colors.black,
+                                                  size: 30),
+                                            ],
+                                          )),
+                                    )
+                                    ,
                                   ),
                                 ],
                               ),
@@ -403,7 +395,8 @@ class DialogEditItem extends StatefulWidget {
   const DialogEditItem(
       {super.key,
       required this.initialQuantity,
-      required this.onQuantityUpdated, required this.ingredientName});
+      required this.onQuantityUpdated,
+      required this.ingredientName});
 
   @override
   State<DialogEditItem> createState() => _DialogEditItemState();
