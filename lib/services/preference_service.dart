@@ -20,7 +20,6 @@ class PreferenceService {
 
       if (response.statusCode == 200) {
         List<dynamic> preferencesJson = json.decode(response.body);
-        print(preferencesJson.map((p) => PreferenceDto.fromJson(p)).toList());
         return preferencesJson.map((p) => PreferenceDto.fromJson(p)).toList();
       } else {
         throw Exception('Error fetching standard preferences: ${response.statusCode}, ${response.body}');

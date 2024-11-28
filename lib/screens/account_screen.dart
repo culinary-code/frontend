@@ -8,7 +8,6 @@ import 'package:frontend/services/account_service.dart';
 import 'package:frontend/services/preference_service.dart';
 import 'package:multi_dropdown/multi_dropdown.dart';
 
-
 class AccountScreen extends StatelessWidget {
   const AccountScreen({super.key});
 
@@ -57,9 +56,29 @@ class _AccountOverviewState extends State<AccountOverview> {
     );
   }
 
-  void _saveAll() {
-    _accountSettingsKey.currentState?.saveData();
-    _preferenceSettingsKey.currentState?._savePreferences();
+  void _saveAll() async {
+    try {
+      await _accountSettingsKey.currentState?._saveData();
+      await _preferenceSettingsKey.currentState?._savePreferences();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gebruikersinstellingen zijn opgeslagen!'),
+            backgroundColor: Colors.black,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Er is een fout opgetreden bij het opslaan.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }
 
@@ -109,7 +128,7 @@ class _AccountSettingsState extends State<AccountSettings> {
     }
   }
 
-  void saveData() async {
+  Future<void> _saveData() async {
     await _saveUsername();
     await _saveFamilySize(_currentFamilySize);
   }
@@ -129,51 +148,20 @@ class _AccountSettingsState extends State<AccountSettings> {
         _currentUsername = newUsername;
         _usernameError = false; // Clear error on successful save
       });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gebruikernaam opgeslagen!')),
-        );
-      }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Gebruikersnaam kon niet opgeslagen worden.'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      Exception(e);
     }
   }
 
   Future<void> _saveFamilySize(int newFamilySize) async {
-    if (newFamilySize < 1) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Mijn gezin moet minstens 1 zijn.')),
-      );
-      return;
-    }
-
     try {
       await _accountService.updateFamilySize(userId, newFamilySize);
       setState(() {
         _currentFamilySize = newFamilySize;
         _familySizeController.text = newFamilySize.toString();
       });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Mijn gezin opgeslagen!')),
-        );
-      }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Mijn gezin kon niet opgeslagen worden.'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      Exception(e);
     }
   }
 
@@ -200,8 +188,6 @@ class _AccountSettingsState extends State<AccountSettings> {
                         ? 'Gebruikersnaam moet minstens 3 karakters zijn.'
                         : null,
                     border: OutlineInputBorder(),
-                    /*suffixIcon: IconButton(
-                          icon: Icon(Icons.save), onPressed: _saveUsername)*/
                   ),
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
@@ -320,12 +306,6 @@ class _MyFamilySelectorState extends State<MyFamilySelector> {
               SizedBox(
                 width: 25,
               ),
-              /*IconButton(
-                onPressed: () {
-                  widget.onAdd(numberOfPeople);
-                },
-                icon: Icon(Icons.save),
-              ),*/
             ],
           )
         ],
@@ -350,13 +330,6 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
   final _accountService = AccountService();
   final _preferenceService = PreferenceService();
   var userId = '';
-
-  final Set<String> standardPreferences = {
-    'Vegan',
-    'Vegetarian',
-    'Nut Allergy',
-    'Lactose Intolerant',
-  };
 
   String? selectedValue;
 
@@ -387,66 +360,49 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
     }
   }
 
-  void _savePreferences() async {
+  Future<void> _savePreferences() async {
     List<String> selectedPreferences =
-    controller.selectedItems.map((item) => item.value).toList();
+        controller.selectedItems.map((item) => item.value).toList();
 
-    // Fetch current user preferences to avoid duplicates
+    // Get current user preferences to avoid duplicates
     List<PreferenceDto> preferencesForDelete =
-    await _accountService.getPreferencesByUserId(userId);
+        await _accountService.getPreferencesByUserId(userId);
 
     if (selectedPreferences.isNotEmpty) {
       for (String preference in selectedPreferences) {
-        bool isExistingPreference = preferencesForDelete.any(
-                (pref) => pref.preferenceName.toLowerCase() == preference.toLowerCase()
-        );
+        bool isExistingPreference = preferencesForDelete.any((pref) =>
+            pref.preferenceName.toLowerCase() == preference.toLowerCase());
 
         if (!isExistingPreference) {
-          if (standardPreferences
-              .map((p) => p.toLowerCase())
-              .contains(preference.toLowerCase())) {
-            // Add standard preference
-            _accountService.addPreference(
-              userId,
-              PreferenceDto(
-                  preferenceName: preference,
-                  standardPreference: true,
-                  preferenceId: ''),
-            );
-          } else {
-            // Add custom preference
-            _accountService.addPreference(
-              userId,
-              PreferenceDto(
-                  preferenceName: preference,
-                  standardPreference: false,
-                  preferenceId: ''),
-            );
-          }
+          // Add custom preference
+          _accountService.addPreference(
+            userId,
+            PreferenceDto(
+                preferenceName: preference,
+                standardPreference: false,
+                preferenceId: ''),
+          );
         }
       }
+    }
 
-      // Now handle preferences to delete (those that were unselected)
-      List<String> currentPreferences =
-      preferences.map((item) => item.value).toList();
-      for (String currentPreference in currentPreferences) {
-        // Check if the current preference is not in the selected preferences list, meaning it's been deselected
-        if (!selectedPreferences.contains(currentPreference)) {
-          // Find the preference ID by matching the preference name
-          final PreferenceDto? preferenceToDelete =
-          preferencesForDelete.firstWhereOrNull(
-                (pref) => pref.preferenceName == currentPreference,
-          );
+    // Delete deselected preferences
+    List<String> currentPreferences =
+        preferences.map((item) => item.value).toList();
+    for (String currentPreference in currentPreferences) {
+      if (!selectedPreferences.contains(currentPreference)) {
+        final PreferenceDto? preferenceToDelete =
+            preferencesForDelete.firstWhereOrNull(
+          (pref) => pref.preferenceName == currentPreference,
+        );
 
-          if (preferenceToDelete != null) {
-            await _accountService
-                .deletePreference(preferenceToDelete.preferenceId);
-          }
+        if (preferenceToDelete != null) {
+          await _accountService
+              .deletePreference(preferenceToDelete.preferenceId);
         }
       }
     }
   }
-
 
   @override
   void initState() {
@@ -458,11 +414,7 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
     try {
       List<DropdownItem<String>> tempPreferences = [];
 
-      // Fetch standard preferences from the backend
       var pref = await _preferenceService.getStandardPreferences();
-      print(pref);
-
-      // Ensure you're converting the data to DropdownItem objects
       tempPreferences = pref.map((preference) {
         return DropdownItem(
           label: preference.preferenceName,
@@ -473,13 +425,14 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
 
       userId = await _accountService.getUserId();
       List<PreferenceDto> userPreferences =
-      await _accountService.getPreferencesByUserId(userId);
+          await _accountService.getPreferencesByUserId(userId);
 
       setState(() {
         // Add userPreferences to tempPreferences if they're not already present
         for (var userPreference in userPreferences) {
           if (!tempPreferences.any((item) =>
-          item.value.toLowerCase() == userPreference.preferenceName.toLowerCase())) {
+              item.value.toLowerCase() ==
+              userPreference.preferenceName.toLowerCase())) {
             tempPreferences.add(DropdownItem(
               label: userPreference.preferenceName,
               value: userPreference.preferenceName,
@@ -489,7 +442,8 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
 
         // Select items the user already has
         for (var item in tempPreferences) {
-          item.selected = userPreferences.any((pref) => pref.preferenceName == item.value);
+          item.selected =
+              userPreferences.any((pref) => pref.preferenceName == item.value);
         }
         preferences = tempPreferences;
 
@@ -498,10 +452,9 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
         controller.addItems(preferences);
       });
     } catch (e) {
-      print('Failed to load preferences: $e');
+      Exception(e);
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -573,12 +526,6 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
                 ]),
                 const SizedBox(height: 12),
                 Wrap(spacing: 8, children: [
-                  /*ElevatedButton(
-                    onPressed: () {
-                      _savePreferences();
-                    },
-                    child: const Text('Opslaan'),
-                  ),*/
                   ElevatedButton(
                     onPressed: () {
                       showDialog(
