@@ -586,7 +586,7 @@ class ReviewsOverview extends StatelessWidget {
                               else if (averageRating < 2)
                                 const Icon(Icons.star_outline,
                                     size: 35, color: Colors.amber)
-                              else if (averageRating <= 4)
+                              else if (averageRating >= 4)
                                 const Icon(Icons.star,
                                     size: 35, color: Colors.amber),
                               Text(

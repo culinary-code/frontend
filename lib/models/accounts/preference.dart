@@ -15,4 +15,13 @@ class Preference {
     required this.recipes,
     this.accounts = const [],
   });
+
+  // Convert Preference to JSON
+  Map<String, dynamic> toJson() {
+    return {
+      "preferenceId": preferenceId,
+      "preferenceName": preferenceName,
+      "standardPreference": standardPreference,
+    };
+  }
 }

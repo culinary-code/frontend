@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:frontend/models/accounts/account.dart';
+import 'package:frontend/models/accounts/preferencedto.dart';
 import 'package:frontend/services/api_client.dart';
 
 class AccountService {
@@ -9,7 +10,7 @@ class AccountService {
 
   String get backendUrl =>
       dotenv.env['BACKEND_BASE_URL'] ??
-          (throw Exception('Environment variable BACKEND_BASE_URL not found'));
+      (throw Exception('Environment variable BACKEND_BASE_URL not found'));
 
   Future<Account> fetchUser(String accountId) async {
     final apiClient = await ApiClient.create();
@@ -48,7 +49,7 @@ class AccountService {
     }
 
     final payload =
-    utf8.decode(base64Url.decode(base64Url.normalize(parts[1])));
+        utf8.decode(base64Url.decode(base64Url.normalize(parts[1])));
     return jsonDecode(payload);
   }
 
@@ -85,6 +86,49 @@ class AccountService {
       }
     } catch (e) {
       throw Exception('Error updating familySize: $e');
+    }
+  }
+
+  Future<List<PreferenceDto>> getPreferencesByUserId(String userId) async {
+    final endpoint = 'api/Account/getPreferences';
+    final apiClient = await ApiClient.create();
+    final response = await apiClient.authorizedGet(endpoint);
+
+    if (response.statusCode == 200) {
+      List<dynamic> preferencesJson = json.decode(response.body);
+      return preferencesJson.map((p) => PreferenceDto.fromJson(p)).toList();
+    } else {
+      throw Exception('Error fetching preferences');
+    }
+  }
+
+  Future<void> addPreference(String userId, PreferenceDto preference) async {
+    final endpoint = 'api/Account/addPreference';
+    final apiClient = await ApiClient.create();
+
+    final response = await apiClient.authorizedPost(endpoint, {
+      'PreferenceName': preference.preferenceName,
+    });
+
+    if (response.statusCode != 200) {
+      throw Exception(
+          'Error adding preference: ${response.statusCode}, ${response.body}');
+    }
+  }
+
+  Future<void> deletePreference(String preferenceId) async {
+    try {
+      final endpoint = 'api/Account/deletePreference/$preferenceId';
+      final apiClient = await ApiClient.create();
+
+      final response = await apiClient.authorizedDelete(endpoint);
+
+      if (response.statusCode != 200) {
+        throw Exception(
+            'Error deleting preference: ${response.statusCode}, ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Error deleting preference: $e');
     }
   }
 }

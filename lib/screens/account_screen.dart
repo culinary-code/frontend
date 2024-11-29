@@ -1,10 +1,12 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:frontend/models/accounts/account.dart';
+import 'package:frontend/models/accounts/preferencedto.dart';
+import 'package:frontend/services/account_service.dart';
+import 'package:frontend/services/preference_service.dart';
 import 'package:multi_dropdown/multi_dropdown.dart';
-
-import '../models/accounts/account.dart';
-import '../services/account_service.dart';
 
 class AccountScreen extends StatelessWidget {
   const AccountScreen({super.key});
@@ -26,19 +28,57 @@ class AccountOverview extends StatefulWidget {
 }
 
 class _AccountOverviewState extends State<AccountOverview> {
+  final GlobalKey<_AccountSettingsState> _accountSettingsKey = GlobalKey();
+  final GlobalKey<_PreferencesSettingsState> _preferenceSettingsKey =
+      GlobalKey();
+
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        AccountSettings(),
+        AccountSettings(key: _accountSettingsKey),
         SizedBox(
           height: 16,
         ),
-        Expanded(
-          child: PreferencesSettings(),
-        ),
+        PreferencesSettings(key: _preferenceSettingsKey),
+        SizedBox(height: 16),
+        ElevatedButton(
+            onPressed: _saveAll,
+            style: ElevatedButton.styleFrom(
+              elevation: 5,
+              padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+            ),
+            child: Text(
+              'Opslaan',
+              style: TextStyle(fontSize: 20),
+            ))
       ],
     );
+  }
+
+  void _saveAll() async {
+    try {
+      await _accountSettingsKey.currentState?._saveData();
+      await _preferenceSettingsKey.currentState?._savePreferences();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gebruikersinstellingen zijn opgeslagen!'),
+            backgroundColor: Colors.black,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Er is een fout opgetreden bij het opslaan.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }
 
@@ -88,6 +128,11 @@ class _AccountSettingsState extends State<AccountSettings> {
     }
   }
 
+  Future<void> _saveData() async {
+    await _saveUsername();
+    await _saveFamilySize(_currentFamilySize);
+  }
+
   Future<void> _saveUsername() async {
     final newUsername = _usernameController.text;
     if (newUsername.length < 3) {
@@ -103,51 +148,20 @@ class _AccountSettingsState extends State<AccountSettings> {
         _currentUsername = newUsername;
         _usernameError = false; // Clear error on successful save
       });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gebruikernaam opgeslagen!')),
-        );
-      }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Gebruikersnaam kon niet opgeslagen worden.'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      Exception(e);
     }
   }
 
   Future<void> _saveFamilySize(int newFamilySize) async {
-    if (newFamilySize < 1) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Mijn gezin moet minstens 1 zijn.')),
-      );
-      return;
-    }
-
     try {
       await _accountService.updateFamilySize(userId, newFamilySize);
       setState(() {
         _currentFamilySize = newFamilySize;
         _familySizeController.text = newFamilySize.toString();
       });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Mijn gezin opgeslagen!')),
-        );
-      }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Mijn gezin kon niet opgeslagen worden.'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      Exception(e);
     }
   }
 
@@ -168,19 +182,20 @@ class _AccountSettingsState extends State<AccountSettings> {
                 TextField(
                   controller: _usernameController,
                   decoration: InputDecoration(
-                      labelText: 'Gebruikersnaam',
-                      floatingLabelBehavior: FloatingLabelBehavior.never,
-                      errorText: _usernameError
-                          ? 'Gebruikersnaam moet minstens 3 karakters zijn.'
-                          : null,
-                      border: OutlineInputBorder(),
-                      suffixIcon: IconButton(
-                          icon: Icon(Icons.save), onPressed: _saveUsername)),
+                    labelText: 'Gebruikersnaam',
+                    floatingLabelBehavior: FloatingLabelBehavior.never,
+                    errorText: _usernameError
+                        ? 'Gebruikersnaam moet minstens 3 karakters zijn.'
+                        : null,
+                    border: OutlineInputBorder(),
+                  ),
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ],
             )),
-        SizedBox(height: 16,),
+        SizedBox(
+          height: 16,
+        ),
         Container(
           decoration: BoxDecoration(
             border: Border.all(color: Colors.black, width: 2),
@@ -240,66 +255,61 @@ class _MyFamilySelectorState extends State<MyFamilySelector> {
 
   @override
   Widget build(BuildContext context) {
-    return
-        Padding(
-          padding: const EdgeInsets.only(left: 6, bottom: 6, top: 6),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
+    return Padding(
+      padding: const EdgeInsets.only(left: 6, bottom: 6, top: 6),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Row(
             children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.family_restroom,
-                    size: 30,
-                  ),
-                  const SizedBox(
-                    width: 8,
-                  ),
-                  Text(
-                    'Mijn gezin',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(
-                    width: 12,
-                  ),
-                  GestureDetector(
-                    onTap: removeFamilyMembers,
-                    child: CircleAvatar(
-                      radius: 15,
-                      child: Icon(
-                        Icons.remove,
-                        size: 18,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Text(
-                    '$numberOfPeople',
-                    style: const TextStyle(fontSize: 22),
-                  ),
-                  const SizedBox(width: 10),
-                  GestureDetector(
-                    onTap: addFamilyMembers,
-                    child: CircleAvatar(
-                      radius: 15,
-                      child: Icon(
-                        Icons.add,
-                        size: 18,
-                      ),
-                    ),
-                  ),
-                       Spacer(),
-                       SizedBox(width: 25,),
-                       IconButton(
-                          onPressed: () {
-                            widget.onAdd(numberOfPeople);
-                          },
-                          icon: Icon(Icons.save),
-                        ),
-                    ],
-                  )
-                ],
+              Icon(
+                Icons.family_restroom,
+                size: 30,
               ),
+              const SizedBox(
+                width: 8,
+              ),
+              Text(
+                'Mijn gezin',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(
+                width: 12,
+              ),
+              GestureDetector(
+                onTap: removeFamilyMembers,
+                child: CircleAvatar(
+                  radius: 15,
+                  child: Icon(
+                    Icons.remove,
+                    size: 18,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                '$numberOfPeople',
+                style: const TextStyle(fontSize: 22),
+              ),
+              const SizedBox(width: 10),
+              GestureDetector(
+                onTap: addFamilyMembers,
+                child: CircleAvatar(
+                  radius: 15,
+                  child: Icon(
+                    Icons.add,
+                    size: 18,
+                  ),
+                ),
+              ),
+              Spacer(),
+              SizedBox(
+                width: 25,
+              ),
+            ],
+          )
+        ],
+      ),
     );
   }
 }
@@ -316,109 +326,206 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
   final controller = MultiSelectController<String>();
   final TextEditingController customPreferenceController =
       TextEditingController();
+
+  final _accountService = AccountService();
+  final _preferenceService = PreferenceService();
+  var userId = '';
+
   String? selectedValue;
 
-  List<DropdownItem<String>> preferences = [
-    DropdownItem(label: 'Vegan', value: 'Vegan'),
-    DropdownItem(label: 'Vegetarisch', value: 'Vegetarian'),
-    DropdownItem(label: 'Notenallergie', value: 'Nut Allergy'),
-    DropdownItem(label: 'Lactose Intolerant', value: 'Lactose Intolerant'),
-  ];
+  List<DropdownItem<String>> preferences = [];
 
   void _addPreferenceToDropdown() {
     String newPreference = customPreferenceController.text.trim();
+
+    // Check is preference is not empty or not already in the list
     if (newPreference.isNotEmpty &&
         !preferences.any((item) => item.value == newPreference)) {
       setState(() {
+        preferences.add(DropdownItem(
+            label: newPreference, value: newPreference, selected: true));
+        // Select new preference when adding it to dropdown
+        controller.addItems([
+          DropdownItem(
+              label: newPreference, value: newPreference, selected: true),
+        ]);
+        controller.selectedItems.add(
+          DropdownItem(
+              label: newPreference, value: newPreference, selected: true),
+        );
         selectedValue = newPreference;
-        preferences
-            .add(DropdownItem(label: newPreference, value: newPreference));
-        controller.addItems(
-            [DropdownItem(label: newPreference, value: newPreference)]);
-        controller.selectedItems
-            .add(DropdownItem(label: newPreference, value: newPreference));
       });
+
       Navigator.pop(context);
-    } else {
-      debugPrint("Preference was empty or already exists.");
+    }
+  }
+
+  Future<void> _savePreferences() async {
+    List<String> selectedPreferences =
+        controller.selectedItems.map((item) => item.value).toList();
+
+    // Get current user preferences to avoid duplicates
+    List<PreferenceDto> preferencesForDelete =
+        await _accountService.getPreferencesByUserId(userId);
+
+    if (selectedPreferences.isNotEmpty) {
+      for (String preference in selectedPreferences) {
+        bool isExistingPreference = preferencesForDelete.any((pref) =>
+            pref.preferenceName.toLowerCase() == preference.toLowerCase());
+
+        if (!isExistingPreference) {
+          // Add custom preference
+          _accountService.addPreference(
+            userId,
+            PreferenceDto(
+                preferenceName: preference,
+                standardPreference: false,
+                preferenceId: ''),
+          );
+        }
+      }
+    }
+
+    // Delete deselected preferences
+    List<String> currentPreferences =
+        preferences.map((item) => item.value).toList();
+    for (String currentPreference in currentPreferences) {
+      if (!selectedPreferences.contains(currentPreference)) {
+        final PreferenceDto? preferenceToDelete =
+            preferencesForDelete.firstWhereOrNull(
+          (pref) => pref.preferenceName == currentPreference,
+        );
+
+        if (preferenceToDelete != null) {
+          await _accountService
+              .deletePreference(preferenceToDelete.preferenceId);
+        }
+      }
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _initializePreferences();
+  }
+
+  Future<void> _initializePreferences() async {
+    try {
+      List<DropdownItem<String>> tempPreferences = [];
+
+      var pref = await _preferenceService.getStandardPreferences();
+      tempPreferences = pref.map((preference) {
+        return DropdownItem(
+          label: preference.preferenceName,
+          value: preference.preferenceName,
+          selected: false,
+        );
+      }).toList();
+
+      userId = await _accountService.getUserId();
+      List<PreferenceDto> userPreferences =
+          await _accountService.getPreferencesByUserId(userId);
+
+      setState(() {
+        // Add userPreferences to tempPreferences if they're not already present
+        for (var userPreference in userPreferences) {
+          if (!tempPreferences.any((item) =>
+              item.value.toLowerCase() ==
+              userPreference.preferenceName.toLowerCase())) {
+            tempPreferences.add(DropdownItem(
+              label: userPreference.preferenceName,
+              value: userPreference.preferenceName,
+            ));
+          }
+        }
+
+        // Select items the user already has
+        for (var item in tempPreferences) {
+          item.selected =
+              userPreferences.any((pref) => pref.preferenceName == item.value);
+        }
+        preferences = tempPreferences;
+
+        // Clear the controller and add items to it
+        controller.clearAll();
+        controller.addItems(preferences);
+      });
+    } catch (e) {
+      Exception(e);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white24,
-      body: SafeArea(
+    return SafeArea(
+      child: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Form(
             key: _formKey,
-            child: ListView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
                   'Voorkeuren',
                   style: TextStyle(fontSize: 30),
                 ),
-                MultiDropdown<String>(
-                  items: preferences,
-                  controller: controller,
-                  enabled: true,
-                  searchEnabled: true,
-                  chipDecoration: const ChipDecoration(
-                      wrap: true, runSpacing: 2, spacing: 10),
-                  fieldDecoration: FieldDecoration(
-                    hintText: 'Voorkeuren',
-                    hintStyle: const TextStyle(color: Colors.black),
-                    prefixIcon: const Icon(CupertinoIcons.flag),
-                    showClearIcon: false,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Colors.grey),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                        color: Colors.black,
+                Row(children: [
+                  Expanded(
+                    child: MultiDropdown<String>(
+                      items: preferences,
+                      controller: controller,
+                      enabled: true,
+                      searchEnabled: true,
+                      chipDecoration: const ChipDecoration(
+                          wrap: true, runSpacing: 2, spacing: 10),
+                      fieldDecoration: FieldDecoration(
+                        hintText: 'Voorkeuren',
+                        prefixIcon: const Icon(CupertinoIcons.flag),
+                        showClearIcon: false,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
+                      dropdownItemDecoration: const DropdownItemDecoration(
+                        selectedIcon:
+                            Icon(Icons.check_box, color: Colors.green),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Kies een voorkeur';
+                        }
+                        return null;
+                      },
                     ),
                   ),
-                  dropdownItemDecoration: const DropdownItemDecoration(
-                    selectedIcon: Icon(Icons.check_box, color: Colors.green),
-                    disabledIcon: Icon(Icons.lock, color: Colors.grey),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Kies een voorkeur';
-                    }
-                    return null;
-                  },
-                  onSelectionChange: (selectedPreferences) {
-                    debugPrint('OnSelectionChange: $selectedPreferences');
-                  },
-                ),
-                const SizedBox(height: 12),
-                Wrap(spacing: 8, children: [
-                  ElevatedButton(
-                    onPressed: () {
-                      if (_formKey.currentState?.validate() ?? false) {
-                        final selectedItems = controller.selectedItems;
-                        debugPrint(selectedItems.toString());
+                  PopupMenuButton<String>(
+                    icon: const Icon(Icons.more_vert),
+                    onSelected: (value) {
+                      if (value == 'select_all') {
+                        controller.selectAll();
+                      } else if (value == 'unselect_all') {
+                        controller.clearAll();
                       }
                     },
-                    child: const Text('Opslaan'),
+                    itemBuilder: (context) => [
+                      const PopupMenuItem<String>(
+                        value: 'select_all',
+                        child: Text('Selecteer alles'),
+                      ),
+                      const PopupMenuItem<String>(
+                        value: 'unselect_all',
+                        child: Text('Verwijder alles'),
+                      )
+                    ],
                   ),
-                  ElevatedButton(
-                    onPressed: () {
-                      controller.selectAll();
-                    },
-                    child: const Text('Selecteer alles'),
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      controller.clearAll();
-                    },
-                    child: const Text('Verwijder alles'),
-                  ),
+                ]),
+                const SizedBox(height: 12),
+                Wrap(spacing: 8, children: [
                   ElevatedButton(
                     onPressed: () {
                       showDialog(
@@ -446,7 +553,7 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
                         ),
                       );
                     },
-                    child: const Text('Andere..'),
+                    child: const Text('\u{2795} Nieuw'),
                   ),
                 ]),
               ],
