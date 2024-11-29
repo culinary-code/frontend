@@ -8,24 +8,20 @@ import 'api_client.dart';
 class PreferenceService {
   String get backendUrl =>
       dotenv.env['BACKEND_BASE_URL'] ??
-          (throw Exception('Environment variable BACKEND_BASE_URL not found'));
-
+      (throw Exception('Environment variable BACKEND_BASE_URL not found'));
 
   Future<List<PreferenceDto>> getStandardPreferences() async {
-    try {
-      final endpoint = 'api/Preference/getStandardPreference';
-      final apiClient = await ApiClient.create();
+    final endpoint = 'api/Preference/getStandardPreference';
+    final apiClient = await ApiClient.create();
 
-      final response = await apiClient.authorizedGet(endpoint);
+    final response = await apiClient.authorizedGet(endpoint);
 
-      if (response.statusCode == 200) {
-        List<dynamic> preferencesJson = json.decode(response.body);
-        return preferencesJson.map((p) => PreferenceDto.fromJson(p)).toList();
-      } else {
-        throw Exception('Error fetching standard preferences: ${response.statusCode}, ${response.body}');
-      }
-    } catch (e) {
-      throw Exception('Error fetching standard preferences: $e');
+    if (response.statusCode == 200) {
+      List<dynamic> preferencesJson = json.decode(response.body);
+      return preferencesJson.map((p) => PreferenceDto.fromJson(p)).toList();
+    } else {
+      throw Exception(
+          'Error fetching standard preferences: ${response.statusCode}, ${response.body}');
     }
   }
 }

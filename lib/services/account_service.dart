@@ -10,7 +10,7 @@ class AccountService {
 
   String get backendUrl =>
       dotenv.env['BACKEND_BASE_URL'] ??
-          (throw Exception('Environment variable BACKEND_BASE_URL not found'));
+      (throw Exception('Environment variable BACKEND_BASE_URL not found'));
 
   Future<Account> fetchUser(String accountId) async {
     final apiClient = await ApiClient.create();
@@ -49,7 +49,7 @@ class AccountService {
     }
 
     final payload =
-    utf8.decode(base64Url.decode(base64Url.normalize(parts[1])));
+        utf8.decode(base64Url.decode(base64Url.normalize(parts[1])));
     return jsonDecode(payload);
   }
 
@@ -90,36 +90,31 @@ class AccountService {
   }
 
   Future<List<PreferenceDto>> getPreferencesByUserId(String userId) async {
-    try {
-      final endpoint = 'api/Account/getPreferences';
-      final apiClient = await ApiClient.create();
-      final response = await apiClient.authorizedGet(endpoint);
+    final endpoint = 'api/Account/getPreferences';
+    final apiClient = await ApiClient.create();
+    final response = await apiClient.authorizedGet(endpoint);
 
-      if (response.statusCode == 200) {
-        List<dynamic> preferencesJson = json.decode(response.body);
-        return preferencesJson.map((p) => PreferenceDto.fromJson(p)).toList();
-      } else {
-        throw Exception('Error fetching preferences: ${response.statusCode}, ${response.body}');
-      }
-    } catch (e) {
-      throw Exception('Error fetching preferences: $e');
+    if (response.statusCode == 200) {
+      List<dynamic> preferencesJson = json.decode(response.body);
+      return preferencesJson.map((p) => PreferenceDto.fromJson(p)).toList();
+    } else {
+      throw Exception('Error fetching preferences');
     }
   }
 
   Future<void> addPreference(String userId, PreferenceDto preference) async {
-      final endpoint = 'api/Account/addPreference';
-      final apiClient = await ApiClient.create();
+    final endpoint = 'api/Account/addPreference';
+    final apiClient = await ApiClient.create();
 
-      final response = await apiClient.authorizedPost(endpoint, {
-        'PreferenceName': preference.preferenceName,
-        'StandardPreference': preference.standardPreference,
-      });
+    final response = await apiClient.authorizedPost(endpoint, {
+      'PreferenceName': preference.preferenceName,
+    });
 
-      if (response.statusCode != 200) {
-        throw Exception(
-            'Error adding preference: ${response.statusCode}, ${response.body}');
-      }
+    if (response.statusCode != 200) {
+      throw Exception(
+          'Error adding preference: ${response.statusCode}, ${response.body}');
     }
+  }
 
   Future<void> deletePreference(String preferenceId) async {
     try {
@@ -129,7 +124,8 @@ class AccountService {
       final response = await apiClient.authorizedDelete(endpoint);
 
       if (response.statusCode != 200) {
-        throw Exception('Error deleting preference: ${response.statusCode}, ${response.body}');
+        throw Exception(
+            'Error deleting preference: ${response.statusCode}, ${response.body}');
       }
     } catch (e) {
       throw Exception('Error deleting preference: $e');
