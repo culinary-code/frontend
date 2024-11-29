@@ -56,9 +56,8 @@ class _GroceryListState extends State<GroceryList> {
   }
 
   Future<void> _loadGroceryList() async {
-    var groceryId = await groceryListService.getGroceryListId();
-    var response = await groceryListService.fetchGroceryListById(groceryId.toString());
     groceryListId = await groceryListService.getGroceryListId();
+    var response = await groceryListService.fetchGroceryListById(groceryListId.toString());
 
     if (response != null) {
       var ingredients = response['ingredients'];
@@ -76,9 +75,6 @@ class _GroceryListState extends State<GroceryList> {
         } else {
           measurementType = MeasurementType.kilogram;
         }
-        // Convert MeasurementType to string for display (localized string)
-        //String measurementString = measurementTypeToStringNl(measurementType);
-
         return {
           'ingredientQuantityId': ingredient['ingredientQuantityId'],
           'ingredientName': ingredient['ingredient']['ingredientName'],
@@ -97,8 +93,6 @@ class _GroceryListState extends State<GroceryList> {
         } else {
           measurementType = MeasurementType.kilogram;
         }
-        //String measurementString = measurementTypeToStringNl(measurementType);
-
         return {
           'ingredientQuantityId': ingredient['ingredientQuantityId'],
           'ingredientName': ingredient['ingredient']['ingredientName'],
@@ -115,13 +109,12 @@ class _GroceryListState extends State<GroceryList> {
   }
 
   void addItem(ItemQuantity newItem) async {
-    String? groceryListId = await groceryListService.getGroceryListId();
+    groceryListId = await groceryListService.getGroceryListId();
     if (groceryListId == null) {
       return;
     }
 
-    final existingItem = combinedData.firstWhere(
-          (item) =>
+    final existingItem = combinedData.firstWhere((item) =>
       item['ingredientName'].toString().toLowerCase() ==
           newItem.groceryListItem.ingredientName.toLowerCase(),
       orElse: () => {},
@@ -151,8 +144,7 @@ class _GroceryListState extends State<GroceryList> {
                       );
 
                       // Update the existing item in the list
-                      groceryListService.addItemToGroceryList(
-                          groceryListId, updatedItem);
+                      groceryListService.addItemToGroceryList(groceryListId!, updatedItem);
                       _loadGroceryList();
                     },
                   );
@@ -160,9 +152,10 @@ class _GroceryListState extends State<GroceryList> {
               );
             });
       }
+    } else {
+      await groceryListService.addItemToGroceryList(groceryListId!, newItem);
+      await _loadGroceryList();
     }
-    await groceryListService.addItemToGroceryList(groceryListId, newItem);
-    await _loadGroceryList();
   }
 
   List<Map<String, dynamic>> get combinedData {
