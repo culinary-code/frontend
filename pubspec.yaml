@@ -53,6 +53,7 @@ dependencies:
   flutter_settings_screens: ^0.3.4
   multi_dropdown: ^3.0.1
   dropdown_textfield: ^1.0.0
+  collection: ^1.18.0
 
   # DateTime formatting
   intl: ^0.19.0
