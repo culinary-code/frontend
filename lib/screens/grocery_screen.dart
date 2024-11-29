@@ -57,13 +57,14 @@ class _GroceryListState extends State<GroceryList> {
 
   Future<void> _loadGroceryList() async {
     groceryListId = await groceryListService.getGroceryListId();
-    var response = await groceryListService.fetchGroceryListById(groceryListId.toString());
+    var response =
+        await groceryListService.fetchGroceryListById(groceryListId.toString());
 
     if (response != null) {
       var ingredients = response['ingredients'];
       var items = response['items'];
 
-      List<Map<String, dynamic>> parsedData =
+      List<Map<String, dynamic>> parsedIngredientData =
           ingredients.map<Map<String, dynamic>>((ingredient) {
         var measurement = ingredient['ingredient']['measurement'];
 
@@ -84,8 +85,8 @@ class _GroceryListState extends State<GroceryList> {
       }).toList();
 
       List<Map<String, dynamic>> parsedDataItems =
-          items.map<Map<String, dynamic>>((ingredient) {
-        var measurement = ingredient['ingredient']['measurement'];
+          items.map<Map<String, dynamic>>((item) {
+        var measurement = item['groceryItem']['measurement'];
 
         MeasurementType measurementType;
         if (measurement is int) {
@@ -94,15 +95,15 @@ class _GroceryListState extends State<GroceryList> {
           measurementType = MeasurementType.kilogram;
         }
         return {
-          'ingredientQuantityId': ingredient['ingredientQuantityId'],
-          'ingredientName': ingredient['ingredient']['ingredientName'],
-          'quantity': ingredient['quantity'],
+          'ingredientQuantityId': item['itemQuantityId'],
+          'ingredientName': item['groceryItem']['groceryItemName'],
+          'quantity': item['quantity'],
           'measurement': measurementType,
         };
       }).toList();
 
       setState(() {
-        ingredientData = parsedData;
+        ingredientData = parsedIngredientData;
         ingredientData.addAll(parsedDataItems);
       });
     }
@@ -114,8 +115,9 @@ class _GroceryListState extends State<GroceryList> {
       return;
     }
 
-    final existingItem = combinedData.firstWhere((item) =>
-      item['ingredientName'].toString().toLowerCase() ==
+    final existingItem = combinedData.firstWhere(
+      (item) =>
+          item['ingredientName'].toString().toLowerCase() ==
           newItem.groceryListItem.ingredientName.toLowerCase(),
       orElse: () => {},
     );
@@ -125,7 +127,7 @@ class _GroceryListState extends State<GroceryList> {
           item['ingredientName'].toString().toLowerCase() ==
           newItem.groceryListItem.ingredientName.toLowerCase());
 
-      if (isEditDialogOpen == false) {
+      if (!isEditDialogOpen) {
         showDialog(
             context: context,
             builder: (BuildContext context) {
@@ -144,7 +146,8 @@ class _GroceryListState extends State<GroceryList> {
                       );
 
                       // Update the existing item in the list
-                      groceryListService.addItemToGroceryList(groceryListId!, updatedItem);
+                      groceryListService.addItemToGroceryList(
+                          groceryListId!, updatedItem);
                       _loadGroceryList();
                     },
                   );
@@ -181,38 +184,50 @@ class _GroceryListState extends State<GroceryList> {
   @override
   Widget build(BuildContext context) {
     return Column(
+      children: [
+        Table(
+          border: TableBorder(
+            left: BorderSide(color: Colors.black),  // Left border
+            right: BorderSide(color: Colors.black), // Right border
+            top: BorderSide(color: Colors.black), // Bottom border
+          ),
+          defaultVerticalAlignment: TableCellVerticalAlignment.middle,
           children: [
-            Table(
+            TableRow(
+              decoration: BoxDecoration(
+                color: Colors.blueGrey[200],
+              ),
+              children: const [
+                TableCell(
+                  verticalAlignment: TableCellVerticalAlignment.middle,
+                  child: Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Align(
+                          alignment: Alignment.center,
+                          child: Text(
+                            'Boodschappenlijst',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 25),
+                          ),
+                        ),
+                        Icon(Icons.shopping_cart, size: 30)
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        Expanded(
+          child: SingleChildScrollView(
+            child: Table(
               border: TableBorder.all(color: Colors.black),
               defaultVerticalAlignment: TableCellVerticalAlignment.middle,
               children: [
-                TableRow(
-                  decoration: BoxDecoration(
-                    color: Colors.blueGrey[200],
-                  ),
-                  children: const [
-                    TableCell(
-                      verticalAlignment: TableCellVerticalAlignment.middle,
-                      child: Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Align(
-                              alignment: Alignment.center,
-                              child: Text(
-                                'Boodschappenlijst',
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold, fontSize: 25),
-                              ),
-                            ),
-                            Icon(Icons.shopping_cart, size: 30)
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
                 ...combinedData.map((ingredient) {
                   return TableRow(
                     children: [
@@ -268,8 +283,10 @@ class _GroceryListState extends State<GroceryList> {
                                   builder: (BuildContext context) {
                                     return DialogEditItem(
                                         initialQuantity: ingredient['quantity'],
-                                        ingredientName: ingredient['ingredientName'],
-                                        measurementType: ingredient['measurement'],
+                                        ingredientName:
+                                            ingredient['ingredientName'],
+                                        measurementType:
+                                            ingredient['measurement'],
                                         onQuantityUpdated: (updatedQuantity) {
                                           setState(() {
                                             ingredient['quantity'] =
@@ -281,7 +298,8 @@ class _GroceryListState extends State<GroceryList> {
                                               groceryListItem: GroceryListItem(
                                                 ingredientName: ingredient[
                                                     'ingredientName'],
-                                                measurement: ingredient['measurement'],
+                                                measurement:
+                                                    ingredient['measurement'],
                                                 ingredientQuantities: [],
                                               ),
                                             );
@@ -298,6 +316,14 @@ class _GroceryListState extends State<GroceryList> {
                             }
                           },
                           child: Table(
+                            columnWidths: {
+                              0: FlexColumnWidth(),
+                              // The first column takes up the remaining space.
+                              1: IntrinsicColumnWidth(),
+                              // The second column fits to its content.
+                              2: IntrinsicColumnWidth(),
+                              // The last column fits to its content.
+                            },
                             children: [
                               TableRow(
                                 children: [
@@ -320,7 +346,7 @@ class _GroceryListState extends State<GroceryList> {
                                     child: Padding(
                                       padding: const EdgeInsets.all(4.0),
                                       child: Text(
-                                        "${ingredient['quantity'].toString()} ${measurementTypeToStringNl( ingredient['measurement'])}",
+                                        "${ingredient['quantity'].toString()} ${measurementTypeToStringNl(ingredient['measurement'])}",
                                         style: const TextStyle(fontSize: 16),
                                         overflow: TextOverflow.ellipsis,
                                         softWrap: false,
@@ -359,38 +385,40 @@ class _GroceryListState extends State<GroceryList> {
                 }),
               ],
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  IconButton(
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) {
-                          return DialogInputGrocery(
-                              onAdd: (name, quantity, measurement) {
-                            final newItem = ItemQuantity(
-                              itemQuantityId: '',
-                              quantity: quantity,
-                              groceryListItem: GroceryListItem(
-                                ingredientName: name,
-                                measurement: measurement,
-                                ingredientQuantities: [],
-                              ),
-                            );
-                            addItem(newItem);
-                          });
-                        },
-                      );
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              IconButton(
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) {
+                      return DialogInputGrocery(
+                          onAdd: (name, quantity, measurement) {
+                        final newItem = ItemQuantity(
+                          itemQuantityId: '',
+                          quantity: quantity,
+                          groceryListItem: GroceryListItem(
+                            ingredientName: name,
+                            measurement: measurement,
+                            ingredientQuantities: [],
+                          ),
+                        );
+                        addItem(newItem);
+                      });
                     },
-                    icon: const Icon(Icons.add_box, size: 50),
-                  )
-                ],
-              ),
-            ),
-          ],
+                  );
+                },
+                icon: const Icon(Icons.add_box, size: 50),
+              )
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
