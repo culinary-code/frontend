@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:frontend/services/keycloak_service_rework.dart';
+import 'package:frontend/services/keycloak_service.dart';
 import 'package:frontend/state/api_selection_provider.dart';
 import 'package:http/http.dart' as http;
 

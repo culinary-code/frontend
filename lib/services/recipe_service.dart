@@ -11,6 +11,10 @@ class RecipeService {
     final apiClient = await ApiClient.create();
     final response = await apiClient.authorizedGet(searchEndpoint);
 
+    if (response.statusCode == 404) {
+      return [];
+    } else
+
     if (response.statusCode != 200) {
       throw FormatException('Failed to load recipes: ${response.body}');
     }
