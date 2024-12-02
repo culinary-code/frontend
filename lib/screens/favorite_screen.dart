@@ -3,20 +3,21 @@ import 'package:frontend/models/recipes/recipe.dart';
 import 'package:frontend/services/favorite_recipes_service.dart';
 import 'package:frontend/widgets/recipe_card.dart';
 
-
 class FavoriteScreen extends StatelessWidget {
   const FavoriteScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return  Scaffold(
-      appBar: AppBar(title: const Text("Jouw Favoriete Recepten!", style: TextStyle(fontWeight: FontWeight.bold),),),
-        body: Column(
-          children: [
-            SizedBox(height: 16),
-            Expanded(child: FavoriteRecipes())
-          ],
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          "Jouw Favoriete Recepten!",
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
+      ),
+      body: Column(
+        children: [SizedBox(height: 16), Expanded(child: FavoriteRecipes())],
+      ),
     );
   }
 }
@@ -61,7 +62,11 @@ class _FavoriteRecipesState extends State<FavoriteRecipes> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.favorite_border, size: 60, color: Colors.red,),
+                  Icon(
+                    Icons.favorite_border,
+                    size: 60,
+                    color: Colors.red,
+                  ),
                   SizedBox(height: 20),
                   Text(
                     'Je hebt nog geen favoriete recepten!',
