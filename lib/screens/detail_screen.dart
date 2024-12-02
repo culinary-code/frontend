@@ -13,6 +13,7 @@ import 'package:frontend/screens/add_to_mealplanner_screen.dart';
 import 'package:frontend/services/recipe_service.dart';
 import 'package:frontend/services/review_service.dart';
 import 'package:expandable_text/expandable_text.dart';
+import 'package:frontend/widgets/favorite/favorite_toggle_button.dart';
 
 
 class DetailScreen extends StatelessWidget {
@@ -178,8 +179,55 @@ class _DetailOverviewState extends State<DetailOverview> {
   }
 }
 
+class RecipeHeader extends StatelessWidget {
+  final bool isFavorited;
+  final VoidCallback onFavoriteToggle;
+  final Recipe recipe;
+
+  const RecipeHeader(
+      {super.key,
+        required this.isFavorited,
+        required this.onFavoriteToggle,
+        required this.recipe});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Image.network(
+            recipe.imagePath,
+            fit: BoxFit.cover,
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                  child: Align(
+                    alignment: Alignment.center,
+                    child: Text(
+                      recipe.recipeName,
+                      style: const TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  )),
+              const SizedBox(width: 1),
+              FavoriteToggleButton(recipe: recipe, onFavoriteToggle: onFavoriteToggle)
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+
 // Hierin worden de titel en foto van het gerecht opgeslagen.
-class RecipeHeader extends StatefulWidget {
+/*class RecipeHeader extends StatefulWidget {
   final bool isFavorited;
   final VoidCallback onFavoriteToggle;
   final Recipe recipe;
@@ -234,7 +282,7 @@ class _RecipeHeaderState extends State<RecipeHeader> {
       ),
     );
   }
-}
+}*/
 
 // Dit is een Grid die enkele kenmerken van het gerecht tonen.
 class RecipeDetailsGrid extends StatelessWidget {

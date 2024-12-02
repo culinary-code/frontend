@@ -38,10 +38,25 @@ class _FavoriteRecipesState extends State<FavoriteRecipes> {
     super.initState();
   }
 
-  void _toggleFavorite(Recipe recipe) {
-    setState(() {
-      recipe.isFavorited = !recipe.isFavorited;
-    });
+  void _toggleFavorite(Recipe recipe) async {
+    final service = FavoriteRecipeService();
+
+    if (!recipe.isFavorited) {
+      final success = await service.addFavoriteRecipe(recipe.recipeId);
+      if (success) {
+        setState(() {
+          recipe.isFavorited = true;
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to add recipe to favorites')),
+        );
+      }
+    } else {
+      setState(() {
+        recipe.isFavorited = false;
+      });
+    }
   }
 
   @override
@@ -85,7 +100,7 @@ class _FavoriteRecipesState extends State<FavoriteRecipes> {
                   recipeId: recipe.recipeId,
                   recipeName: recipe.recipeName,
                   score: recipe.averageRating,
-                  isFavorited: recipe.isFavorited,
+                  recipe: recipe,
                   onFavoriteToggle: () => _toggleFavorite(recipe),
                   imageUrl: recipe.imagePath,
                 );

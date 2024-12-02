@@ -22,4 +22,19 @@ class FavoriteRecipeService {
       return [];
     }
   }
+
+  Future<bool> addFavoriteRecipe(String recipeId) async {
+    final endpoint = 'api/Account/addFavoriteRecipe';
+    final apiClient = await ApiClient.create();
+
+    final Map<String, dynamic> body = {'recipeId': recipeId};
+
+    final response = await apiClient.authorizedPost(endpoint, body);
+
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      return false;
+    }
+  }
 }

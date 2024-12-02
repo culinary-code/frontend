@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
+import '../models/recipes/recipe.dart';
 import '../screens/detail_screen.dart';
+import 'favorite/favorite_toggle_button.dart';
 
 class RecipeCard extends StatelessWidget {
   final String recipeId;
   final String recipeName;
   final double score;
-  final bool isFavorited;
+  final Recipe recipe;
   final VoidCallback onFavoriteToggle;
   final String imageUrl;
 
@@ -16,7 +18,7 @@ class RecipeCard extends StatelessWidget {
       required this.recipeId,
       required this.recipeName,
       required this.score,
-      required this.isFavorited,
+      required this.recipe,
       required this.onFavoriteToggle,
       required this.imageUrl});
 
@@ -88,12 +90,9 @@ class RecipeCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 4),
-                    GestureDetector(
-                      onTap: onFavoriteToggle,
-                      child: Icon(
-                          isFavorited ? Icons.favorite : Icons.favorite_border,
-                          size: 25,
-                          color: isFavorited ? Colors.red : Colors.blueGrey),
+                    FavoriteToggleButton(
+                      recipe: recipe,
+                      onFavoriteToggle: () {},
                     ),
                   ],
                 ),

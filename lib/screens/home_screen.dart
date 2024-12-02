@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:frontend/models/recipes/recipe.dart';
 import 'package:frontend/screens/create_recipe_screen.dart';
+import 'package:frontend/services/favorite_recipes_service.dart';
 import 'package:frontend/state/recipe_filter_options_provider.dart';
 import 'package:frontend/widgets/filter/filter_button.dart';
 import 'package:frontend/widgets/filter/filter_option_chip.dart';
@@ -32,9 +33,14 @@ class _RecipeOverviewState extends State<RecipeOverview> {
   late TextEditingController _searchController = TextEditingController();
   Timer? _debounce;
 
+  final FavoriteRecipeService favoriteRecipeService = FavoriteRecipeService();
+  late List<Recipe> favoriteRecipes = [];
+
   @override
   void initState() {
     super.initState();
+
+    _recipesFuture = Future.value([]);
 
     // Initialize TextEditingController with the current value of recipenamefilter
     final filterProvider =
@@ -45,6 +51,7 @@ class _RecipeOverviewState extends State<RecipeOverview> {
     _searchController.addListener(() {
       filterProvider.recipeName = _searchController.text;
     });
+    _fetchRecipes();
   }
 
   @override
@@ -69,13 +76,41 @@ class _RecipeOverviewState extends State<RecipeOverview> {
     });
   }
 
+  Future<void> _handleFavoriteToggle(Recipe recipe) async {
+    final result = await favoriteRecipeService.addFavoriteRecipe(recipe.recipeId);
+
+    if (result) {
+      setState(() {
+        // Toggle the favorite status of the recipe
+        recipe.isFavorited = !recipe.isFavorited;
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to add recipe to favorites')),
+      );
+    }
+  }
+
+  // Fetch favorite recipes and update the state
+  Future<void> _fetchRecipes() async {
+    final favoriteRecipesList = await favoriteRecipeService.getFavoriteRecipes();
+    final filterProvider = Provider.of<RecipeFilterOptionsProvider>(context, listen: false);
+
+    final filteredRecipes = await filterProvider.recipes;
+
+    for (var recipe in filteredRecipes) {
+      recipe.isFavorited =
+          favoriteRecipesList.any((favorite) => favorite.recipeId == recipe.recipeId);
+    }
+
+    setState(() {
+      favoriteRecipes = favoriteRecipesList;
+      _recipesFuture = Future.value(filteredRecipes);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    final filterProvider =
-        Provider.of<RecipeFilterOptionsProvider>(context, listen: true);
-
-    _recipesFuture = filterProvider.recipes;
-
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 8.0),
       child: Column(
@@ -215,13 +250,10 @@ class _RecipeOverviewState extends State<RecipeOverview> {
                                 recipeId: recipes[index].recipeId,
                                 recipeName: recipes[index].recipeName,
                                 score: recipes[index].averageRating,
-                                isFavorited: recipes[index].isFavorited,
+                                recipe: recipes[index],
                                 imageUrl: recipes[index].imagePath,
                                 onFavoriteToggle: () {
-                                  setState(() {
-                                    recipes[index].isFavorited =
-                                        !recipes[index].isFavorited;
-                                  });
+                                  _handleFavoriteToggle(recipes[index]);
                                 },
                               );
                             }
@@ -239,10 +271,4 @@ class _RecipeOverviewState extends State<RecipeOverview> {
       ),
     );
   }
-
-
 }
-
-
-
-
