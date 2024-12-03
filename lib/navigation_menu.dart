@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/screens/account_screen.dart';
 import 'package:frontend/screens/favorite_screen.dart';
-import 'package:frontend/screens/grocery_screen.dart';
+import 'package:frontend/screens/grocery_screen_new.dart';
 import 'package:frontend/screens/home_screen.dart';
 import 'package:frontend/screens/weekoverview_screen.dart';
 

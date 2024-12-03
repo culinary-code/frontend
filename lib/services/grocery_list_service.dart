@@ -17,10 +17,6 @@ class GroceryListService {
       final apiClient = await ApiClient.create();
       final response = await apiClient.authorizedGet('api/Grocery/account/grocery-list');
 
-      if (response == null) {
-        return null;
-      }
-
       if (response.statusCode == 200) {
         Map<String, dynamic> responseBody = json.decode(response.body);
 
@@ -35,11 +31,10 @@ class GroceryListService {
     }
   }
 
-  Future<Map<String, dynamic>?> fetchGroceryListById(
-      String groceryListId) async {
+  Future<Map<String, dynamic>?> fetchGroceryListByAccountId() async {
     try {
       final apiClient = await ApiClient.create();
-      final response = await apiClient.authorizedGet('api/Grocery/$groceryListId');
+      final response = await apiClient.authorizedGet('api/Grocery/grocery-list');
 
       if (response.statusCode == 200) {
         return json.decode(response.body);
@@ -51,17 +46,19 @@ class GroceryListService {
   }
 
   Future<void> addItemToGroceryList(
-      String groceryListId, ItemQuantity item) async {
+      ItemQuantity item) async {
     try {
       final apiClient = await ApiClient.create();
       final response = await apiClient.authorizedPut(
-        'api/Grocery/$groceryListId/add-item',
+        'api/Grocery/grocery-list/add-item',
         {
+          "itemQuantityId": item.itemQuantityId,
           "quantity": item.quantity,
-          "ingredient": {
-            "ingredientName": item.groceryListItem.ingredientName,
+          "groceryItem": {
+            "groceryItemName": item.groceryListItem.ingredientName,
             "measurement": item.groceryListItem.measurement.index,
           },
+          "isIngredient" : item.isIngredient,
         },
       );
 
@@ -74,12 +71,19 @@ class GroceryListService {
     }
   }
 
-  Future<void> deleteItemFromGroceryList(
-      String groceryListId, String itemQuantityId) async {
+  Future<void> deleteItemFromGroceryList(ItemQuantity item) async {
     try {
       final apiClient = await ApiClient.create();
-      final response = await apiClient.authorizedDelete(
-        'api/Grocery/$groceryListId/items/$itemQuantityId',
+      final response = await apiClient.authorizedDeleteWithBody(
+        'api/Grocery/grocery-list/items', {
+        "itemQuantityId": item.itemQuantityId,
+        "quantity": item.quantity,
+        "groceryItem": {
+          "groceryItemName": item.groceryListItem.ingredientName,
+          "measurement": item.groceryListItem.measurement.index,
+        },
+        "isIngredient" : item.isIngredient,
+      },
       );
 
       if (response.statusCode != 200) {
