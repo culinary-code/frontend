@@ -3,6 +3,8 @@ import 'package:frontend/models/meal_planning/grocery_list_item.dart';
 import 'package:frontend/models/recipes/ingredients/item_quantity.dart';
 import 'package:frontend/models/recipes/ingredients/measurement_type.dart';
 import 'package:frontend/services/grocery_list_service.dart';
+import 'package:frontend/state/grocery_list_provider.dart';
+import 'package:provider/provider.dart';
 
 class GroceryScreen extends StatelessWidget {
   const GroceryScreen({super.key});
@@ -46,143 +48,27 @@ class _GroceryListState extends State<GroceryList> {
   @override
   void initState() {
     super.initState();
-    _loadGroceryList();
-  }
-
-  Future<void> _loadGroceryList() async {
-    var response = await groceryListService.fetchGroceryListByAccountId();
-
-    if (response != null) {
-      var ingredients = response['ingredients'];
-      var items = response['items'];
-
-      List<Map<String, dynamic>> parsedIngredientData =
-          ingredients.map<Map<String, dynamic>>((ingredient) {
-        var measurement = ingredient['ingredient']['measurement'];
-
-        // Convert measurement integer to MeasurementType enum
-        MeasurementType measurementType;
-        if (measurement is int) {
-          // Map the integer value to the corresponding MeasurementType
-          measurementType = intToMeasurementType(measurement);
-        } else {
-          measurementType = MeasurementType.kilogram;
-        }
-        return {
-          'ingredientQuantityId': ingredient['ingredientQuantityId'],
-          'ingredientName': ingredient['ingredient']['ingredientName'],
-          'quantity': ingredient['quantity'],
-          'measurement': measurementType,
-          'recipeName': ingredient['recipeName']?.isEmpty ?? true
-              ? "Extra"
-              : ingredient['recipeName'],
-          'isIngredient': true
-        };
-      }).toList();
-
-      List<Map<String, dynamic>> parsedDataItems =
-          items.map<Map<String, dynamic>>((item) {
-        var measurement = item['groceryItem']['measurement'];
-
-        MeasurementType measurementType;
-        if (measurement is int) {
-          measurementType = intToMeasurementType(measurement);
-        } else {
-          measurementType = MeasurementType.kilogram;
-        }
-        return {
-          'ingredientQuantityId': item['itemQuantityId'],
-          'ingredientName': item['groceryItem']['groceryItemName'],
-          'quantity': item['quantity'],
-          'measurement': measurementType,
-          'recipeName': "Extra",
-          'isIngredient': false
-        };
-      }).toList();
-
-      // combine both lists
-      setState(() {
-        ingredientData = parsedIngredientData;
-        ingredientData.addAll(parsedDataItems);
-      });
-
-      compileIngredientData();
-    }
-  }
-
-  void compileIngredientData() {
-    // Step 1: Group by ingredientName and measurement
-    Map<String, List<Map<String, dynamic>>> grouped = {};
-    for (var ingredient in ingredientData) {
-      String key =
-          '${ingredient['ingredientName']}_${ingredient['measurement'].index.toString()}'; // Unique key for grouping
-      grouped.putIfAbsent(key, () => []).add(ingredient);
-    }
-
-    // Step 2: Calculate total quantities and format the output
-    List<Map<String, dynamic>> transformed = grouped.entries.map((entry) {
-      String key = entry.key;
-      List<Map<String, dynamic>> items = entry.value;
-
-      // Split the key back into ingredientName and measurement
-      List<String> splitKey = key.split('_');
-      String ingredientName = splitKey[0];
-      String measurement = splitKey[1];
-      MeasurementType measurementType =
-          intToMeasurementType(int.parse(measurement));
-      num totalQuantity = items.fold(0, (sum, item) => sum + item['quantity']);
-
-      // Sort the details: "Extra" should always be last
-      List<Map<String, dynamic>> sortedDetails = items.map((item) {
-        return {
-          'ingredientQuantityId': item['ingredientQuantityId'],
-          'recipeName': item['recipeName'],
-          'quantity': item['quantity'],
-          'isIngredient': item['isIngredient']
-        };
-      }).toList()
-        ..sort((a, b) {
-          if (a['recipeName'] == "Extra" && b['recipeName'] != "Extra") {
-            return 1; // "Extra" goes after other items
-          } else if (a['recipeName'] != "Extra" && b['recipeName'] == "Extra") {
-            return -1; // Other items go before "Extra"
-          } else {
-            return 0; // Keep the relative order otherwise
-          }
-        });
-
-      return {
-        'ingredientName': ingredientName,
-        'measurement': measurementType,
-        'totalQuantity': totalQuantity,
-        'details': sortedDetails,
-      };
-    }).toList();
-
-    // Step 3: Sort ingredients alphabetically by ingredientName
-    transformed
-        .sort((a, b) => a['ingredientName'].compareTo(b['ingredientName']));
-
-    // Output result
-    setState(() {
-      data = transformed;
-    });
   }
 
   void addItem(ItemQuantity newItem) async {
-    final existingItem = ingredientData.firstWhere(
+    final groceryListProvider =
+        Provider.of<GroceryListProvider>(context, listen: false);
+    final existingItem = groceryListProvider.ingredientData.firstWhere(
       (item) =>
           item['ingredientName'].toString().toLowerCase() ==
               newItem.groceryListItem.ingredientName.toLowerCase() &&
-          item['recipeName'] == "Extra",
+          item['recipeName'] == "Extra" &&
+          item['measurement'] == newItem.groceryListItem.measurement,
       orElse: () => {},
     );
 
     if (existingItem.isNotEmpty) {
-      final existingItem = ingredientData.firstWhere((item) =>
-          item['ingredientName'].toString().toLowerCase() ==
-              newItem.groceryListItem.ingredientName.toLowerCase() &&
-          item['recipeName'] == "Extra");
+      final existingItem = groceryListProvider.ingredientData.firstWhere(
+          (item) =>
+              item['ingredientName'].toString().toLowerCase() ==
+                  newItem.groceryListItem.ingredientName.toLowerCase() &&
+              item['recipeName'] == "Extra" &&
+              item['measurement'] == newItem.groceryListItem.measurement);
 
       // if the dialog is not open for editing an already existing item, open it
       if (!isEditDialogOpen) {
@@ -194,7 +80,7 @@ class _GroceryListState extends State<GroceryList> {
                   initialQuantity: existingItem['quantity'],
                   ingredientName: existingItem['ingredientName'],
                   measurementType: existingItem['measurement'],
-                  onQuantityUpdated: (updatedQuantity) {
+                  onQuantityUpdated: (updatedQuantity) async {
                     setState(() {
                       final updatedItem = ItemQuantity(
                           itemQuantityId: existingItem['ingredientQuantityId'],
@@ -203,8 +89,8 @@ class _GroceryListState extends State<GroceryList> {
                           isIngredient: existingItem['isIngredient']);
 
                       groceryListService.addItemToGroceryList(updatedItem);
-                      _loadGroceryList();
                     });
+                    await groceryListProvider.getGroceryListFromDatabase();
                   },
                 );
               });
@@ -216,12 +102,12 @@ class _GroceryListState extends State<GroceryList> {
             quantity: newItem.quantity,
             groceryListItem: newItem.groceryListItem,
             isIngredient: existingItem['isIngredient']));
-        await _loadGroceryList();
+        await groceryListProvider.getGroceryListFromDatabase();
       }
       // if the item was not found, call the function to add it
     } else {
       await groceryListService.addItemToGroceryList(newItem);
-      await _loadGroceryList();
+      await groceryListProvider.getGroceryListFromDatabase();
     }
   }
 
@@ -231,6 +117,9 @@ class _GroceryListState extends State<GroceryList> {
 
   @override
   Widget build(BuildContext context) {
+    final groceryListProvider =
+        Provider.of<GroceryListProvider>(context, listen: true);
+    data = groceryListProvider.data;
     return Column(
       children: [
         Expanded(
@@ -270,7 +159,7 @@ class _GroceryListState extends State<GroceryList> {
                   );
 
                   // Delay deletion to allow undo
-                  Future.delayed(Duration(milliseconds: 3000), () {
+                  Future.delayed(Duration(milliseconds: 3000), () async {
                     if (isDeleting) {
                       for (var detail in dismissedIngredient['details']) {
                         deleteItem(
@@ -287,6 +176,7 @@ class _GroceryListState extends State<GroceryList> {
                           ),
                         );
                       }
+                      await groceryListProvider.getGroceryListFromDatabase();
                     }
                   });
                 },
@@ -333,40 +223,46 @@ class _GroceryListState extends State<GroceryList> {
                               setState(() {
                                 isEditDialogOpen = true;
                               });
-                              showDialog(
-                                  context: context,
-                                  builder: (BuildContext context) {
-                                    return DialogEditItem(
-                                        initialQuantity: detail['quantity'],
-                                        ingredientName:
-                                            ingredient['ingredientName'],
-                                        measurementType:
-                                            ingredient['measurement'],
-                                        onQuantityUpdated: (updatedQuantity) {
-                                          setState(() {
-                                            detail['quantity'] =
-                                                updatedQuantity;
-                                            final updatedItem = ItemQuantity(
-                                                itemQuantityId: detail[
-                                                    'ingredientQuantityId'],
-                                                quantity: updatedQuantity,
-                                                groceryListItem:
-                                                    GroceryListItem(
-                                                  ingredientName: ingredient[
-                                                      'ingredientName'],
-                                                  measurement:
-                                                      ingredient['measurement'],
-                                                  ingredientQuantities: [],
-                                                ),
-                                                isIngredient:
-                                                    detail['isIngredient']);
-                                            addItem(updatedItem);
+                              Future.delayed(Duration(milliseconds: 10), () {
+                                showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) {
+                                      return DialogEditItem(
+                                          initialQuantity: detail['quantity'],
+                                          ingredientName:
+                                              ingredient['ingredientName'],
+                                          measurementType:
+                                              ingredient['measurement'],
+                                          onQuantityUpdated:
+                                              (updatedQuantity) async {
+                                            setState(() {
+                                              detail['quantity'] =
+                                                  updatedQuantity;
+                                              final updatedItem = ItemQuantity(
+                                                  itemQuantityId: detail[
+                                                      'ingredientQuantityId'],
+                                                  quantity: updatedQuantity,
+                                                  groceryListItem:
+                                                      GroceryListItem(
+                                                    ingredientName: ingredient[
+                                                        'ingredientName'],
+                                                    measurement: ingredient[
+                                                        'measurement'],
+                                                    ingredientQuantities: [],
+                                                  ),
+                                                  isIngredient:
+                                                      detail['isIngredient']);
+                                              addItem(updatedItem);
+                                            });
+                                            await groceryListProvider
+                                                .getGroceryListFromDatabase();
                                           });
-                                        });
-                                  }).then((_) {
-                                Future.delayed(Duration(milliseconds: 100), () {
-                                  setState(() {
-                                    isEditDialogOpen = false;
+                                    }).then((_) {
+                                  Future.delayed(Duration(milliseconds: 100),
+                                      () {
+                                    setState(() {
+                                      isEditDialogOpen = false;
+                                    });
                                   });
                                 });
                               });
