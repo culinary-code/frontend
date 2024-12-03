@@ -45,7 +45,7 @@ class GroceryListService {
     return null;
   }
 
-  Future<void> addItemToGroceryList(
+  Future<bool> addItemToGroceryList(
       ItemQuantity item) async {
     try {
       final apiClient = await ApiClient.create();
@@ -62,12 +62,10 @@ class GroceryListService {
         },
       );
 
-      if (response.statusCode == 200) {
-      } else {
-        return;
-      }
+      return response.statusCode == 200;
+
     } catch (e) {
-      return;
+      return false;
     }
   }
 

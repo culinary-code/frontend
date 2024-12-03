@@ -31,7 +31,7 @@ class GroceryListProvider with ChangeNotifier {
   void compileIngredientData() {
     // Step 1: Group by ingredientName and measurement
     Map<String, List<Map<String, dynamic>>> grouped = {};
-    for (var ingredient in ingredientData) {
+    for (var ingredient in _ingredientData) {
       String key =
           '${ingredient['ingredientName']}_${ingredient['measurement'].index.toString()}'; // Unique key for grouping
       grouped.putIfAbsent(key, () => []).add(ingredient);
@@ -82,7 +82,8 @@ class GroceryListProvider with ChangeNotifier {
         .sort((a, b) => a['ingredientName'].compareTo(b['ingredientName']));
 
     // Output result
-    data = transformed;
+    _data = transformed;
+    notifyListeners();
   }
 
   Future<void> getGroceryListFromDatabase() async {
@@ -138,10 +139,11 @@ class GroceryListProvider with ChangeNotifier {
 
       // combine both lists
 
-      ingredientData = parsedIngredientData;
-      ingredientData.addAll(parsedDataItems);
+      _ingredientData = parsedIngredientData;
+      _ingredientData.addAll(parsedDataItems);
 
       compileIngredientData();
+
     }
   }
 }

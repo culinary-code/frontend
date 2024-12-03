@@ -48,6 +48,9 @@ class _GroceryListState extends State<GroceryList> {
   @override
   void initState() {
     super.initState();
+    final groceryListProvider =
+        Provider.of<GroceryListProvider>(context, listen: false);
+    groceryListProvider.getGroceryListFromDatabase();
   }
 
   void addItem(ItemQuantity newItem) async {
@@ -73,6 +76,7 @@ class _GroceryListState extends State<GroceryList> {
       // if the dialog is not open for editing an already existing item, open it
       if (!isEditDialogOpen) {
         Future.delayed(Duration(milliseconds: 10), () {
+          if (!mounted) return;
           showDialog(
               context: context,
               builder: (BuildContext context) {
@@ -81,15 +85,13 @@ class _GroceryListState extends State<GroceryList> {
                   ingredientName: existingItem['ingredientName'],
                   measurementType: existingItem['measurement'],
                   onQuantityUpdated: (updatedQuantity) async {
-                    setState(() {
-                      final updatedItem = ItemQuantity(
-                          itemQuantityId: existingItem['ingredientQuantityId'],
-                          quantity: updatedQuantity,
-                          groceryListItem: newItem.groceryListItem,
-                          isIngredient: existingItem['isIngredient']);
+                    final updatedItem = ItemQuantity(
+                        itemQuantityId: existingItem['ingredientQuantityId'],
+                        quantity: updatedQuantity,
+                        groceryListItem: newItem.groceryListItem,
+                        isIngredient: existingItem['isIngredient']);
 
-                      groceryListService.addItemToGroceryList(updatedItem);
-                    });
+                    await groceryListService.addItemToGroceryList(updatedItem);
                     await groceryListProvider.getGroceryListFromDatabase();
                   },
                 );
@@ -119,25 +121,24 @@ class _GroceryListState extends State<GroceryList> {
   Widget build(BuildContext context) {
     final groceryListProvider =
         Provider.of<GroceryListProvider>(context, listen: true);
-    data = groceryListProvider.data;
     return Column(
       children: [
         Expanded(
           child: ListView.builder(
-            itemCount: data.length,
+            itemCount: groceryListProvider.data.length,
             itemBuilder: (context, index) {
-              final ingredient = data[index];
+              final ingredient = groceryListProvider.data[index];
               return Dismissible(
-                key: ValueKey(ingredient['ingredientName']),
+                key: ValueKey(ingredient),
                 direction: DismissDirection.endToStart,
                 onDismissed: (direction) {
                   final dismissedIngredient = ingredient;
                   setState(() {
-                    data.removeWhere(
-                      (loopIngredient) =>
-                          loopIngredient['ingredientName'] ==
-                          ingredient['ingredientName'],
-                    );
+                    groceryListProvider.data.removeWhere((loopIngredient) =>
+                        loopIngredient['ingredientName'] ==
+                            ingredient['ingredientName'] &&
+                        loopIngredient['measurement'] ==
+                            ingredient['measurement']);
                     isDeleting = true;
                   });
 
@@ -151,7 +152,7 @@ class _GroceryListState extends State<GroceryList> {
                         onPressed: () {
                           setState(() {
                             isDeleting = false;
-                            data.add(dismissedIngredient);
+                            groceryListProvider.data.add(dismissedIngredient);
                           });
                         },
                       ),
@@ -210,7 +211,11 @@ class _GroceryListState extends State<GroceryList> {
                       ),
                       SizedBox(width: 10),
                       Text(
-                        measurementTypeToStringNl(ingredient['measurement']),
+                        (ingredient['totalQuantity'] > 1)
+                            ? measurementTypeToStringMultipleNl(
+                                ingredient['measurement'])
+                            : measurementTypeToStringNl(
+                                ingredient['measurement']),
                         textAlign: TextAlign.right,
                         style: TextStyle(color: Colors.grey),
                       ),
@@ -275,9 +280,12 @@ class _GroceryListState extends State<GroceryList> {
                               final dismissedDetail = detail;
                               final dismissedIngredient = ingredient;
                               setState(() {
-                                for (var loopIngredient in data) {
+                                for (var loopIngredient
+                                    in groceryListProvider.data) {
                                   if (loopIngredient['ingredientName'] ==
-                                      ingredient['ingredientName']) {
+                                          ingredient['ingredientName'] &&
+                                      loopIngredient['measurement'] ==
+                                          ingredient['measurement']) {
                                     loopIngredient['details'].removeWhere(
                                         (dismissedDetail) =>
                                             dismissedDetail[
@@ -324,6 +332,8 @@ class _GroceryListState extends State<GroceryList> {
                                             ingredientQuantities: []),
                                         isIngredient: detail['isIngredient']));
                                   }
+                                  groceryListProvider
+                                      .getGroceryListFromDatabase();
                                 });
                               });
                             },
@@ -361,8 +371,11 @@ class _GroceryListState extends State<GroceryList> {
                                   ),
                                   SizedBox(width: 10),
                                   Text(
-                                    measurementTypeToStringNl(
-                                        ingredient['measurement']),
+                                    (detail['quantity'] > 1)
+                                        ? measurementTypeToStringMultipleNl(
+                                            ingredient['measurement'])
+                                        : measurementTypeToStringNl(
+                                            ingredient['measurement']),
                                     textAlign: TextAlign.right,
                                     style: TextStyle(color: Colors.grey),
                                   ),
