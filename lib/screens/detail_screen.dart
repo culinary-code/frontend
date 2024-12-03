@@ -15,6 +15,8 @@ import 'package:frontend/services/review_service.dart';
 import 'package:expandable_text/expandable_text.dart';
 import 'package:frontend/widgets/favorite/favorite_toggle_button.dart';
 
+import '../services/favorite_recipes_service.dart';
+
 
 class DetailScreen extends StatelessWidget {
   final String recipeId;
@@ -59,10 +61,34 @@ class _DetailOverviewState extends State<DetailOverview> {
   late final int cookingTime = recipe.cookingTime;
   late final RecipeType recipeType = recipe.recipeType;
   late final Difficulty difficulty = recipe.difficulty;
+  late bool isFavorited = recipe.isFavorited;
   late var reviews = ReviewService().getReviewsByRecipeId(recipe.recipeId);
   Timer? _debounce;
 
-  bool isFavorited = false;
+
+  final FavoriteRecipeService favoriteRecipeService = FavoriteRecipeService();
+  late List<Recipe> favoriteRecipes = [];
+
+  Future<List<Recipe>> getFavoriteRecipes() async {
+    favoriteRecipes = await favoriteRecipeService.getFavoriteRecipes();
+    return favoriteRecipes;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    searchRecipeInFavorite();
+  }
+
+  Future<void> searchRecipeInFavorite() async {
+    List<Recipe> recipes = await favoriteRecipeService.getFavoriteRecipes();
+
+    setState(() {
+      favoriteRecipes = recipes;
+      isFavorited = favoriteRecipes.any((favRecipe) => favRecipe.recipeId == recipe.recipeId);
+      recipe.isFavorited = isFavorited;
+    });
+  }
 
   void toggleFavorite() {
     setState(() {
@@ -190,6 +216,7 @@ class RecipeHeader extends StatelessWidget {
         required this.onFavoriteToggle,
         required this.recipe});
 
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -216,7 +243,7 @@ class RecipeHeader extends StatelessWidget {
                     ),
                   )),
               const SizedBox(width: 1),
-              FavoriteToggleButton(recipe: recipe, onFavoriteToggle: onFavoriteToggle)
+              FavoriteToggleButton(recipe: recipe)
             ],
           ),
         ],
@@ -224,65 +251,6 @@ class RecipeHeader extends StatelessWidget {
     );
   }
 }
-
-
-// Hierin worden de titel en foto van het gerecht opgeslagen.
-/*class RecipeHeader extends StatefulWidget {
-  final bool isFavorited;
-  final VoidCallback onFavoriteToggle;
-  final Recipe recipe;
-
-  const RecipeHeader(
-      {super.key,
-      required this.isFavorited,
-      required this.onFavoriteToggle,
-      required this.recipe});
-
-  @override
-  State<RecipeHeader> createState() => _RecipeHeaderState();
-}
-
-class _RecipeHeaderState extends State<RecipeHeader> {
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Image.network(
-            widget.recipe.imagePath,
-            fit: BoxFit.cover,
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                  child: Align(
-                alignment: Alignment.center,
-                child: Text(
-                  widget.recipe.recipeName,
-                  style: const TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              )),
-              const SizedBox(width: 1),
-              GestureDetector(
-                onTap: widget.onFavoriteToggle,
-                child: Icon(
-                    widget.isFavorited ? Icons.favorite : Icons.favorite_border,
-                    size: 30,
-                    color: widget.isFavorited ? Colors.red : Colors.blueGrey),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}*/
 
 // Dit is een Grid die enkele kenmerken van het gerecht tonen.
 class RecipeDetailsGrid extends StatelessWidget {

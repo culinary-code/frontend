@@ -38,27 +38,6 @@ class _FavoriteRecipesState extends State<FavoriteRecipes> {
     super.initState();
   }
 
-  void _toggleFavorite(Recipe recipe) async {
-    final service = FavoriteRecipeService();
-
-    if (!recipe.isFavorited) {
-      final success = await service.addFavoriteRecipe(recipe.recipeId);
-      if (success) {
-        setState(() {
-          recipe.isFavorited = true;
-        });
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to add recipe to favorites')),
-        );
-      }
-    } else {
-      setState(() {
-        recipe.isFavorited = false;
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -101,7 +80,6 @@ class _FavoriteRecipesState extends State<FavoriteRecipes> {
                   recipeName: recipe.recipeName,
                   score: recipe.averageRating,
                   recipe: recipe,
-                  onFavoriteToggle: () => _toggleFavorite(recipe),
                   imageUrl: recipe.imagePath,
                 );
               },

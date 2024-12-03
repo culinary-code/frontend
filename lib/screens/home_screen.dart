@@ -76,21 +76,6 @@ class _RecipeOverviewState extends State<RecipeOverview> {
     });
   }
 
-  Future<void> _handleFavoriteToggle(Recipe recipe) async {
-    final result = await favoriteRecipeService.addFavoriteRecipe(recipe.recipeId);
-
-    if (result) {
-      setState(() {
-        // Toggle the favorite status of the recipe
-        recipe.isFavorited = !recipe.isFavorited;
-      });
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to add recipe to favorites')),
-      );
-    }
-  }
-
   // Fetch favorite recipes and update the state
   Future<void> _fetchRecipes() async {
     final favoriteRecipesList = await favoriteRecipeService.getFavoriteRecipes();
@@ -215,7 +200,7 @@ class _RecipeOverviewState extends State<RecipeOverview> {
                       // Sliver that contains the ListView
                       SliverList(
                         delegate: SliverChildBuilderDelegate(
-                          (context, index) {
+                              (context, index) {
                             if (index == recipes.length) {
                               return Column(
                                 children: [
@@ -233,8 +218,7 @@ class _RecipeOverviewState extends State<RecipeOverview> {
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                          builder: (context) =>
-                                              CreateRecipeScreen(
+                                          builder: (context) => CreateRecipeScreen(
                                             preloadedRecipeName: query,
                                           ),
                                         ),
@@ -252,13 +236,10 @@ class _RecipeOverviewState extends State<RecipeOverview> {
                                 score: recipes[index].averageRating,
                                 recipe: recipes[index],
                                 imageUrl: recipes[index].imagePath,
-                                onFavoriteToggle: () {
-                                  _handleFavoriteToggle(recipes[index]);
-                                },
                               );
                             }
                           },
-                          childCount: recipes.length + 1,
+                          childCount: recipes.length,
                         ),
                       ),
                     ],
