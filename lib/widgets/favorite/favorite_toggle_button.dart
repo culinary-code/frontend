@@ -24,7 +24,8 @@ class FavoriteToggleButton extends StatelessWidget {
         );
       }
     } else {
-      // TODO: Implementatie remove
+      // TODO: Implementatie remove ISSUE MET RECIPE ID
+      await favoriteRecipeService.deleteFavoriteRecipe(recipe.recipeId);
       recipe.isFavorited = false;
     }
 

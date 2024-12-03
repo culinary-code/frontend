@@ -37,4 +37,20 @@ class FavoriteRecipeService {
       return false;
     }
   }
+
+  Future<void> deleteFavoriteRecipe(String recipeId) async {
+    try {
+      final endpoint = 'api/Account/deleteFavoriteRecipe/$recipeId';
+      final apiClient = await ApiClient.create();
+
+      final response = await apiClient.authorizedDelete(endpoint);
+
+      if (response.statusCode != 200) {
+        throw Exception(
+            'Error deleting favorite recipe: ${response.statusCode}, ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Error deleting favorite recipe: $e');
+    }
+  }
 }
