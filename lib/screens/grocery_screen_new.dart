@@ -238,173 +238,253 @@ class _GroceryListState extends State<GroceryList> {
             itemCount: data.length,
             itemBuilder: (context, index) {
               final ingredient = data[index];
-              return ExpansionTile(
-                title: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        ingredient['ingredientName'],
-                        textAlign: TextAlign.left,
-                        style: TextStyle(fontWeight: FontWeight.bold),
+              return Dismissible(
+                key: ValueKey(ingredient['ingredientName']),
+                direction: DismissDirection.endToStart,
+                onDismissed: (direction) {
+                  final dismissedIngredient = ingredient;
+                  setState(() {
+                    data.removeWhere(
+                      (loopIngredient) =>
+                          loopIngredient['ingredientName'] ==
+                          ingredient['ingredientName'],
+                    );
+                    isDeleting = true;
+                  });
+
+                  // Show Snackbar for undo option
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content:
+                          Text('${ingredient['ingredientName']} is verwijderd'),
+                      action: SnackBarAction(
+                        label: "Ongedaan maken",
+                        onPressed: () {
+                          setState(() {
+                            isDeleting = false;
+                            data.add(dismissedIngredient);
+                          });
+                        },
                       ),
                     ),
-                    Text(
-                      ingredient['totalQuantity'].toString(),
-                      textAlign: TextAlign.right,
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    SizedBox(width: 10),
-                    Text(
-                      measurementTypeToStringNl(ingredient['measurement']),
-                      textAlign: TextAlign.right,
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                  ],
+                  );
+
+                  // Delay deletion to allow undo
+                  Future.delayed(Duration(milliseconds: 3000), () {
+                    if (isDeleting) {
+                      for (var detail in dismissedIngredient['details']) {
+                        deleteItem(
+                          ItemQuantity(
+                            itemQuantityId: detail['ingredientQuantityId'],
+                            quantity: detail['quantity'],
+                            groceryListItem: GroceryListItem(
+                              ingredientName:
+                                  dismissedIngredient['ingredientName'],
+                              measurement: dismissedIngredient['measurement'],
+                              ingredientQuantities: [],
+                            ),
+                            isIngredient: detail['isIngredient'],
+                          ),
+                        );
+                      }
+                    }
+                  });
+                },
+                background: Container(
+                  color: Colors.red,
+                  alignment: Alignment.centerRight,
+                  padding: EdgeInsets.only(right: 20),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Icon(Icons.keyboard_arrow_left,
+                          color: Colors.white, size: 30),
+                      Icon(Icons.delete, color: Colors.white, size: 30),
+                    ],
+                  ),
                 ),
-                children: ingredient['details']
-                    .map<Widget>((detail) => GestureDetector(
-                        onTap: () {
-                          if (!isEditDialogOpen) {
-                            setState(() {
-                              isEditDialogOpen = true;
-                            });
-                            showDialog(
-                                context: context,
-                                builder: (BuildContext context) {
-                                  return DialogEditItem(
-                                      initialQuantity: detail['quantity'],
-                                      ingredientName:
-                                          ingredient['ingredientName'],
-                                      measurementType:
-                                          ingredient['measurement'],
-                                      onQuantityUpdated: (updatedQuantity) {
-                                        setState(() {
-                                          detail['quantity'] = updatedQuantity;
-                                          final updatedItem = ItemQuantity(
-                                              itemQuantityId: detail[
-                                                  'ingredientQuantityId'],
-                                              quantity: updatedQuantity,
-                                              groceryListItem: GroceryListItem(
-                                                ingredientName: ingredient[
-                                                    'ingredientName'],
-                                                measurement:
-                                                    ingredient['measurement'],
-                                                ingredientQuantities: [],
-                                              ),
-                                              isIngredient:
-                                                  detail['isIngredient']);
-                                          addItem(updatedItem);
+                child: ExpansionTile(
+                  title: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          ingredient['ingredientName'],
+                          textAlign: TextAlign.left,
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      Text(
+                        ingredient['totalQuantity'].toString(),
+                        textAlign: TextAlign.right,
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(width: 10),
+                      Text(
+                        measurementTypeToStringNl(ingredient['measurement']),
+                        textAlign: TextAlign.right,
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                  children: ingredient['details']
+                      .map<Widget>((detail) => GestureDetector(
+                          onTap: () {
+                            if (!isEditDialogOpen) {
+                              setState(() {
+                                isEditDialogOpen = true;
+                              });
+                              showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return DialogEditItem(
+                                        initialQuantity: detail['quantity'],
+                                        ingredientName:
+                                            ingredient['ingredientName'],
+                                        measurementType:
+                                            ingredient['measurement'],
+                                        onQuantityUpdated: (updatedQuantity) {
+                                          setState(() {
+                                            detail['quantity'] =
+                                                updatedQuantity;
+                                            final updatedItem = ItemQuantity(
+                                                itemQuantityId: detail[
+                                                    'ingredientQuantityId'],
+                                                quantity: updatedQuantity,
+                                                groceryListItem:
+                                                    GroceryListItem(
+                                                  ingredientName: ingredient[
+                                                      'ingredientName'],
+                                                  measurement:
+                                                      ingredient['measurement'],
+                                                  ingredientQuantities: [],
+                                                ),
+                                                isIngredient:
+                                                    detail['isIngredient']);
+                                            addItem(updatedItem);
+                                          });
                                         });
-                                      });
-                                }).then((_) {
-                              Future.delayed(Duration(milliseconds: 100), () {
-                                setState(() {
-                                  isEditDialogOpen = false;
+                                  }).then((_) {
+                                Future.delayed(Duration(milliseconds: 100), () {
+                                  setState(() {
+                                    isEditDialogOpen = false;
+                                  });
                                 });
                               });
-                            });
-                          }
-                        },
-                        child: Dismissible(
-                          key: ValueKey(detail),
-                          direction: DismissDirection.endToStart,
-                          onDismissed: (direction) {
-                            final dismissedDetail = detail;
-                            final dismissedIngredient = ingredient;
-                            setState(() {
-                              for (var loopIngredient in data) {
-                                if (loopIngredient['ingredientName'] ==
-                                    ingredient['ingredientName']) {
-                                  loopIngredient['details'].removeWhere(
-                                      (dismissedDetail) =>
-                                          dismissedDetail[
-                                              'ingredientQuantityId'] ==
-                                          detail['ingredientQuantityId']);
-                                }
-                              }
-
-                              isDeleting = true;
-                            });
-
-                            // Delay when deleting item
-                            Future.delayed(Duration(milliseconds: 200), () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                      '${ingredient['ingredientName']} is verwijderd'),
-                                  action: SnackBarAction(
-                                    label: "Ongedaan maken",
-                                    onPressed: () {
-                                      setState(() {
-                                        isDeleting = false;
-                                        dismissedIngredient['details'].add(dismissedDetail);
-                                      });
-                                    },
-                                  ),
-                                ),
-                              );
-                              // Delay actual deletion to allow undo
-                              Future.delayed(Duration(milliseconds: 3000), () {
-                                if (isDeleting) {
-                                  // Perform deletion only if not undone
-                                  deleteItem(
-                                    ItemQuantity(itemQuantityId: detail['ingredientQuantityId'], quantity: detail['quantity'], groceryListItem: GroceryListItem(ingredientName: ingredient['ingredientName'], measurement: ingredient['measurement'], ingredientQuantities: []), isIngredient: detail['isIngredient'])                                      );
-                                }
-                              });
-                            });
+                            }
                           },
-                          background: Container(
-                            color: Colors.red,
-                            alignment: Alignment.centerRight,
-                            padding: EdgeInsets.only(right: 20),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                Icon(Icons.keyboard_arrow_left,
-                                    color: Colors.white, size: 30),
-                                Icon(Icons.delete,
-                                    color: Colors.white, size: 30),
-                              ],
-                            ),
-                          ),
-                          child: Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 16.0),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    detail['recipeName'],
-                                    overflow: TextOverflow.ellipsis,
-                                    textAlign: TextAlign.left,
+                          child: Dismissible(
+                            key: ValueKey(detail),
+                            direction: DismissDirection.endToStart,
+                            onDismissed: (direction) {
+                              final dismissedDetail = detail;
+                              final dismissedIngredient = ingredient;
+                              setState(() {
+                                for (var loopIngredient in data) {
+                                  if (loopIngredient['ingredientName'] ==
+                                      ingredient['ingredientName']) {
+                                    loopIngredient['details'].removeWhere(
+                                        (dismissedDetail) =>
+                                            dismissedDetail[
+                                                'ingredientQuantityId'] ==
+                                            detail['ingredientQuantityId']);
+                                  }
+                                }
+
+                                isDeleting = true;
+                              });
+
+                              // Delay when deleting item
+                              Future.delayed(Duration(milliseconds: 200), () {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                        '${ingredient['ingredientName']} is verwijderd'),
+                                    action: SnackBarAction(
+                                      label: "Ongedaan maken",
+                                      onPressed: () {
+                                        setState(() {
+                                          isDeleting = false;
+                                          dismissedIngredient['details']
+                                              .add(dismissedDetail);
+                                        });
+                                      },
+                                    ),
                                   ),
-                                ),
-                                Text(
-                                  detail['quantity'].toString(),
-                                  textAlign: TextAlign.right,
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                                SizedBox(width: 10),
-                                Text(
-                                  measurementTypeToStringNl(
-                                      ingredient['measurement']),
-                                  textAlign: TextAlign.right,
-                                  style: TextStyle(color: Colors.grey),
-                                ),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                    Icon(Icons.keyboard_arrow_left,
-                                        color: Colors.red, size: 30),
-                                    Icon(Icons.delete,
-                                        color: Colors.red, size: 30),
-                                  ],
-                                ),
-                              ],
+                                );
+                                // Delay actual deletion to allow undo
+                                Future.delayed(Duration(milliseconds: 3000),
+                                    () {
+                                  if (isDeleting) {
+                                    // Perform deletion only if not undone
+                                    deleteItem(ItemQuantity(
+                                        itemQuantityId:
+                                            detail['ingredientQuantityId'],
+                                        quantity: detail['quantity'],
+                                        groceryListItem: GroceryListItem(
+                                            ingredientName:
+                                                ingredient['ingredientName'],
+                                            measurement:
+                                                ingredient['measurement'],
+                                            ingredientQuantities: []),
+                                        isIngredient: detail['isIngredient']));
+                                  }
+                                });
+                              });
+                            },
+                            background: Container(
+                              color: Colors.red,
+                              alignment: Alignment.centerRight,
+                              padding: EdgeInsets.only(right: 20),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  Icon(Icons.keyboard_arrow_left,
+                                      color: Colors.white, size: 30),
+                                  Icon(Icons.delete,
+                                      color: Colors.white, size: 30),
+                                ],
+                              ),
                             ),
-                          ),
-                        )))
-                    .toList(),
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16.0),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      detail['recipeName'],
+                                      overflow: TextOverflow.ellipsis,
+                                      textAlign: TextAlign.left,
+                                    ),
+                                  ),
+                                  Text(
+                                    detail['quantity'].toString(),
+                                    textAlign: TextAlign.right,
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                  SizedBox(width: 10),
+                                  Text(
+                                    measurementTypeToStringNl(
+                                        ingredient['measurement']),
+                                    textAlign: TextAlign.right,
+                                    style: TextStyle(color: Colors.grey),
+                                  ),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      Icon(Icons.keyboard_arrow_left,
+                                          color: Colors.red, size: 30),
+                                      Icon(Icons.delete,
+                                          color: Colors.red, size: 30),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )))
+                      .toList(),
+                ),
               );
             },
           ),
