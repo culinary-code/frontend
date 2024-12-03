@@ -1,22 +1,23 @@
 import 'package:flutter/material.dart';
-
-import '../models/recipes/recipe.dart';
-import '../services/favorite_recipes_service.dart';
-import '../widgets/recipe_card.dart';
+import 'package:frontend/models/recipes/recipe.dart';
+import 'package:frontend/services/favorite_recipes_service.dart';
+import 'package:frontend/widgets/recipe_card.dart';
 
 class FavoriteScreen extends StatelessWidget {
   const FavoriteScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return  Scaffold(
-      appBar: AppBar(title: const Text("Jouw Favoriete Recepten!"),),
-        body: Column(
-          children: [
-            SizedBox(height: 16),
-            Expanded(child: FavoriteRecipes())
-          ],
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          "Jouw Favoriete Recepten!",
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
+      ),
+      body: Column(
+        children: [SizedBox(height: 16), Expanded(child: FavoriteRecipes())],
+      ),
     );
   }
 }
@@ -33,7 +34,7 @@ class _FavoriteRecipesState extends State<FavoriteRecipes> {
 
   @override
   void initState() {
-    _favoriteRecipesFuture = FavoriteRecipeService().getDummyFavoriteRecipes();
+    _favoriteRecipesFuture = FavoriteRecipeService().getFavoriteRecipes();
     super.initState();
   }
 
@@ -45,8 +46,9 @@ class _FavoriteRecipesState extends State<FavoriteRecipes> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: FutureBuilder<List<Recipe>>(
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 8.0),
+      child: FutureBuilder<List<Recipe>>(
         future: _favoriteRecipesFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -57,7 +59,21 @@ class _FavoriteRecipesState extends State<FavoriteRecipes> {
             );
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return const Center(
-              child: Text('No favorite recipes found.'),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.favorite_border,
+                    size: 60,
+                    color: Colors.red,
+                  ),
+                  SizedBox(height: 20),
+                  Text(
+                    'Je hebt nog geen favoriete recepten!',
+                    style: TextStyle(fontSize: 18, fontStyle: FontStyle.italic),
+                  ),
+                ],
+              ),
             );
           } else {
             final favoriteRecipes = snapshot.data!;
