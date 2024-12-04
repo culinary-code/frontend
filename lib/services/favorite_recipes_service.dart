@@ -22,4 +22,27 @@ class FavoriteRecipeService {
       return [];
     }
   }
+
+  Future<bool> addFavoriteRecipe(String recipeId) async {
+    final endpoint = 'api/Account/addFavoriteRecipe';
+    final apiClient = await ApiClient.create();
+
+    final Map<String, dynamic> body = {'recipeId': recipeId};
+
+    final response = await apiClient.authorizedPost(endpoint, body);
+
+    return (response.statusCode == 200);
+  }
+
+  Future<void> deleteFavoriteRecipe(String recipeId) async {
+    final endpoint = 'api/Account/deleteFavoriteRecipe/$recipeId';
+    final apiClient = await ApiClient.create();
+
+    final response = await apiClient.authorizedDelete(endpoint);
+
+    if (response.statusCode != 200) {
+      throw Exception(
+          'Error deleting favorite recipe: ${response.statusCode}, ${response.body}');
+    }
+  }
 }

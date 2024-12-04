@@ -7,6 +7,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:frontend/Services/keycloak_service.dart';
 import 'package:frontend/navigation_menu.dart';
 import 'package:frontend/state/api_selection_provider.dart';
+import 'package:frontend/state/favorite_recipe_provider.dart';
 import 'package:frontend/state/grocery_list_provider.dart';
 import 'package:frontend/state/recipe_filter_options_provider.dart';
 import 'package:frontend/theme/theme_loader.dart';
@@ -31,6 +32,7 @@ void main() async {
           ChangeNotifierProvider(
               create: (context) => RecipeFilterOptionsProvider()),
           ChangeNotifierProvider(create: (context) => ApiSelectionProvider()),
+          ChangeNotifierProvider(create: (context) => FavoriteRecipeProvider()),
           ChangeNotifierProvider(create: (context) => GroceryListProvider()),
         ],
         child: DevicePreview(
@@ -43,6 +45,8 @@ void main() async {
         ChangeNotifierProvider(
             create: (context) => RecipeFilterOptionsProvider()),
         ChangeNotifierProvider(create: (context) => ApiSelectionProvider()),
+        ChangeNotifierProvider(create: (context) => FavoriteRecipeProvider()),
+        ChangeNotifierProvider(create: (context) => GroceryListProvider()),
       ],
       child: MyApp(),
     ));
