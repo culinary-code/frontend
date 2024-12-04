@@ -38,7 +38,6 @@ class FavoriteRecipeProvider extends ChangeNotifier {
       // If already favorited, remove it
       await _favoriteRecipeService.deleteFavoriteRecipe(recipeId);
       _favoriteRecipes.removeWhere((recipe) => recipe.recipeId == recipeId);
-      await loadFavoriteRecipes();
     } else {
       // If not favorited, add it
       bool success = await _favoriteRecipeService.addFavoriteRecipe(recipeId);
