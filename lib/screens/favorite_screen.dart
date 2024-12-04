@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/recipes/recipe.dart';
-import 'package:frontend/services/favorite_recipes_service.dart';
 import 'package:frontend/state/favorite_recipe_provider.dart';
 import 'package:frontend/widgets/recipe_card.dart';
 import 'package:provider/provider.dart';
@@ -80,7 +79,6 @@ class _FavoriteRecipesState extends State<FavoriteRecipes> {
             score: recipe.averageRating,
             recipe: recipe,
             imageUrl: recipe.imagePath,
-            onReturnFromDetail: () {},
           );
         },
       );
