@@ -22,10 +22,6 @@ class FavoriteRecipeProvider extends ChangeNotifier {
     final List<Recipe> favoriteRecipesList =
         await _favoriteRecipeService.getFavoriteRecipes();
 
-    for (var recipe in favoriteRecipesList) {
-      recipe.isFavorited = true;
-    }
-
     _favoriteRecipes = favoriteRecipesList;
     notifyListeners(); // Notify listeners to rebuild the UI
   }

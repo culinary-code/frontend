@@ -31,11 +31,7 @@ class FavoriteRecipeService {
 
     final response = await apiClient.authorizedPost(endpoint, body);
 
-    if (response.statusCode == 200) {
-      return true;
-    } else {
-      return false;
-    }
+    return (response.statusCode == 200);
   }
 
   Future<void> deleteFavoriteRecipe(String recipeId) async {

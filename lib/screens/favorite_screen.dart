@@ -46,42 +46,44 @@ class _FavoriteRecipesState extends State<FavoriteRecipes> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<FavoriteRecipeProvider>(
-        builder: (context, favoriteRecipeProvider, child) {
-      List<Recipe> favoriteRecipes = favoriteRecipeProvider.favoriteRecipes;
+    return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 8.0),
+        child: Consumer<FavoriteRecipeProvider>(
+            builder: (context, favoriteRecipeProvider, child) {
+          List<Recipe> favoriteRecipes = favoriteRecipeProvider.favoriteRecipes;
 
-      if (favoriteRecipes.isEmpty) {
-        return const Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.favorite_border,
-                size: 60,
-                color: Colors.red,
+          if (favoriteRecipes.isEmpty) {
+            return const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.favorite_border,
+                    size: 60,
+                    color: Colors.red,
+                  ),
+                  SizedBox(height: 20),
+                  Text(
+                    'Je hebt nog geen favoriete recepten!',
+                    style: TextStyle(fontSize: 18, fontStyle: FontStyle.italic),
+                  ),
+                ],
               ),
-              SizedBox(height: 20),
-              Text(
-                'Je hebt nog geen favoriete recepten!',
-                style: TextStyle(fontSize: 18, fontStyle: FontStyle.italic),
-              ),
-            ],
-          ),
-        );
-      }
-      return ListView.builder(
-        itemCount: favoriteRecipes.length,
-        itemBuilder: (context, index) {
-          final recipe = favoriteRecipes[index];
-          return RecipeCard(
-            recipeId: recipe.recipeId,
-            recipeName: recipe.recipeName,
-            score: recipe.averageRating,
-            recipe: recipe,
-            imageUrl: recipe.imagePath,
+            );
+          }
+          return ListView.builder(
+            itemCount: favoriteRecipes.length,
+            itemBuilder: (context, index) {
+              final recipe = favoriteRecipes[index];
+              return RecipeCard(
+                recipeId: recipe.recipeId,
+                recipeName: recipe.recipeName,
+                score: recipe.averageRating,
+                recipe: recipe,
+                imageUrl: recipe.imagePath,
+              );
+            },
           );
-        },
-      );
-    });
+        }));
   }
 }
