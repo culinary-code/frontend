@@ -108,7 +108,7 @@ class GroceryListProvider with ChangeNotifier {
         return {
           'ingredientQuantityId': ingredient['ingredientQuantityId'],
           'ingredientName': ingredient['ingredient']['ingredientName'],
-          'quantity': ingredient['quantity'],
+          'quantity': ingredient['quantity'].toDouble(),
           'measurement': measurementType,
           'recipeName': ingredient['recipeName']?.isEmpty ?? true
               ? "Extra"
@@ -130,7 +130,7 @@ class GroceryListProvider with ChangeNotifier {
         return {
           'ingredientQuantityId': item['itemQuantityId'],
           'ingredientName': item['groceryItem']['groceryItemName'],
-          'quantity': item['quantity'],
+          'quantity': item['quantity'].toDouble(),
           'measurement': measurementType,
           'recipeName': "Extra",
           'isIngredient': false
