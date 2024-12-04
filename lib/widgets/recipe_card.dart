@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/models/recipes/recipe.dart';
+import 'package:frontend/screens/detail_screen.dart';
 import 'package:http/http.dart' as http;
 
-import '../models/recipes/recipe.dart';
-import '../screens/detail_screen.dart';
 import 'favorite/favorite_toggle_button.dart';
 
 class RecipeCard extends StatelessWidget {
+  final VoidCallback onReturnFromDetail; // Callback function
+
   final String recipeId;
   final String recipeName;
   final double score;
@@ -18,7 +20,7 @@ class RecipeCard extends StatelessWidget {
     required this.recipeName,
     required this.score,
     required this.recipe,
-    required this.imageUrl,
+    required this.imageUrl, required this.onReturnFromDetail,
   });
 
   Future<bool> _checkImageUrl(String url) async {
@@ -44,7 +46,9 @@ class RecipeCard extends StatelessWidget {
                 recipeId: recipeId,
               ),
             ),
-          );
+          ).then((_) {
+            onReturnFromDetail();
+          });
         },
         child: Row(
           children: [
@@ -110,7 +114,10 @@ class RecipeCard extends StatelessWidget {
                                 recipeId: recipeId,
                               ),
                             ),
-                          );
+                          ).then((_) {
+                            // Trigger the callback when returning
+                            onReturnFromDetail();
+                          });;
                         },
                         style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.blueGrey[50]),

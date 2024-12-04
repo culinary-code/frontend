@@ -10,12 +10,12 @@ import 'package:frontend/models/recipes/recipe.dart';
 import 'package:frontend/models/recipes/recipe_type.dart';
 import 'package:frontend/screens/add_review_screen.dart';
 import 'package:frontend/screens/add_to_mealplanner_screen.dart';
+import 'package:frontend/services/favorite_recipes_service.dart';
 import 'package:frontend/services/recipe_service.dart';
 import 'package:frontend/services/review_service.dart';
 import 'package:expandable_text/expandable_text.dart';
 import 'package:frontend/widgets/favorite/favorite_toggle_button.dart';
 
-import '../services/favorite_recipes_service.dart';
 
 
 class DetailScreen extends StatelessWidget {

@@ -79,13 +79,15 @@ class _RecipeOverviewState extends State<RecipeOverview> {
   // Fetch favorite recipes and update the state
   Future<void> _fetchRecipes() async {
     final favoriteRecipesList = await favoriteRecipeService.getFavoriteRecipes();
-    final filterProvider = Provider.of<RecipeFilterOptionsProvider>(context, listen: false);
+
+    final filterProvider =
+        Provider.of<RecipeFilterOptionsProvider>(context, listen: false);
 
     final filteredRecipes = await filterProvider.recipes;
 
     for (var recipe in filteredRecipes) {
-      recipe.isFavorited =
-          favoriteRecipesList.any((favorite) => favorite.recipeId == recipe.recipeId);
+      recipe.isFavorited = favoriteRecipesList
+          .any((favorite) => favorite.recipeId == recipe.recipeId);
     }
 
     setState(() {
@@ -121,7 +123,6 @@ class _RecipeOverviewState extends State<RecipeOverview> {
               SizedBox(
                 width: 16,
               ),
-
               FilterButton(),
             ],
           ),
@@ -142,7 +143,8 @@ class _RecipeOverviewState extends State<RecipeOverview> {
                       return SingleChildScrollView(
                         child: ConstrainedBox(
                           constraints: BoxConstraints(
-                            minHeight: constraints.maxHeight, // Use the constraints here
+                            minHeight: constraints
+                                .maxHeight, // Use the constraints here
                           ),
                           child: IntrinsicHeight(
                             child: Column(
@@ -169,7 +171,8 @@ class _RecipeOverviewState extends State<RecipeOverview> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => CreateRecipeScreen(
+                                        builder: (context) =>
+                                            CreateRecipeScreen(
                                           preloadedRecipeName: query,
                                         ),
                                       ),
@@ -200,7 +203,7 @@ class _RecipeOverviewState extends State<RecipeOverview> {
                       // Sliver that contains the ListView
                       SliverList(
                         delegate: SliverChildBuilderDelegate(
-                              (context, index) {
+                          (context, index) {
                             if (index == recipes.length) {
                               return Column(
                                 children: [
@@ -218,7 +221,8 @@ class _RecipeOverviewState extends State<RecipeOverview> {
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                          builder: (context) => CreateRecipeScreen(
+                                          builder: (context) =>
+                                              CreateRecipeScreen(
                                             preloadedRecipeName: query,
                                           ),
                                         ),
@@ -236,6 +240,7 @@ class _RecipeOverviewState extends State<RecipeOverview> {
                                 score: recipes[index].averageRating,
                                 recipe: recipes[index],
                                 imageUrl: recipes[index].imagePath,
+                                onReturnFromDetail: _fetchRecipes,
                               );
                             }
                           },

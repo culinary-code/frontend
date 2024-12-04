@@ -34,8 +34,18 @@ class _FavoriteRecipesState extends State<FavoriteRecipes> {
 
   @override
   void initState() {
-    _favoriteRecipesFuture = FavoriteRecipeService().getFavoriteRecipes();
     super.initState();
+    _loadFavoriteRecipes();
+  }
+
+  void _loadFavoriteRecipes() {
+    _favoriteRecipesFuture = FavoriteRecipeService().getFavoriteRecipes();
+  }
+
+  void _refreshFavorites() {
+    setState(() {
+      _loadFavoriteRecipes();
+    });
   }
 
   @override
@@ -81,6 +91,7 @@ class _FavoriteRecipesState extends State<FavoriteRecipes> {
                   score: recipe.averageRating,
                   recipe: recipe,
                   imageUrl: recipe.imagePath,
+                  onReturnFromDetail: _refreshFavorites,
                 );
               },
             );

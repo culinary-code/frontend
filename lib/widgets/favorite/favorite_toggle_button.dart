@@ -2,16 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:frontend/services/favorite_recipes_service.dart';
 import 'package:frontend/models/recipes/recipe.dart';
 
-class FavoriteToggleButton extends StatelessWidget {
+
+class FavoriteToggleButton extends StatefulWidget {
   final Recipe recipe;
 
-  const FavoriteToggleButton({
-    super.key,
-    required this.recipe,
-  });
+  const FavoriteToggleButton({super.key, required this.recipe});
 
+  @override
+  State<FavoriteToggleButton> createState() => _FavoriteToggleButtonState();
+}
+
+class _FavoriteToggleButtonState extends State<FavoriteToggleButton> {
   Future<void> _toggleFavorite(BuildContext context, Recipe recipe) async {
     final favoriteRecipeService = FavoriteRecipeService();
+    final recipe = widget.recipe;
 
     // Only add to favorites if not already favorited
     if (!recipe.isFavorited) {
@@ -20,11 +24,10 @@ class FavoriteToggleButton extends StatelessWidget {
         recipe.isFavorited = true;
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to add recipe to favorites')),
+          SnackBar(content: Text('Failed to add recipe to favorites'), backgroundColor: Colors.red,),
         );
       }
     } else {
-      // TODO: Implementatie remove ISSUE MET RECIPE ID
       await favoriteRecipeService.deleteFavoriteRecipe(recipe.recipeId);
       recipe.isFavorited = false;
     }
@@ -36,11 +39,11 @@ class FavoriteToggleButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => _toggleFavorite(context, recipe),
+      onTap: () => _toggleFavorite(context, widget.recipe),
       child: Icon(
-        recipe.isFavorited ? Icons.favorite : Icons.favorite_border,
+        widget.recipe.isFavorited ? Icons.favorite : Icons.favorite_border,
         size: 25,
-        color: recipe.isFavorited ? Colors.red : Colors.blueGrey,
+        color: widget.recipe.isFavorited ? Colors.red : Colors.blueGrey,
       ),
     );
   }
