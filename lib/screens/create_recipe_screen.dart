@@ -132,6 +132,7 @@ class _RecipeFormState extends State<RecipeForm> {
                                     .createRecipe(_recipeNameController.text,
                                         filterProvider.filterOptions);
 
+                                // Check if the response is a valid UUID, otherwise it's an error message that needs to be displayed to the user
                                 final uuidRegExp = RegExp(
                                   r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
                                 );
@@ -157,6 +158,11 @@ class _RecipeFormState extends State<RecipeForm> {
                                 setState(() {
                                   _isLoading = false;
                                 });
+
+                                if (!mounted) return;
+
+                                // force refresh of recipes in the home screen to show the new recipe
+                                filterProvider.onFilterChanged();
 
                                 Navigator.pop(context);
                                 Navigator.push(
