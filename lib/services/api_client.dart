@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:frontend/services/keycloak_service.dart';
 import 'package:frontend/state/api_selection_provider.dart';
 import 'package:http/http.dart' as http;
@@ -106,6 +105,21 @@ class ApiClient {
         'Accept': '*/*',
         'Authorization': 'Bearer $accesstoken',
       },
+    );
+
+    return response;
+  }
+
+  Future<http.Response> authorizedDeleteWithBody(String endpoint, Map<String, dynamic> body) async {
+    final accesstoken = await KeycloakService().getAccessToken();
+    final response = await http.delete(
+      Uri.parse('$_backendUrl/$endpoint'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': '*/*',
+        'Authorization': 'Bearer $accesstoken',
+      },
+      body: jsonEncode(body),
     );
 
     return response;
