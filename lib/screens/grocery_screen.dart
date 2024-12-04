@@ -113,8 +113,8 @@ class _GroceryListState extends State<GroceryList> {
     }
   }
 
-  void deleteItem(ItemQuantity item) {
-    groceryListService.deleteItemFromGroceryList(item);
+  Future<void> deleteItem(ItemQuantity item) async {
+    await groceryListService.deleteItemFromGroceryList(item);
   }
 
   @override
@@ -185,7 +185,7 @@ class _GroceryListState extends State<GroceryList> {
                   Future.delayed(Duration(milliseconds: 3000), () async {
                     if (isDeleting) {
                       for (var detail in dismissedIngredient['details']) {
-                        deleteItem(
+                        await deleteItem(
                           ItemQuantity(
                             itemQuantityId: detail['ingredientQuantityId'],
                             quantity: detail['quantity'],
@@ -342,7 +342,7 @@ class _GroceryListState extends State<GroceryList> {
                                     () async {
                                   if (isDeleting) {
                                     // Perform deletion only if not undone
-                                    deleteItem(ItemQuantity(
+                                    await deleteItem(ItemQuantity(
                                         itemQuantityId:
                                         detail['ingredientQuantityId'],
                                         quantity: detail['quantity'],
