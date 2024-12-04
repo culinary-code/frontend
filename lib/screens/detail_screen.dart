@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/models/accounts/review.dart';
 import 'package:frontend/models/recipes/difficulty.dart';
@@ -15,7 +16,6 @@ import 'package:frontend/services/recipe_service.dart';
 import 'package:frontend/services/review_service.dart';
 import 'package:expandable_text/expandable_text.dart';
 import 'package:frontend/widgets/favorite/favorite_toggle_button.dart';
-
 
 
 class DetailScreen extends StatelessWidget {
@@ -224,10 +224,31 @@ class RecipeHeader extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Image.network(
-            recipe.imagePath,
-            fit: BoxFit.cover,
-          ),
+          recipe.imagePath.isNotEmpty
+              ? CachedNetworkImage(
+                  imageUrl: recipe.imagePath,
+                  progressIndicatorBuilder: (context, url, downloadProgress) =>
+                      Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: CircularProgressIndicator(
+                        value: downloadProgress.progress),
+                  ),
+                  errorWidget: (context, url, error) => const Center(
+                    child: Icon(
+                      Icons.broken_image,
+                      size: 50,
+                      color: Colors.grey,
+                    ),
+                  ),
+                  fit: BoxFit.cover,
+                )
+              : const Center(
+                  child: Icon(
+                    Icons.broken_image,
+                    size: 50,
+                    color: Colors.grey,
+                  ),
+                ),
           const SizedBox(height: 16),
           Row(
             children: [

@@ -36,6 +36,9 @@ dependencies:
     sdk: flutter
   flutter_settings_ui: ^3.0.1
 
+  # Authentication
+  flutter_appauth: ^8.0.1
+
   # Lets you make http requests
   http: ^1.2.2
 
@@ -63,6 +66,9 @@ dependencies:
 
   # Add expandable text widget
   expandable_text: 2.3.0
+
+  # Cache network images
+  cached_network_image: ^3.4.1
 
 dev_dependencies:
   flutter_test:

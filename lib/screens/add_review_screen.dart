@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/services/review_service.dart';
+import 'package:frontend/state/recipe_filter_options_provider.dart';
+import 'package:provider/provider.dart';
 
 class AddReviewScreen extends StatefulWidget {
   final String recipeId;
@@ -49,6 +51,11 @@ class _AddReviewScreenState extends State<AddReviewScreen> {
     if (!mounted) return;
 
     if (result.keys.first) {
+      // force refresh of recipes in the home screen to show the new recipe
+      final filterProvider =
+      Provider.of<RecipeFilterOptionsProvider>(context, listen: false);
+      filterProvider.onFilterChanged();
+
       Navigator.pop(context);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(

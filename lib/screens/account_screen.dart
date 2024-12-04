@@ -2,8 +2,10 @@ import 'package:collection/collection.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:frontend/Services/keycloak_service.dart';
 import 'package:frontend/models/accounts/account.dart';
 import 'package:frontend/models/accounts/preferencedto.dart';
+import 'package:frontend/screens/keycloak/login_screen.dart';
 import 'package:frontend/services/account_service.dart';
 import 'package:frontend/services/preference_service.dart';
 import 'package:multi_dropdown/multi_dropdown.dart';
@@ -14,7 +16,7 @@ class AccountScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Gebruikersinstellingen')),
+      appBar: AppBar(title: const Text('Profiel'), centerTitle: true),
       body: const AccountOverview(),
     );
   }
@@ -31,6 +33,19 @@ class _AccountOverviewState extends State<AccountOverview> {
   final GlobalKey<_AccountSettingsState> _accountSettingsKey = GlobalKey();
   final GlobalKey<_PreferencesSettingsState> _preferenceSettingsKey =
       GlobalKey();
+
+  void _logout() async {
+    await KeycloakService().logout();
+    if (mounted) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const LoginPage(),
+        ),
+        (route) => false, // This removes all previous routes
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +66,24 @@ class _AccountOverviewState extends State<AccountOverview> {
             child: Text(
               'Opslaan',
               style: TextStyle(fontSize: 20),
-            ))
+            )),
+        Spacer(),
+        ElevatedButton(
+          onPressed: () {
+            _logout();
+          },
+          style: ElevatedButton.styleFrom(
+            elevation: 5,
+            padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+            backgroundColor: Color(0xFFE72222),
+          ),
+          child: Text(
+            'Uitloggen',
+            style: TextStyle(
+                fontSize: 20, color: Theme.of(context).colorScheme.onPrimary),
+          ),
+        ),
+        SizedBox(height: 16),
       ],
     );
   }
@@ -170,9 +202,6 @@ class _AccountSettingsState extends State<AccountSettings> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(crossAxisAlignment: CrossAxisAlignment.center, children: [
-        const SizedBox(height: 16),
-        const Text('Account instellingen', style: TextStyle(fontSize: 30)),
-        const SizedBox(height: 16),
         Container(
             decoration: BoxDecoration(
               border: Border.all(color: Colors.black, width: 2),
