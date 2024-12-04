@@ -160,7 +160,6 @@ class LoginPageState extends State<LoginPage> {
             padding: const EdgeInsets.all(16.0),
             child: Column(
               children: [
-                // The "Log in" label at 1/3 of the screen height
                 SizedBox(
                   height: MediaQuery.of(context).size.height * 0.15,
                   // Responsive to screen height
