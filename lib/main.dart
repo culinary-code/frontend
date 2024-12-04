@@ -45,7 +45,8 @@ void main() async {
         ChangeNotifierProvider(
             create: (context) => RecipeFilterOptionsProvider()),
         ChangeNotifierProvider(create: (context) => ApiSelectionProvider()),
-        ChangeNotifierProvider(create: (context) => FavoriteRecipeProvider())
+        ChangeNotifierProvider(create: (context) => FavoriteRecipeProvider()),
+        ChangeNotifierProvider(create: (context) => GroceryListProvider()),
       ],
       child: MyApp(),
     ));
