@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 import 'package:flutter_appauth/flutter_appauth.dart';
 import 'package:frontend/services/api_client.dart';
 import 'package:frontend/state/api_selection_provider.dart';
@@ -19,9 +20,12 @@ class KeycloakService {
       dotenv.env['KEYCLOAK_REALM'] ??
       (throw Exception('Environment variable KEYCLOAK_REALM not found'));
 
+  bool get developmentMode =>
+      dotenv.env['DEVELOPMENT_MODE'] == 'true' ? true : false;
+
   final String redirectUrl = "com.culinarycode://login-callback";
 
-  Future<bool> login() async {
+  Future<bool> loginSecured() async {
     final idpBaseUrl = await ApiSelectionProvider().keycloakUrl;
     final issuer = "$idpBaseUrl/realms/$realm";
     try {
@@ -37,10 +41,22 @@ class KeycloakService {
       );
 
       if (result != null) {
+
         await storage.write(key: 'access_token', value: result.accessToken);
         await storage.write(key: 'refresh_token', value: result.refreshToken);
         await storage.write(key: 'id_token', value: result.idToken);
-        return true;
+
+
+        // check account exists in backend on login on /KeyCloak/login
+        final apiClient = await ApiClient.create();
+        final response = await apiClient.authorizedPost("KeyCloak/login", {});
+
+        if (response.statusCode == 200 || response.statusCode == 201) { // separate out if we want to do a special action on 201
+          return true;
+        } else {
+          await logout();
+          return false;
+        }
       }
 
       return false;
@@ -51,25 +67,78 @@ class KeycloakService {
     return false;
   }
 
-  Future<void> logout() async {
-    // End session request
+  // This method may only ever be used in development mode
+  Future<bool> loginDevelopment(String username, String password) async {
+    if (!developmentMode) throw Exception('Development mode is disabled');
+
     final idpBaseUrl = await ApiSelectionProvider().keycloakUrl;
-    final issuer = "$idpBaseUrl/realms/$realm";
-    await appAuth.endSession(
-      EndSessionRequest(
-        issuer: issuer,
-        idTokenHint: await storage.read(key: 'id_token'),
-        postLogoutRedirectUrl: redirectUrl,
-      ),
+    final response = await http.post(
+      Uri.parse('$idpBaseUrl/realms/$realm/protocol/openid-connect/token'),
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: {
+        'grant_type': 'password',
+        'client_id': clientId,
+        'username': username,
+        'password': password,
+      },
     );
+    final responseBody = json.decode(response.body);
+    if (response.statusCode == 200) {
+      await storage.write(
+          key: 'access_token', value: responseBody['access_token']);
+      await storage.write(
+          key: 'refresh_token', value: responseBody['refresh_token']);
+      return true; // Login successful
+    } else {
+      throw FormatException(responseBody['error_description']); // Login failed
+    }
+  }
+
+  Future<void> logout() async {
+    if (!developmentMode) {
+      // End session request
+      final idpBaseUrl = await ApiSelectionProvider().keycloakUrl;
+      final issuer = "$idpBaseUrl/realms/$realm";
+
+      await appAuth.endSession(
+        EndSessionRequest(
+          issuer: issuer,
+          idTokenHint: await storage.read(key: 'id_token'),
+          postLogoutRedirectUrl: redirectUrl,
+        ),
+      );
+    }
 
     // Clear stored tokens on logout
     await storage.delete(key: 'access_token');
     await storage.delete(key: 'refresh_token');
   }
 
+  Future<void> createUser({
+    required String username,
+    required String password,
+  }) async {
+    final Random random = Random();
+    final email = 'user${random.nextInt(1000)}@example.com';
+
+    final apiClient = await ApiClient.create();
+    final response = await apiClient.unauthorizedPost(
+        'KeyCloak/register',
+        {
+          'username': username,
+          'email': email,
+          'password': password,
+        });
+
+    if (response.statusCode != 200) {
+      throw FormatException('gebruiker aanmaken mislukt: ${response.body}');
+    }
+  }
+
+
   Future<String?> getAccessToken() async {
-    print("Getting access token");
     final accessToken = await storage.read(key: 'access_token');
 
     if (accessToken == null) {
@@ -77,38 +146,66 @@ class KeycloakService {
     }
 
     if (_isTokenExpired(accessToken)) {
-      return refreshToken(); // returns new access token
+      return refreshAccessToken(); // returns new access token
     }
 
     return accessToken;
   }
 
-  Future<String?> refreshToken() async {
+  Future<String?> refreshAccessToken() async {
     final refreshToken = await storage.read(key: 'refresh_token');
     final idpBaseUrl = await ApiSelectionProvider().keycloakUrl;
-    final issuer = "$idpBaseUrl/realms/$realm";
 
     if (refreshToken == null) {
       throw FormatException('Refresh token not found');
     }
 
-    try {
-      final result = await appAuth.token(
-        TokenRequest(
-          clientId,
-          redirectUrl,
-          issuer: issuer,
-          refreshToken: refreshToken,
-        ),
+    String newRefreshToken;
+    String newAccessToken;
+
+    if (!developmentMode) {
+      try {
+        final issuer = "$idpBaseUrl/realms/$realm";
+        final result = await appAuth.token(
+          TokenRequest(
+            clientId,
+            redirectUrl,
+            issuer: issuer,
+            refreshToken: refreshToken,
+          ),
+        );
+
+        newRefreshToken = result.refreshToken!;
+        newAccessToken = result.accessToken!;
+      } catch (e) {
+        throw Exception('Failed to refresh token');
+      }
+    } else {
+      final response = await http.post(
+        Uri.parse('$idpBaseUrl/realms/$realm/protocol/openid-connect/token'),
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: {
+          'grant_type': 'refresh_token',
+          'client_id': clientId,
+          'refresh_token': refreshToken,
+        },
       );
 
-      await storage.write(key: 'access_token', value: result.accessToken);
-      await storage.write(key: 'refresh_token', value: result.refreshToken);
-
-      return result.accessToken;
-    } catch (e) {
-      throw Exception('Failed to refresh token');
+      final responseBody = json.decode(response.body);
+      if (response.statusCode == 200) {
+        newRefreshToken = responseBody['refresh_token'];
+        newAccessToken = responseBody['access_token'];
+      } else {
+        throw FormatException(responseBody['error_description']);
+      }
     }
+
+    await storage.write(key: 'access_token', value: newAccessToken);
+    await storage.write(key: 'refresh_token', value: newRefreshToken);
+
+    return newAccessToken;
   }
 
   Map<String, dynamic> _decodeJwt(String token) {

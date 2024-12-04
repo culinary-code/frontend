@@ -15,9 +15,7 @@ class ApiClient {
   }
 
   Future<http.Response> authorizedGet(String endpoint) async {
-    print("GET request to $_backendUrl/$endpoint");
     final accesstoken = await KeycloakService().getAccessToken();
-    print("Access token: $accesstoken");
     final response = await http.get(
       Uri.parse('$_backendUrl/$endpoint'),
       headers: {
