@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/models/accounts/account.dart';
 import 'package:frontend/models/meal_planning/planned_meal.dart';
@@ -123,7 +124,7 @@ class _AddToMealPlanner extends State<AddToMealPlanner> {
     });
   }
 
-  void addAllIngredients(){
+  void addAllIngredients() {
     setState(() {
       for (var ingredient in ingredients) {
         ingredient.isAddedToList = true;
@@ -145,7 +146,6 @@ class _AddToMealPlanner extends State<AddToMealPlanner> {
 
     // Optional: handle the selected date
     if (selectedDate != null) {
-
       if (!mounted) return;
 
       PlannedMealFull plannedMeal = PlannedMealFull(
@@ -230,12 +230,33 @@ class _AddToMealPlanner extends State<AddToMealPlanner> {
 
             // Recipe Image
             Center(
-              child: Image.network(
-                recipe.imagePath,
-                width: double.infinity,
-                height: 150,
-                fit: BoxFit.cover,
-              ),
+              child: recipe.imagePath.isNotEmpty
+                  ? CachedNetworkImage(
+                      imageUrl: recipe.imagePath,
+                      progressIndicatorBuilder:
+                          (context, url, downloadProgress) => Padding(
+                        padding: const EdgeInsets.all(24.0),
+                        child: CircularProgressIndicator(
+                            value: downloadProgress.progress),
+                      ),
+                      errorWidget: (context, url, error) => const Center(
+                        child: Icon(
+                          Icons.broken_image,
+                          size: 50,
+                          color: Colors.grey,
+                        ),
+                      ),
+                      width: double.infinity,
+                      height: 150,
+                      fit: BoxFit.cover,
+                    )
+                  : const Center(
+                      child: Icon(
+                        Icons.broken_image,
+                        size: 50,
+                        color: Colors.grey,
+                      ),
+                    ),
             ),
             const SizedBox(height: 20),
 
@@ -264,7 +285,10 @@ class _AddToMealPlanner extends State<AddToMealPlanner> {
                   'Ingrediënten',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-                ElevatedButton(onPressed: addAllIngredients, child: const Text('Voeg alle ingredienten toe'),)
+                ElevatedButton(
+                  onPressed: addAllIngredients,
+                  child: const Text('Voeg alle ingredienten toe'),
+                )
               ],
             ),
 

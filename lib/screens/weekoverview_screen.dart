@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/models/meal_planning/planned_meal.dart';
 import 'package:frontend/screens/detail_screen.dart';
@@ -239,16 +240,6 @@ class PlannedMealWidget extends StatelessWidget {
     required this.onButtonPressed,
   });
 
-  Future<bool> _checkImageUrl(String url) async {
-    try {
-      final response = await http.get(Uri.parse(url));
-      return response.statusCode == 200;
-    } catch (e) {
-      print('Error checking image URL: $e');
-      return false;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     // padding around the whole widget
@@ -291,28 +282,31 @@ class PlannedMealWidget extends StatelessWidget {
                     width: 130,
                     height: 130,
                     color: Colors.blueGrey,
-                    child: FutureBuilder<bool>(
-                      future: _checkImageUrl(plannedMeal.recipe.imagePath),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const Center(
-                              child: CircularProgressIndicator());
-                        } else if (snapshot.hasError || !snapshot.data!) {
-                          return const Center(
+                    child: plannedMeal.recipe.imagePath.isNotEmpty
+                        ? CachedNetworkImage(
+                            imageUrl: plannedMeal.recipe.imagePath,
+                            progressIndicatorBuilder:
+                                (context, url, downloadProgress) => Padding(
+                              padding: const EdgeInsets.all(24.0),
+                              child: CircularProgressIndicator(
+                                  value: downloadProgress.progress),
+                            ),
+                            errorWidget: (context, url, error) => const Center(
+                              child: Icon(
+                                Icons.broken_image,
+                                size: 50,
+                                color: Colors.grey,
+                              ),
+                            ),
+                            fit: BoxFit.cover,
+                          )
+                        : const Center(
                             child: Icon(
                               Icons.broken_image,
                               size: 50,
                               color: Colors.grey,
                             ),
-                          );
-                        } else {
-                          return Image.network(
-                            plannedMeal.recipe.imagePath,
-                          );
-                        }
-                      },
-                    ),
+                          ),
                   ),
 
                   const SizedBox(width: 10),
