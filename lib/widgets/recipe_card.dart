@@ -98,7 +98,7 @@ class RecipeCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 4),
                       FavoriteToggleButton(
-                        recipe: recipe,
+                        recipeId: recipe.recipeId,
                       ),
                     ],
                   ),

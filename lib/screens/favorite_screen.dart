@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/recipes/recipe.dart';
 import 'package:frontend/services/favorite_recipes_service.dart';
+import 'package:frontend/state/favorite_recipe_provider.dart';
 import 'package:frontend/widgets/recipe_card.dart';
+import 'package:provider/provider.dart';
 
 class FavoriteScreen extends StatelessWidget {
   const FavoriteScreen({super.key});
@@ -30,74 +32,58 @@ class FavoriteRecipes extends StatefulWidget {
 }
 
 class _FavoriteRecipesState extends State<FavoriteRecipes> {
-  late Future<List<Recipe>> _favoriteRecipesFuture;
+  late Future<void> _favoriteRecipesFuture;
 
   @override
   void initState() {
     super.initState();
-    _loadFavoriteRecipes();
+    _favoriteRecipesFuture = _loadFavoriteRecipes();
   }
 
-  void _loadFavoriteRecipes() {
-    _favoriteRecipesFuture = FavoriteRecipeService().getFavoriteRecipes();
-  }
-
-  void _refreshFavorites() {
-    setState(() {
-      _loadFavoriteRecipes();
-    });
+  Future<void> _loadFavoriteRecipes() async {
+    await Provider.of<FavoriteRecipeProvider>(context, listen: false)
+        .loadFavoriteRecipes();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 8.0),
-      child: FutureBuilder<List<Recipe>>(
-        future: _favoriteRecipesFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(
-              child: Text('Error: ${snapshot.error}'),
-            );
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.favorite_border,
-                    size: 60,
-                    color: Colors.red,
-                  ),
-                  SizedBox(height: 20),
-                  Text(
-                    'Je hebt nog geen favoriete recepten!',
-                    style: TextStyle(fontSize: 18, fontStyle: FontStyle.italic),
-                  ),
-                ],
+    return Consumer<FavoriteRecipeProvider>(
+        builder: (context, favoriteRecipeProvider, child) {
+      List<Recipe> favoriteRecipes = favoriteRecipeProvider.favoriteRecipes;
+
+      if (favoriteRecipes.isEmpty) {
+        return const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.favorite_border,
+                size: 60,
+                color: Colors.red,
               ),
-            );
-          } else {
-            final favoriteRecipes = snapshot.data!;
-            return ListView.builder(
-              itemCount: favoriteRecipes.length,
-              itemBuilder: (context, index) {
-                final recipe = favoriteRecipes[index];
-                return RecipeCard(
-                  recipeId: recipe.recipeId,
-                  recipeName: recipe.recipeName,
-                  score: recipe.averageRating,
-                  recipe: recipe,
-                  imageUrl: recipe.imagePath,
-                  onReturnFromDetail: _refreshFavorites,
-                );
-              },
-            );
-          }
+              SizedBox(height: 20),
+              Text(
+                'Je hebt nog geen favoriete recepten!',
+                style: TextStyle(fontSize: 18, fontStyle: FontStyle.italic),
+              ),
+            ],
+          ),
+        );
+      }
+      return ListView.builder(
+        itemCount: favoriteRecipes.length,
+        itemBuilder: (context, index) {
+          final recipe = favoriteRecipes[index];
+          return RecipeCard(
+            recipeId: recipe.recipeId,
+            recipeName: recipe.recipeName,
+            score: recipe.averageRating,
+            recipe: recipe,
+            imageUrl: recipe.imagePath,
+            onReturnFromDetail: () {},
+          );
         },
-      ),
-    );
+      );
+    });
   }
 }

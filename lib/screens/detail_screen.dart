@@ -243,7 +243,7 @@ class RecipeHeader extends StatelessWidget {
                     ),
                   )),
               const SizedBox(width: 1),
-              FavoriteToggleButton(recipe: recipe)
+              FavoriteToggleButton(recipeId: recipe.recipeId)
             ],
           ),
         ],

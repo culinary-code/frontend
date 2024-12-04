@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/models/recipes/recipe.dart';
 import 'package:frontend/screens/create_recipe_screen.dart';
 import 'package:frontend/services/favorite_recipes_service.dart';
+import 'package:frontend/state/favorite_recipe_provider.dart';
 import 'package:frontend/state/recipe_filter_options_provider.dart';
 import 'package:frontend/widgets/filter/filter_button.dart';
 import 'package:frontend/widgets/filter/filter_option_chip.dart';
@@ -51,7 +52,7 @@ class _RecipeOverviewState extends State<RecipeOverview> {
     _searchController.addListener(() {
       filterProvider.recipeName = _searchController.text;
     });
-    _fetchRecipes();
+    _loadRecipes();
   }
 
   @override
@@ -76,22 +77,15 @@ class _RecipeOverviewState extends State<RecipeOverview> {
     });
   }
 
-  // Fetch favorite recipes and update the state
-  Future<void> _fetchRecipes() async {
-    final favoriteRecipesList = await favoriteRecipeService.getFavoriteRecipes();
+  Future<void> _loadRecipes() async {
+    final favoriteRecipeProvider = Provider.of<FavoriteRecipeProvider>(context, listen: false);
+    await favoriteRecipeProvider.loadFavoriteRecipes();
 
-    final filterProvider =
-        Provider.of<RecipeFilterOptionsProvider>(context, listen: false);
-
+    final filterProvider = Provider.of<RecipeFilterOptionsProvider>(context, listen: false);
     final filteredRecipes = await filterProvider.recipes;
 
-    for (var recipe in filteredRecipes) {
-      recipe.isFavorited = favoriteRecipesList
-          .any((favorite) => favorite.recipeId == recipe.recipeId);
-    }
-
+    // Set the filtered recipes after loading favorites
     setState(() {
-      favoriteRecipes = favoriteRecipesList;
       _recipesFuture = Future.value(filteredRecipes);
     });
   }
@@ -240,7 +234,7 @@ class _RecipeOverviewState extends State<RecipeOverview> {
                                 score: recipes[index].averageRating,
                                 recipe: recipes[index],
                                 imageUrl: recipes[index].imagePath,
-                                onReturnFromDetail: _fetchRecipes,
+                                onReturnFromDetail: () {},
                               );
                             }
                           },
