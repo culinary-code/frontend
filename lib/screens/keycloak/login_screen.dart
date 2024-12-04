@@ -235,7 +235,7 @@ class LoginPageState extends State<LoginPage> {
                                     minimumSize: Size(double.infinity, 40),
                                   ),
                                   onPressed: () {
-                                    _keycloakService.createUser(
+                                    _keycloakService.createUserDevelopment(
                                       username: _usernameController.text,
                                       password: _passwordController.text,
                                     );

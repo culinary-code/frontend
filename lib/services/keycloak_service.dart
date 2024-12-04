@@ -116,7 +116,8 @@ class KeycloakService {
     await storage.delete(key: 'refresh_token');
   }
 
-  Future<void> createUser({
+  // only called when development mode is true
+  Future<void> createUserDevelopment({
     required String username,
     required String password,
   }) async {
