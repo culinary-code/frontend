@@ -237,7 +237,7 @@ class _RecipeOverviewState extends State<RecipeOverview> {
                               );
                             }
                           },
-                          childCount: recipes.length,
+                          childCount: recipes.length + 1, // +1 to add the button below the recipes
                         ),
                       ),
                     ],

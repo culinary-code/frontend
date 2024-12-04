@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
@@ -9,7 +11,23 @@ class ApiCheckerService {
       final response = await http.get(Uri.parse(url));
 
       if (response.statusCode == 200) {
-        return {true: response.body};
+
+        try {
+          var body = jsonDecode(response.body);
+
+          if (body['verifier'] != "Culinary Code") {
+            return {
+              false:
+              'Deze URL is niet bereikbaar, controleer of de backend juist is ingesteld.'
+            };
+          }
+
+          return {true: body['keycloakUrl']};
+
+        } on FormatException catch (e) {
+          return {false: 'Deze URL is niet bereikbaar, controleer of de backend juist is ingesteld.'};
+        }
+
       } else if (response.statusCode == 404) {
         return {
           false:
