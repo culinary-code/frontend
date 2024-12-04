@@ -67,7 +67,6 @@ class _AccountOverviewState extends State<AccountOverview> {
               'Opslaan',
               style: TextStyle(fontSize: 20),
             )),
-        // add logout button at the bottom of the screen
         Spacer(),
         ElevatedButton(
           onPressed: () {
