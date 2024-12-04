@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:frontend/models/recipes/recipe.dart';
 import 'package:frontend/screens/create_recipe_screen.dart';
+import 'package:frontend/services/favorite_recipes_service.dart';
+import 'package:frontend/state/favorite_recipe_provider.dart';
 import 'package:frontend/state/recipe_filter_options_provider.dart';
 import 'package:frontend/widgets/filter/filter_button.dart';
 import 'package:frontend/widgets/filter/filter_option_chip.dart';
@@ -32,9 +34,14 @@ class _RecipeOverviewState extends State<RecipeOverview> {
   late TextEditingController _searchController = TextEditingController();
   Timer? _debounce;
 
+  final FavoriteRecipeService favoriteRecipeService = FavoriteRecipeService();
+  late List<Recipe> favoriteRecipes = [];
+
   @override
   void initState() {
     super.initState();
+
+    _recipesFuture = Future.value([]);
 
     // Initialize TextEditingController with the current value of recipenamefilter
     final filterProvider =
@@ -45,6 +52,7 @@ class _RecipeOverviewState extends State<RecipeOverview> {
     _searchController.addListener(() {
       filterProvider.recipeName = _searchController.text;
     });
+    _loadRecipes();
   }
 
   @override
@@ -69,13 +77,21 @@ class _RecipeOverviewState extends State<RecipeOverview> {
     });
   }
 
+  Future<void> _loadRecipes() async {
+    final favoriteRecipeProvider = Provider.of<FavoriteRecipeProvider>(context, listen: false);
+    await favoriteRecipeProvider.loadFavoriteRecipes();
+
+    final filterProvider = Provider.of<RecipeFilterOptionsProvider>(context, listen: false);
+    final filteredRecipes = await filterProvider.recipes;
+
+    // Set the filtered recipes after loading favorites
+    setState(() {
+      _recipesFuture = Future.value(filteredRecipes);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    final filterProvider =
-        Provider.of<RecipeFilterOptionsProvider>(context, listen: true);
-
-    _recipesFuture = filterProvider.recipes;
-
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 8.0),
       child: Column(
@@ -101,7 +117,6 @@ class _RecipeOverviewState extends State<RecipeOverview> {
               SizedBox(
                 width: 16,
               ),
-
               FilterButton(),
             ],
           ),
@@ -122,7 +137,8 @@ class _RecipeOverviewState extends State<RecipeOverview> {
                       return SingleChildScrollView(
                         child: ConstrainedBox(
                           constraints: BoxConstraints(
-                            minHeight: constraints.maxHeight, // Use the constraints here
+                            minHeight: constraints
+                                .maxHeight, // Use the constraints here
                           ),
                           child: IntrinsicHeight(
                             child: Column(
@@ -149,7 +165,8 @@ class _RecipeOverviewState extends State<RecipeOverview> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => CreateRecipeScreen(
+                                        builder: (context) =>
+                                            CreateRecipeScreen(
                                           preloadedRecipeName: query,
                                         ),
                                       ),
@@ -215,18 +232,12 @@ class _RecipeOverviewState extends State<RecipeOverview> {
                                 recipeId: recipes[index].recipeId,
                                 recipeName: recipes[index].recipeName,
                                 score: recipes[index].averageRating,
-                                isFavorited: recipes[index].isFavorited,
+                                recipe: recipes[index],
                                 imageUrl: recipes[index].imagePath,
-                                onFavoriteToggle: () {
-                                  setState(() {
-                                    recipes[index].isFavorited =
-                                        !recipes[index].isFavorited;
-                                  });
-                                },
                               );
                             }
                           },
-                          childCount: recipes.length + 1,
+                          childCount: recipes.length,
                         ),
                       ),
                     ],
@@ -239,10 +250,4 @@ class _RecipeOverviewState extends State<RecipeOverview> {
       ),
     );
   }
-
-
 }
-
-
-
-

@@ -10,9 +10,12 @@ import 'package:frontend/models/recipes/recipe.dart';
 import 'package:frontend/models/recipes/recipe_type.dart';
 import 'package:frontend/screens/add_review_screen.dart';
 import 'package:frontend/screens/add_to_mealplanner_screen.dart';
+import 'package:frontend/services/favorite_recipes_service.dart';
 import 'package:frontend/services/recipe_service.dart';
 import 'package:frontend/services/review_service.dart';
 import 'package:expandable_text/expandable_text.dart';
+import 'package:frontend/widgets/favorite/favorite_toggle_button.dart';
+
 
 
 class DetailScreen extends StatelessWidget {
@@ -58,10 +61,34 @@ class _DetailOverviewState extends State<DetailOverview> {
   late final int cookingTime = recipe.cookingTime;
   late final RecipeType recipeType = recipe.recipeType;
   late final Difficulty difficulty = recipe.difficulty;
+  late bool isFavorited = recipe.isFavorited;
   late var reviews = ReviewService().getReviewsByRecipeId(recipe.recipeId);
   Timer? _debounce;
 
-  bool isFavorited = false;
+
+  final FavoriteRecipeService favoriteRecipeService = FavoriteRecipeService();
+  late List<Recipe> favoriteRecipes = [];
+
+  Future<List<Recipe>> getFavoriteRecipes() async {
+    favoriteRecipes = await favoriteRecipeService.getFavoriteRecipes();
+    return favoriteRecipes;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    searchRecipeInFavorite();
+  }
+
+  Future<void> searchRecipeInFavorite() async {
+    List<Recipe> recipes = await favoriteRecipeService.getFavoriteRecipes();
+
+    setState(() {
+      favoriteRecipes = recipes;
+      isFavorited = favoriteRecipes.any((favRecipe) => favRecipe.recipeId == recipe.recipeId);
+      recipe.isFavorited = isFavorited;
+    });
+  }
 
   void toggleFavorite() {
     setState(() {
@@ -178,23 +205,18 @@ class _DetailOverviewState extends State<DetailOverview> {
   }
 }
 
-// Hierin worden de titel en foto van het gerecht opgeslagen.
-class RecipeHeader extends StatefulWidget {
+class RecipeHeader extends StatelessWidget {
   final bool isFavorited;
   final VoidCallback onFavoriteToggle;
   final Recipe recipe;
 
   const RecipeHeader(
       {super.key,
-      required this.isFavorited,
-      required this.onFavoriteToggle,
-      required this.recipe});
+        required this.isFavorited,
+        required this.onFavoriteToggle,
+        required this.recipe});
 
-  @override
-  State<RecipeHeader> createState() => _RecipeHeaderState();
-}
 
-class _RecipeHeaderState extends State<RecipeHeader> {
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -203,7 +225,7 @@ class _RecipeHeaderState extends State<RecipeHeader> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Image.network(
-            widget.recipe.imagePath,
+            recipe.imagePath,
             fit: BoxFit.cover,
           ),
           const SizedBox(height: 16),
@@ -211,23 +233,17 @@ class _RecipeHeaderState extends State<RecipeHeader> {
             children: [
               Expanded(
                   child: Align(
-                alignment: Alignment.center,
-                child: Text(
-                  widget.recipe.recipeName,
-                  style: const TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              )),
+                    alignment: Alignment.center,
+                    child: Text(
+                      recipe.recipeName,
+                      style: const TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  )),
               const SizedBox(width: 1),
-              GestureDetector(
-                onTap: widget.onFavoriteToggle,
-                child: Icon(
-                    widget.isFavorited ? Icons.favorite : Icons.favorite_border,
-                    size: 30,
-                    color: widget.isFavorited ? Colors.red : Colors.blueGrey),
-              ),
+              FavoriteToggleButton(recipeId: recipe.recipeId)
             ],
           ),
         ],
