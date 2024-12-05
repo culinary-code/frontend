@@ -28,6 +28,21 @@ class GroceryListProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  void addIngredientData(Map<String, dynamic> ingredient) {
+    _ingredientData.add(ingredient);
+    compileIngredientData();
+    notifyListeners();
+  }
+
+  Map<String, dynamic> getIngredientData(String ingredientQuantityId) {
+    for (var ingredient in _ingredientData) {
+      if (ingredient['ingredientQuantityId'] == ingredientQuantityId) {
+        return ingredient;
+      }
+    }
+    throw ArgumentError('Ingredient with ID $ingredientQuantityId not found.');
+  }
+
   void compileIngredientData() {
     // Step 1: Group by ingredientName and measurement
     Map<String, List<Map<String, dynamic>>> grouped = {};

@@ -299,22 +299,13 @@ class _GroceryListState extends State<GroceryList> {
                         key: ValueKey(detail),
                         direction: DismissDirection.endToStart,
                         onDismissed: (direction) {
-                          final dismissedDetail = detail;
-                          final dismissedIngredient = ingredient;
+                          final dismissedIngredientData = groceryListProvider.getIngredientData(detail['ingredientQuantityId']);
                           setState(() {
-                            for (var loopIngredient
-                            in groceryListProvider.data) {
-                              if (loopIngredient['ingredientName'] ==
-                                  ingredient['ingredientName'] &&
-                                  loopIngredient['measurement'] ==
-                                      ingredient['measurement']) {
-                                loopIngredient['details'].removeWhere(
-                                        (dismissedDetail) =>
-                                    dismissedDetail[
-                                    'ingredientQuantityId'] ==
-                                        detail['ingredientQuantityId']);
-                              }
-                            }
+                            groceryListProvider.ingredientData.removeWhere((dismissedDetail) =>
+                              dismissedDetail['ingredientQuantityId'] ==
+                                          detail['ingredientQuantityId']
+                            );
+                            groceryListProvider.compileIngredientData();
 
                             isDeleting = true;
                           });
@@ -330,8 +321,7 @@ class _GroceryListState extends State<GroceryList> {
                                   onPressed: () {
                                     setState(() {
                                       isDeleting = false;
-                                      dismissedIngredient['details']
-                                          .add(dismissedDetail);
+                                      groceryListProvider.addIngredientData(dismissedIngredientData);
                                     });
                                   },
                                 ),
