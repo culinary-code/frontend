@@ -47,9 +47,6 @@ class GroceryListProvider with ChangeNotifier {
     // Step 1: Group by ingredientName and measurement
     Map<String, List<Map<String, dynamic>>> grouped = {};
     for (var ingredient in _ingredientData) {
-      if (ingredient['measurement'] == null){
-        print(ingredient);
-      }
       String key =
           '${ingredient['ingredientName']}_${ingredient['measurement'].index.toString()}'; // Unique key for grouping
       grouped.putIfAbsent(key, () => []).add(ingredient);
