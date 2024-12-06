@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:frontend/models/recipes/recipe_filter.dart';
+import 'package:frontend/models/recipes/recipe_suggestion.dart';
 import 'package:frontend/services/api_client.dart';
 import 'package:frontend/models/recipes/recipe.dart';
 
@@ -130,5 +131,22 @@ class RecipeService {
       "CookTime": cooktime,
       "MealType": mealtype,
     };
+  }
+
+  Future<List<RecipeSuggestion>> getRecipeSuggestions(String recipename, List<FilterOption> filterOptions) async {
+    final apiClient = await ApiClient.create();
+    final response = await apiClient.authorizedPost('Recipe/GetSuggestions', _buildFilterOptionPayload(recipename, filterOptions));
+
+    if (response.statusCode != 200) {
+      return [];
+    }
+
+    final List<dynamic> dynamicSuggestions = json.decode(response.body);
+
+    final List<RecipeSuggestion> suggestions = dynamicSuggestions
+        .map((dynamic suggestion) => RecipeSuggestion.fromJson(suggestion))
+        .toList();
+
+    return suggestions;
   }
 }
