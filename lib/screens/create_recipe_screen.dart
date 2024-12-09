@@ -98,11 +98,13 @@ class _RecipeFormState extends State<RecipeForm> {
           description,
           filterProvider.filterOptions);
 
+      // Check if the response is a valid recipe UUID, otherwise it's an error message
       final uuidRegExp = RegExp(
         r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
       );
 
       if (!uuidRegExp.hasMatch(response)) {
+        // Show the error message
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(response)),
         );
