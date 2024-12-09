@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:frontend/models/recipes/recipe_filter.dart';
+import 'package:frontend/models/recipes/recipe_suggestion.dart';
 import 'package:frontend/services/api_client.dart';
 import 'package:frontend/models/recipes/recipe.dart';
 
@@ -79,10 +80,10 @@ class RecipeService {
     return Recipe.fromJson(recipe);
   }
 
-  Future<String> createRecipe(String recipename, List<FilterOption> filterOptions) async {
+  Future<String> createRecipe(String recipename, String description, List<FilterOption> filterOptions) async {
     final apiClient = await ApiClient.create();
     final response = await apiClient.authorizedPost('Recipe/Create',
-        _buildFilterOptionPayload(recipename, filterOptions));
+        _buildFilterOptionPayload(recipename, filterOptions, description: description));
 
     if (response.statusCode == 400) {
       return response.body;
@@ -101,7 +102,7 @@ class RecipeService {
     return '';
   }
 
-  Map<String, dynamic> _buildFilterOptionPayload(String recipename, List<FilterOption> filterOptions) {
+  Map<String, dynamic> _buildFilterOptionPayload(String recipename, List<FilterOption> filterOptions, {String description = ""}) {
 
     List<String> ingredients = [];
     var difficulty = "";
@@ -129,6 +130,24 @@ class RecipeService {
       "Difficulty": difficulty,
       "CookTime": cooktime,
       "MealType": mealtype,
+      "Description": description,
     };
+  }
+
+  Future<List<RecipeSuggestion>> getRecipeSuggestions(String recipename, List<FilterOption> filterOptions) async {
+    final apiClient = await ApiClient.create();
+    final response = await apiClient.authorizedPost('Recipe/GetSuggestions', _buildFilterOptionPayload(recipename, filterOptions));
+
+    if (response.statusCode != 200) {
+      return [];
+    }
+
+    final List<dynamic> dynamicSuggestions = json.decode(response.body);
+
+    final List<RecipeSuggestion> suggestions = dynamicSuggestions
+        .map((dynamic suggestion) => RecipeSuggestion.fromJson(suggestion))
+        .toList();
+
+    return suggestions;
   }
 }
