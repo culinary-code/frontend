@@ -93,7 +93,6 @@ class _RecipeFormState extends State<RecipeForm> {
         const SnackBar(content: Text('Recept aangevraagd')),
       );
 
-      // TODO: description meegeven in de request
       String response = await RecipeService().createRecipe(
           _recipeNameController.text,
           description,
