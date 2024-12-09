@@ -43,6 +43,7 @@ class _RecipeFormState extends State<RecipeForm> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _recipeNameController;
   bool _isLoading = false;
+  bool _requestButtonDisabled = false;
   bool _isRecipeInvalid = false;
   String _recipeInvalidReason = '';
   bool showAllFilterOptions = false;
@@ -51,7 +52,7 @@ class _RecipeFormState extends State<RecipeForm> {
 
   void _fetchRecipeSuggestions(BuildContext context) async {
     final filterProvider =
-    Provider.of<RecipeFilterOptionsProvider>(context, listen: false);
+        Provider.of<RecipeFilterOptionsProvider>(context, listen: false);
 
     if (_formKey.currentState!.validate()) {
       setState(() {
@@ -63,7 +64,9 @@ class _RecipeFormState extends State<RecipeForm> {
 
       if (suggestions.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Geen suggesties gevonden, probeer een andere naam of specificaties')),
+          const SnackBar(
+              content: Text(
+                  'Geen suggesties gevonden, probeer een andere naam of specificaties')),
         );
       } else {
         setState(() {
@@ -77,13 +80,13 @@ class _RecipeFormState extends State<RecipeForm> {
     }
   }
 
-  void createRecipe(BuildContext context, String name, String description) async {
+  Future<void> createRecipe(BuildContext context, String name, String description) async {
     final filterProvider =
-    Provider.of<RecipeFilterOptionsProvider>(context, listen: false);
+        Provider.of<RecipeFilterOptionsProvider>(context, listen: false);
 
     if (_formKey.currentState!.validate()) {
       setState(() {
-        _isLoading = true;
+        _requestButtonDisabled = true;
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -92,7 +95,9 @@ class _RecipeFormState extends State<RecipeForm> {
 
       // TODO: description meegeven in de request
       String response = await RecipeService().createRecipe(
-          _recipeNameController.text, filterProvider.filterOptions);
+          _recipeNameController.text,
+          description,
+          filterProvider.filterOptions);
 
       final uuidRegExp = RegExp(
         r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
@@ -122,8 +127,6 @@ class _RecipeFormState extends State<RecipeForm> {
 
       if (!mounted) return;
 
-      filterProvider.onFilterChanged();
-
       Navigator.pop(context);
       Navigator.push(
         context,
@@ -150,102 +153,114 @@ class _RecipeFormState extends State<RecipeForm> {
   @override
   Widget build(BuildContext context) {
     final filterProvider =
-    Provider.of<RecipeFilterOptionsProvider>(context, listen: true);
+        Provider.of<RecipeFilterOptionsProvider>(context, listen: true);
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return Center(
-            child: SingleChildScrollView(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  minHeight: constraints.maxHeight,
-                ),
-                child: IntrinsicHeight(
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const SizedBox(height: 12),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              child: TextFormField(
-                                minLines: 1,
-                                maxLines: 10,
-                                decoration: const InputDecoration(
-                                  labelText: 'Receptnaam',
-                                  isDense: true,
-                                  border: OutlineInputBorder(
-                                    borderRadius:
-                                    BorderRadius.all(Radius.circular(8.0)),
-                                  ),
-                                  suffixIcon: Icon(Icons.food_bank_outlined),
-                                ),
-                                validator: (value) {
-                                  if ((value == null || value.isEmpty) &&
-                                      filterProvider.filterOptions.isEmpty) {
-                                    return 'Voer een receptnaam of specificaties in';
-                                  }
-                                  return null;
-                                },
-                                controller: _recipeNameController,
-                              ),
+    return SingleChildScrollView(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return Center(
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          minLines: 1,
+                          maxLines: 10,
+                          decoration: const InputDecoration(
+                            labelText: 'Receptnaam',
+                            isDense: true,
+                            border: OutlineInputBorder(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(8.0)),
                             ),
-                            const SizedBox(width: 8),
-                            FilterButton(),
-                          ],
+                            suffixIcon: Icon(Icons.food_bank_outlined),
+                          ),
+                          validator: (value) {
+                            if ((value == null || value.isEmpty) &&
+                                filterProvider.filterOptions.isEmpty) {
+                              return 'Voer een receptnaam of specificaties in';
+                            }
+                            return null;
+                          },
+                          controller: _recipeNameController,
                         ),
-                        SizedBox(
-                          height: 8,
-                        ),
-                        FilterOptionsDisplayWidget(),
-                        const SizedBox(height: 12),
-                        _isLoading
-                            ? CircularProgressIndicator()
-                            : ElevatedButton(
-                          onPressed: () => _fetchRecipeSuggestions(context),
+                      ),
+                      const SizedBox(width: 8),
+                      FilterButton(
+                        onFilterChanged: (bool value) => {},
+                      ),
+                    ],
+                  ),
+                  SizedBox(
+                    height: 8,
+                  ),
+                  FilterOptionsDisplayWidget(
+                    onDelete: () {
+                      filterProvider.filterOptions.clear();
+                      filterProvider.onFilterChanged();
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  _isLoading
+                      ? CircularProgressIndicator()
+                      : ElevatedButton(
+                        onPressed: _requestButtonDisabled
+                            ? null
+                            : () => _fetchRecipeSuggestions(context),
                           child: const Text('Aanvragen'),
                         ),
-                        if (_isRecipeInvalid)
-                          Column(children: [
-                            const SizedBox(height: 12),
-                            Text(
-                              'We kunnen dit recept niet aanmaken.',
-                              style: TextStyle(color: Colors.red),
-                            ),
-                            SizedBox(
-                              height: 4,
-                            ),
-                            Text(
-                              _recipeInvalidReason,
-                              style: TextStyle(color: Colors.red, fontSize: 12),
-                            ),
-                          ]),
-                        SizedBox(height: 12),
-                        if (_recipeSuggestions.isNotEmpty)
-                          RecipeSuggestionList(
-                            recipes: _recipeSuggestions
-                                .asMap()
-                                .map((index, recipeSuggestion) => MapEntry(
-                                recipeSuggestion.description, recipeSuggestion.recipeName))
-                                .map((key, value) => MapEntry(value, key)),
-                            onRecipeSelected: (recipeName, recipeDescription) {
-                              setState(() {
-                                _recipeNameController.text = recipeName;
-                              });
-                              createRecipe(context, recipeName, recipeDescription);
-                            },
-                          ),
-                      ],
+                  if (_isRecipeInvalid)
+                    Column(children: [
+                      const SizedBox(height: 12),
+                      Text(
+                        'We kunnen dit recept niet aanmaken.',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                      SizedBox(
+                        height: 4,
+                      ),
+                      Text(
+                        _recipeInvalidReason,
+                        style: TextStyle(color: Colors.red, fontSize: 12),
+                      ),
+                    ]),
+                  SizedBox(height: 12),
+                  if (_recipeSuggestions.isNotEmpty)
+                    RecipeSuggestionList(
+                      recipes: _recipeSuggestions
+                          .asMap()
+                          .map((index, recipeSuggestion) => MapEntry(
+                              recipeSuggestion.description,
+                              recipeSuggestion.recipeName))
+                          .map((key, value) => MapEntry(value, key)),
+                      onRecipeSelected: (recipeName, recipeDescription) async {
+                        setState(() {
+                          _recipeNameController.text = recipeName;
+
+                          // clear recipesuggestion except for recipename
+                          _recipeSuggestions = _recipeSuggestions
+                              .where((element) => element.recipeName == recipeName)
+                              .toList();
+
+                        });
+                        await createRecipe(
+                            context, recipeName, recipeDescription);
+                        filterProvider.onFilterChanged();
+                      },
                     ),
-                  ),
-                ),
+                ],
               ),
-            ));
-      },
+            ),
+          );
+        },
+      ),
     );
   }
 }
@@ -254,7 +269,8 @@ class RecipeSuggestionList extends StatefulWidget {
   final Map<String, String> recipes;
   final Function(String, String) onRecipeSelected;
 
-  const RecipeSuggestionList({super.key, required this.recipes, required this.onRecipeSelected});
+  const RecipeSuggestionList(
+      {super.key, required this.recipes, required this.onRecipeSelected});
 
   @override
   _RecipeSuggestionListState createState() => _RecipeSuggestionListState();
@@ -282,7 +298,7 @@ class _RecipeSuggestionListState extends State<RecipeSuggestionList> {
 
   void _startMessageRotation() {
     _messageTimer?.cancel();
-    _messageTimer = Timer.periodic(Duration(seconds: 4), (timer) {
+    _messageTimer = Timer.periodic(Duration(seconds: 5), (timer) {
       if (_selectedRecipe == null) {
         timer.cancel();
       } else {
@@ -302,29 +318,24 @@ class _RecipeSuggestionListState extends State<RecipeSuggestionList> {
 
   @override
   Widget build(BuildContext context) {
-    return ConstrainedBox(
-      constraints: BoxConstraints(maxHeight: 400),
-      child: SingleChildScrollView(
-        child: Column(
-          children: [
-            const SizedBox(height: 12),
-            Text('Kies uit een van onze suggesties'),
-            const SizedBox(height: 12),
-            for (var recipe in widget.recipes.entries)
-              RecipeSuggestionCard(
-                recipeName: recipe.key,
-                recipeDescription: recipe.value,
-                isSelected: _selectedRecipe == recipe.key,
-                isDisabled:
+    return Column(
+      children: [
+        const SizedBox(height: 12),
+        Text('Kies uit een van onze suggesties'),
+        const SizedBox(height: 12),
+        for (var recipe in widget.recipes.entries)
+          RecipeSuggestionCard(
+            recipeName: recipe.key,
+            recipeDescription: recipe.value,
+            isSelected: _selectedRecipe == recipe.key,
+            isDisabled:
                 _selectedRecipe != null && _selectedRecipe != recipe.key,
-                onTap: () => _onCardTap(recipe.key, recipe.value),
-                funnyMessage: _selectedRecipe == recipe.key
-                    ? _funnyMessages[_currentMessageIndex]
-                    : null,
-              ),
-          ],
-        ),
-      ),
+            onTap: () => _onCardTap(recipe.key, recipe.value),
+            funnyMessage: _selectedRecipe == recipe.key
+                ? _funnyMessages[_currentMessageIndex]
+                : null,
+          ),
+      ],
     );
   }
 }
@@ -352,7 +363,7 @@ class RecipeSuggestionCard extends StatelessWidget {
     return Card(
       color: isDisabled ? Colors.grey[300] : null,
       child: InkWell(
-        onTap: isDisabled ? null : onTap,
+        onTap: isDisabled || isSelected ? null : onTap,
         child: Column(
           children: [
             ListTile(
@@ -362,13 +373,17 @@ class RecipeSuggestionCard extends StatelessWidget {
             if (isSelected)
               Column(
                 children: [
+                  SizedBox(height: 12),
                   SizedBox(
                     height: 50,
                     width: 50,
                     child: CircularProgressIndicator(strokeWidth: 6),
                   ),
-                  const SizedBox(height: 8),
-                  Text(funnyMessage ?? ''),
+                  const SizedBox(height: 12),
+                  Text(
+                      funnyMessage ?? '',
+                      style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+                  ),
                 ],
               ),
             const SizedBox(height: 8),

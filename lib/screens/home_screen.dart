@@ -75,6 +75,7 @@ class _RecipeOverviewState extends State<RecipeOverview> {
     setState(() {
       filterProvider.onFilterChanged();
     });
+    _loadRecipes();
   }
 
   Future<void> _loadRecipes() async {
@@ -117,7 +118,13 @@ class _RecipeOverviewState extends State<RecipeOverview> {
               SizedBox(
                 width: 16,
               ),
-              FilterButton(),
+              FilterButton(
+                onFilterChanged: (bool value) {
+                  if (value) {
+                    _onFilterChanged();
+                  }
+                },
+              ),
             ],
           ),
           const SizedBox(
@@ -143,7 +150,11 @@ class _RecipeOverviewState extends State<RecipeOverview> {
                           child: IntrinsicHeight(
                             child: Column(
                               children: [
-                                FilterOptionsDisplayWidget(),
+                                FilterOptionsDisplayWidget(
+                                  onDelete: () {
+                                    _onFilterChanged();
+                                  },
+                                ),
                                 const SizedBox(height: 8.0),
                                 const Center(
                                   child: Text(
@@ -187,7 +198,11 @@ class _RecipeOverviewState extends State<RecipeOverview> {
                     slivers: [
                       // Sliver that contains the Wrap (it will scroll with the rest)
                       SliverToBoxAdapter(
-                        child: FilterOptionsDisplayWidget(),
+                        child: FilterOptionsDisplayWidget(
+                          onDelete: () {
+                            _onFilterChanged();
+                          },
+                        ),
                       ),
                       const SliverToBoxAdapter(
                         child: SizedBox(
@@ -204,14 +219,14 @@ class _RecipeOverviewState extends State<RecipeOverview> {
                                   const Center(
                                     child: Text(
                                       'Recept met jouw zoekterm aanmaken?',
-                                      style: TextStyle(fontSize: 14),
+                                      style: TextStyle(fontSize: 16),
                                     ),
                                   ),
                                   const SizedBox(height: 10),
                                   ElevatedButton(
                                     onPressed: () {
                                       String query = _searchController.text;
-                                      _searchController.clear();
+                                      // _searchController.clear();
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
