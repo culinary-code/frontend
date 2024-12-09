@@ -226,7 +226,6 @@ class _RecipeOverviewState extends State<RecipeOverview> {
                                   ElevatedButton(
                                     onPressed: () {
                                       String query = _searchController.text;
-                                      // _searchController.clear();
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
