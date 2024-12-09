@@ -320,7 +320,7 @@ class _AddToMealPlanner extends State<AddToMealPlanner> {
 
             const SizedBox(height: 5),
             const Text(
-              'Je kan ingrediënten toevoegen & verwijderen aan je boodschappenlijst door te swipen.',
+              'Je kan hier ingrediënten toevoegen & verwijderen aan je boodschappenlijst.',
               style: TextStyle(fontSize: 12, color: Colors.grey),
             ),
             const SizedBox(height: 10),
