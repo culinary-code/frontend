@@ -131,4 +131,20 @@ class AccountService {
       throw Exception('Error deleting preference: $e');
     }
   }
+
+  Future<void> deleteAccount() async {
+    try {
+      final endpoint = 'api/Account/deleteAccount';
+      final apiClient = await ApiClient.create();
+
+      final response = await apiClient.authorizedDelete(endpoint);
+
+      if (response.statusCode != 200) {
+        throw Exception(
+            'Error deleting account: ${response.statusCode}, ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Error deleting account: $e');
+    }
+  }
 }

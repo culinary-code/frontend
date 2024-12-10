@@ -35,6 +35,10 @@ class KeycloakService {
           clientId,
           redirectUrl,
           issuer: issuer,
+          // TODO: test this out, check if kc_action can be passed here
+          additionalParameters: {
+            'prompt': 'login',
+          },
           scopes: ['openid', 'profile', 'email', 'offline_access'],
           promptValues: ['login'],
         ),
