@@ -3,7 +3,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'api_client.dart';
 
 class InvitationService {
-  Future<void> sendInvitation(String groupId, String groupName, String email, String inviterName, String invitedUserName) async {
+  Future<void> sendInvitation(String groupId, String groupName, String email,
+      String inviterName, String invitedUserName) async {
     final endpoint = 'api/Invitation/sendInvitation';
     final apiClient = await ApiClient.create();
 
@@ -22,16 +23,14 @@ class InvitationService {
     final endpoint = 'api/Invitation/acceptInvitation/$token';
     final apiClient = await ApiClient.create();
 
-    try {
-      final response = await apiClient.authorizedGet(endpoint);
-      if (response.statusCode == 200) {
-        final prefs = await SharedPreferences.getInstance();
-        prefs.remove('pending_invitation_code');
-      } else {
-        print('Failed to accept the invitation: ${response.body}');
-      }
-    } catch (e) {
-      print('Error accepting invitation: $e');
+    final response = await apiClient.authorizedGet(endpoint);
+    if (response.statusCode == 200) {
+
+      // remove token from sharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      prefs.remove('pending_invitation_code');
+    } else {
+      throw Exception('Error handling invitation');
     }
   }
 }
