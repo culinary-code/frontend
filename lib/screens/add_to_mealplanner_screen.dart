@@ -47,13 +47,16 @@ class _AddToMealPlanner extends State<AddToMealPlanner> {
   late String userId;
   late Future<void> _initFuture;
 
+  bool allIngredientsAdded = true;
+
   // Initialization for familySize
   Future<void> _initialize() async {
     try {
       userId = await _accountService.getUserId();
       Account user = await _accountService.fetchUser(userId);
 
-      int userFamilySize = user.familySize > 0 ? user.familySize : recipe.amountOfPeople;
+      int userFamilySize =
+          user.familySize > 0 ? user.familySize : recipe.amountOfPeople;
 
       double scaleFactor = userFamilySize / recipe.amountOfPeople;
 
@@ -63,8 +66,10 @@ class _AddToMealPlanner extends State<AddToMealPlanner> {
 
         for (var ingredient in ingredients) {
           String id = ingredient.ingredientQuantity.ingredientQuantityId;
-          double originalQuantity = originalQuantities[id] ?? ingredient.ingredientQuantity.quantity;
-          ingredient.ingredientQuantity.quantity = originalQuantity * scaleFactor;
+          double originalQuantity =
+              originalQuantities[id] ?? ingredient.ingredientQuantity.quantity;
+          ingredient.ingredientQuantity.quantity =
+              originalQuantity * scaleFactor;
         }
       });
     } catch (e) {
@@ -121,13 +126,29 @@ class _AddToMealPlanner extends State<AddToMealPlanner> {
   void toggleItemAddedToRecipe(AddMealPlannerIngredientQuantity ingredient) {
     setState(() {
       ingredient.isAddedToList = !ingredient.isAddedToList;
+      allIngredientsAdded =
+          ingredients.every((ingredient) => ingredient.isAddedToList);
     });
   }
 
-  void addAllIngredients() {
+  void toggleAllIngredients() {
     setState(() {
-      for (var ingredient in ingredients) {
-        ingredient.isAddedToList = true;
+      // check if one ingredient is added to the list, if so, set all to true, if all ingredients are already added, set all to false
+      if (ingredients.every((ingredient) => ingredient.isAddedToList)) {
+        for (var ingredient in ingredients) {
+          ingredient.isAddedToList = false;
+        }
+        allIngredientsAdded = false;
+      } else if (ingredients.any((ingredient) => ingredient.isAddedToList)) {
+        for (var ingredient in ingredients) {
+          ingredient.isAddedToList = true;
+        }
+        allIngredientsAdded = true;
+      } else {
+        for (var ingredient in ingredients) {
+          ingredient.isAddedToList = true;
+        }
+        allIngredientsAdded = true;
       }
     });
   }
@@ -153,7 +174,8 @@ class _AddToMealPlanner extends State<AddToMealPlanner> {
         recipe: recipe,
         plannedDay: selectedDate,
         ingredients: ingredients
-            .where((item) => item.isAddedToList) // Filter items with isAddedToList true
+            .where((item) =>
+                item.isAddedToList) // Filter items with isAddedToList true
             .map((item) => item.ingredientQuantity) // Map filtered items
             .toList(),
       );
@@ -188,7 +210,7 @@ class _AddToMealPlanner extends State<AddToMealPlanner> {
             ingredient: ingredient.ingredient,
             quantity: ingredient.quantity, // Copy the quantity
           ),
-          isAddedToList: false);
+          isAddedToList: true);
     }).toList();
 
     // Store the original quantities for scaling purposes
@@ -286,15 +308,19 @@ class _AddToMealPlanner extends State<AddToMealPlanner> {
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 ElevatedButton(
-                  onPressed: addAllIngredients,
-                  child: const Text('Voeg alle ingredienten toe'),
+                  onPressed: toggleAllIngredients,
+                  child: Text(
+                    allIngredientsAdded
+                        ? 'Deselecteer alles'
+                        : 'Selecteer alles',
+                  ),
                 )
               ],
             ),
 
             const SizedBox(height: 5),
             const Text(
-              'Je kan ingrediënten toevoegen aan je boodschappenlijst door te swipen.',
+              'Je kan hier ingrediënten toevoegen & verwijderen aan je boodschappenlijst.',
               style: TextStyle(fontSize: 12, color: Colors.grey),
             ),
             const SizedBox(height: 10),
@@ -318,11 +344,26 @@ class _AddToMealPlanner extends State<AddToMealPlanner> {
 
             // Add to Meal Planner Button
             Center(
-              child: ElevatedButton(
-                onPressed: _addToMealPlanner,
-                child: const Text('Voeg toe aan maaltijdplanner'),
-              ),
-            ),
+                child: Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _addToMealPlanner,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                    ),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: const Text(
+                        'Voeg toe aan maaltijdplanner',
+                        style: TextStyle(fontSize: 18, color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            )),
             const SizedBox(height: 20),
           ],
         ),
@@ -356,53 +397,38 @@ TableRow buildIngredientRow(
         verticalAlignment: TableCellVerticalAlignment.middle,
         child: Padding(
           padding: const EdgeInsets.only(left: 8.0),
-          child: Dismissible(
-            background: Container(
-              color: (ingredient.isAddedToList) ? Colors.green : Colors.red,
-            ),
-            key: Key(ingredient.ingredientQuantity.ingredientQuantityId),
-            direction: DismissDirection.endToStart,
-            confirmDismiss: (direction) async {
-              // Update the state when swiped
-              toggleItemAddedToRecipe();
-              return false; // Prevent the item from being dismissed
-            },
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    ingredientName,
-                    style: const TextStyle(fontSize: 16),
-                  ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  ingredientName,
+                  style: const TextStyle(fontSize: 16),
                 ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(8, 0, 16, 0),
-                  child: Text(
-                    quantity,
-                    style: const TextStyle(fontSize: 16),
-                  ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(8, 0, 16, 0),
+                child: Text(
+                  quantity,
+                  style: const TextStyle(fontSize: 16),
                 ),
-                Container(
-                  color: (ingredient.isAddedToList) ? Colors.green : Colors.red,
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.keyboard_arrow_left,
-                        size: 30,
-                      ),
-                      Icon(
-                        (ingredient.isAddedToList)
-                            ? Icons.local_grocery_store
-                            : Icons.cancel_outlined,
-                        color: Colors.black,
-                        size: 30,
-                      ),
-                    ],
-                  ),
+              ),
+              Transform.scale(
+                scale: 1.5, // Adjust the scale factor as needed
+                child: Checkbox(
+                  value: ingredient.isAddedToList,
+                  fillColor: WidgetStateProperty.resolveWith((states) {
+                    if (states.contains(WidgetState.selected)) {
+                      return Colors.green[400];
+                    }
+                    return Colors.red[300];
+                  }),
+                  onChanged: (bool? value) {
+                    toggleItemAddedToRecipe();
+                  },
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
