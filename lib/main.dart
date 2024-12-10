@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:device_preview/device_preview.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -6,6 +8,7 @@ import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:frontend/Services/keycloak_service.dart';
 import 'package:frontend/navigation_menu.dart';
+import 'package:frontend/screens/invitation_screen.dart';
 import 'package:frontend/state/api_selection_provider.dart';
 import 'package:frontend/state/favorite_recipe_provider.dart';
 import 'package:frontend/state/grocery_list_provider.dart';
@@ -13,6 +16,7 @@ import 'package:frontend/state/recipe_filter_options_provider.dart';
 import 'package:frontend/theme/theme_loader.dart';
 import 'package:frontend/screens/keycloak/login_screen.dart';
 import 'package:provider/provider.dart';
+import 'package:uni_links/uni_links.dart';
 
 void main() async {
   await dotenv.load(fileName: ".env");
@@ -38,7 +42,8 @@ void main() async {
         child: DevicePreview(
           enabled: !kReleaseMode,
           builder: (context) => MyApp(),
-        )));
+        )
+    ));
   } else {
     runApp(MultiProvider(
       providers: [
@@ -93,11 +98,61 @@ class Main extends StatefulWidget {
 class _MainState extends State<Main> {
   bool _isLoggedIn = false;
   bool _isCheckingLoginStatus = true;
+  String? _pendingInvitationCode;
+
+  late StreamSubscription _linkSubscription; // For listening to incoming links
 
   @override
   void initState() {
     super.initState();
     _checkLoginStatus();
+    _initDeepLinkListener(); // Initialize deep link listener
+  }
+
+  // This function handles both initial deep links and streaming for subsequent links
+  Future<void> _initDeepLinkListener() async {
+    try {
+      // Get the initial deep link (if any)
+      final initialLink = await getInitialLink(); // String?
+      if (initialLink != null) {
+        Uri initialUri = Uri.parse(initialLink); // Convert String to Uri
+        _processDeepLink(initialUri);
+      }
+    } catch (e) {
+      print('Error while getting initial deep link: $e');
+    }
+
+    // Listen for any subsequent deep links (which are also Strings)
+    _linkSubscription = linkStream.listen((String? link) {
+      if (link != null) {
+        Uri linkUri = Uri.parse(link); // Convert String to Uri
+        _processDeepLink(linkUri);
+      }
+    });
+  }
+
+  // Method to handle the deep link and navigate accordingly
+  void _processDeepLink(Uri link) {
+    if (link.host == 'accept-invitation') {
+      String invitationCode = link.queryParameters['invitation_code'] ?? 'No Code Provided';
+
+      if (_isLoggedIn) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => InvitationScreen(invitationCode: invitationCode),
+          ),
+        );
+      } else {
+        setState(() {
+          _pendingInvitationCode = invitationCode;
+        });
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginPage()),
+        );
+      }
+    }
   }
 
   Future<void> _checkLoginStatus() async {

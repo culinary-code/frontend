@@ -4,11 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:frontend/Services/keycloak_service.dart';
 import 'package:frontend/models/accounts/account.dart';
+import 'package:frontend/models/accounts/group.dart';
 import 'package:frontend/models/accounts/preferencedto.dart';
 import 'package:frontend/screens/keycloak/login_screen.dart';
 import 'package:frontend/services/account_service.dart';
+import 'package:frontend/services/group_service.dart';
 import 'package:frontend/services/preference_service.dart';
 import 'package:multi_dropdown/multi_dropdown.dart';
+
+import '../services/invitation_service.dart';
 
 class AccountScreen extends StatelessWidget {
   const AccountScreen({super.key});
@@ -49,43 +53,51 @@ class _AccountOverviewState extends State<AccountOverview> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        AccountSettings(key: _accountSettingsKey),
-        SizedBox(
-          height: 16,
-        ),
-        PreferencesSettings(key: _preferenceSettingsKey),
-        SizedBox(height: 16),
-        ElevatedButton(
-            onPressed: _saveAll,
-            style: ElevatedButton.styleFrom(
-              elevation: 5,
-              padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-            ),
-            child: Text(
-              'Opslaan',
-              style: TextStyle(fontSize: 20),
-            )),
-        Spacer(),
-        ElevatedButton(
-          onPressed: () {
-            _logout();
-          },
-          style: ElevatedButton.styleFrom(
-            elevation: 5,
-            padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-            backgroundColor: Color(0xFFE72222),
+    return SafeArea(
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              AccountSettings(key: _accountSettingsKey),
+              SizedBox(
+                height: 16,
+              ),
+              PreferencesSettings(key: _preferenceSettingsKey),
+              SizedBox(height: 16),
+              ElevatedButton(
+                  onPressed: _saveAll,
+                  style: ElevatedButton.styleFrom(
+                    elevation: 5,
+                    padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                  ),
+                  child: Text(
+                    'Opslaan',
+                    style: TextStyle(fontSize: 20),
+                  )),
+              SizedBox(height: 16),
+              Align(
+                alignment: Alignment.bottomLeft,
+                child: GroupOverview(),
+              ),
+              SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () {
+                  _logout();
+                },
+                style: ElevatedButton.styleFrom(
+                  elevation: 5,
+                  padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                  backgroundColor: Color(0xFFE72222),
+                ),
+                child: Text(
+                  'Uitloggen',
+                  style: TextStyle(
+                      fontSize: 20, color: Theme.of(context).colorScheme.onPrimary),
+                ),
+              ),
+              SizedBox(height: 16),
+            ],
           ),
-          child: Text(
-            'Uitloggen',
-            style: TextStyle(
-                fontSize: 20, color: Theme.of(context).colorScheme.onPrimary),
-          ),
-        ),
-        SizedBox(height: 16),
-      ],
-    );
+        ));
   }
 
   void _saveAll() async {
@@ -590,6 +602,216 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class GroupOverview extends StatefulWidget {
+  const GroupOverview({super.key});
+
+  @override
+  State<GroupOverview> createState() => _GroupOverviewState();
+}
+
+class _GroupOverviewState extends State<GroupOverview> {
+  late List<Group> _groups = [];
+  final _groupService = GroupService();
+  final _accountService = AccountService();
+  final _invitationService = InvitationService();
+
+  var userId = '';
+
+  void _showCreateGroupDialog() {
+    final TextEditingController groupNameController = TextEditingController();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('Maak een nieuwe groep aan'),
+            content: TextField(
+              controller: groupNameController,
+              decoration: const InputDecoration(labelText: 'Groepsnaam'),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: const Text('Annuleer'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  final groupName = groupNameController.text.trim();
+                  if (groupName.isNotEmpty) {
+                    setState(() {
+                      _groups.add(Group(groupId: '', groupName: groupName));
+                      _groupService.createGroup(groupName);
+                    });
+                    Navigator.pop(context);
+                  }
+                },
+                child: const Text('Maak aan'),
+              ),
+            ],
+          );
+        },
+      );
+    });
+  }
+
+  Future<void> _initialize() async {
+    userId = await _accountService.getUserId();
+    _groups = await _groupService.getGroupsByUserId(userId);
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _initialize();
+  }
+
+  // Function to invite a user to a group
+  void _inviteUserToGroup(Group group) {
+    final TextEditingController emailController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Nodig een gebruiker uit voor jouw groep!'),
+          content: TextField(
+            controller: emailController,
+            decoration: const InputDecoration(labelText: 'Voer de email van de gebruiker in'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final email = emailController.text.trim();
+                if (email.isNotEmpty) {
+                  await _invitationService.sendInvitation(
+                      group.groupId, email, '', '');
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text('Invitation sent successfully!')),
+                  );
+
+                  Navigator.pop(context);
+                }
+              },
+              child: const Text('Send Invitation'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _leaveGroup(Group group) async {
+    try {
+      await _groupService.removeUserFromGroup(group.groupId);
+      setState(() {
+        _groups.remove(group);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Je hebt de groep verlaten!')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Groep verlaten mislukt: $e')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+          child: const Text(
+            'Jouw Groepen',
+            style: TextStyle(fontSize: 30),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: ElevatedButton(
+            onPressed: _showCreateGroupDialog,
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+            ),
+            child: const Text('\u{2795} Nieuw', style: TextStyle(fontSize: 16)),
+          ),
+        ),
+
+        const SizedBox(height: 8),
+
+        ListView(
+          shrinkWrap: true,  // Ensures the ListView only takes up as much space as needed
+          children: [
+            ..._groups.map((group) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.onPrimary,
+                    borderRadius: BorderRadius.circular(8.0),
+                    boxShadow: [BoxShadow(color: Colors.grey.shade200, blurRadius: 6)],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Text(group.groupName),
+                      ),
+
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Row(
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.person_add),
+                              onPressed: () {
+                                _inviteUserToGroup(group);
+                              },
+                            ),
+
+                            IconButton(
+                              icon: const Icon(Icons.exit_to_app),
+                              onPressed: () {
+                                setState(() {
+                                  _leaveGroup(group);
+                                });
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            })
+          ],
+        ),
+      ],
     );
   }
 }

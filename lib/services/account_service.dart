@@ -8,10 +8,6 @@ import 'package:frontend/services/api_client.dart';
 class AccountService {
   final FlutterSecureStorage storage = FlutterSecureStorage();
 
-  String get backendUrl =>
-      dotenv.env['BACKEND_BASE_URL'] ??
-      (throw Exception('Environment variable BACKEND_BASE_URL not found'));
-
   Future<Account> fetchUser(String accountId) async {
     final apiClient = await ApiClient.create();
     final response = await apiClient.authorizedGet('api/Account/$accountId');

@@ -70,6 +70,9 @@ dependencies:
   # Cache network images
   cached_network_image: ^3.4.1
 
+  # Handle invitation
+  uni_links: ^0.5.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
