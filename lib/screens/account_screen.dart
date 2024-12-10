@@ -700,7 +700,7 @@ class _GroupOverviewState extends State<GroupOverview> {
                 final email = emailController.text.trim();
                 if (email.isNotEmpty) {
                   await _invitationService.sendInvitation(
-                      group.groupId, email, '', '');
+                      group.groupId, group.groupName, email, '', '');
 
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(

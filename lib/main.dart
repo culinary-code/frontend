@@ -17,6 +17,8 @@ import 'package:frontend/theme/theme_loader.dart';
 import 'package:frontend/screens/keycloak/login_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:uni_links/uni_links.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 
 void main() async {
   await dotenv.load(fileName: ".env");
@@ -42,8 +44,7 @@ void main() async {
         child: DevicePreview(
           enabled: !kReleaseMode,
           builder: (context) => MyApp(),
-        )
-    ));
+        )));
   } else {
     runApp(MultiProvider(
       providers: [
@@ -109,52 +110,6 @@ class _MainState extends State<Main> {
     _initDeepLinkListener(); // Initialize deep link listener
   }
 
-  // This function handles both initial deep links and streaming for subsequent links
-  Future<void> _initDeepLinkListener() async {
-    try {
-      // Get the initial deep link (if any)
-      final initialLink = await getInitialLink(); // String?
-      if (initialLink != null) {
-        Uri initialUri = Uri.parse(initialLink); // Convert String to Uri
-        _processDeepLink(initialUri);
-      }
-    } catch (e) {
-      print('Error while getting initial deep link: $e');
-    }
-
-    // Listen for any subsequent deep links (which are also Strings)
-    _linkSubscription = linkStream.listen((String? link) {
-      if (link != null) {
-        Uri linkUri = Uri.parse(link); // Convert String to Uri
-        _processDeepLink(linkUri);
-      }
-    });
-  }
-
-  // Method to handle the deep link and navigate accordingly
-  void _processDeepLink(Uri link) {
-    if (link.host == 'accept-invitation') {
-      String invitationCode = link.queryParameters['invitation_code'] ?? 'No Code Provided';
-
-      if (_isLoggedIn) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => InvitationScreen(invitationCode: invitationCode),
-          ),
-        );
-      } else {
-        setState(() {
-          _pendingInvitationCode = invitationCode;
-        });
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const LoginPage()),
-        );
-      }
-    }
-  }
-
   Future<void> _checkLoginStatus() async {
     try {
       await KeycloakService().getAccessToken();
@@ -171,6 +126,51 @@ class _MainState extends State<Main> {
       });
     }
   }
+
+  Future<void> _initDeepLinkListener() async {
+    // Handle initial deep link
+    final initialLink = await getInitialLink();
+    if (initialLink != null) {
+      _processDeepLink(Uri.parse(initialLink));
+    }
+
+    // Listen for subsequent deep links
+    _linkSubscription = linkStream.listen((link) {
+      if (link != null) {
+        _processDeepLink(Uri.parse(link));
+      }
+    });
+  }
+
+  void _processDeepLink(Uri link) async {
+    if (link.host != 'accept-invitation') return;
+
+    final invitationCode = link.queryParameters['invitation_code'] ??
+        (link.pathSegments.isNotEmpty
+            ? link.pathSegments.last
+            : 'Uitnodiging is vervallen!');
+
+    if (_isLoggedIn) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+              InvitationScreen(invitationCode: invitationCode),
+        ),
+      );
+    } else {
+      // Store the invitation code in SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      prefs.setString('pending_invitation_code', invitationCode);
+
+      setState(() => _pendingInvitationCode = invitationCode);
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginPage()),
+      );
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {

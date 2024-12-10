@@ -1,12 +1,15 @@
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'api_client.dart';
 
 class InvitationService {
-  Future<void> sendInvitation(String groupId, String email, String inviterName, String invitedUserName) async {
+  Future<void> sendInvitation(String groupId, String groupName, String email, String inviterName, String invitedUserName) async {
     final endpoint = 'api/Invitation/sendInvitation';
     final apiClient = await ApiClient.create();
 
     final Map<String, dynamic> body = {
       'groupId': groupId,
+      'groupName': groupName,
       'email': email,
       'inviterName': inviterName,
       'invitedUserName': invitedUserName
@@ -22,7 +25,8 @@ class InvitationService {
     try {
       final response = await apiClient.authorizedGet(endpoint);
       if (response.statusCode == 200) {
-        print('Invitation accepted successfully');
+        final prefs = await SharedPreferences.getInstance();
+        prefs.remove('pending_invitation_code');
       } else {
         print('Failed to accept the invitation: ${response.body}');
       }
