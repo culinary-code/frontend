@@ -16,7 +16,7 @@ class InvitationService {
       'invitedUserName': invitedUserName
     };
 
-    final response = await apiClient.authorizedPost(endpoint, body);
+    await apiClient.authorizedPost(endpoint, body);
   }
 
   Future<void> acceptInvitation(String token) async {
