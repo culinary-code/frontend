@@ -11,8 +11,12 @@ import 'package:frontend/services/planned_meals_service.dart';
 
 class AddToMealplannerScreen extends StatelessWidget {
   final Recipe recipe;
+  // pass the amount of people and original amount for scaling of ingredient amounts
+  final int amountOfPeople;
+  final int originalAmount;
 
-  const AddToMealplannerScreen({super.key, required this.recipe});
+  const AddToMealplannerScreen({super.key, required this.recipe,
+    required this.amountOfPeople, required this.originalAmount});
 
   @override
   Widget build(BuildContext context) {
@@ -20,6 +24,8 @@ class AddToMealplannerScreen extends StatelessWidget {
       appBar: AppBar(title: const Text("Voeg het recept toe!")),
       body: AddToMealPlanner(
         recipe: recipe,
+        amountOfPeople: amountOfPeople,
+        originalAmount: originalAmount,
       ),
     );
   }
@@ -27,8 +33,11 @@ class AddToMealplannerScreen extends StatelessWidget {
 
 class AddToMealPlanner extends StatefulWidget {
   final Recipe recipe;
+  final int amountOfPeople;
+  final int originalAmount;
 
-  const AddToMealPlanner({super.key, required this.recipe});
+  const AddToMealPlanner({super.key, required this.recipe,
+    required this.amountOfPeople, required this.originalAmount});
 
   @override
   State<AddToMealPlanner> createState() => _AddToMealPlanner();
@@ -52,24 +61,36 @@ class _AddToMealPlanner extends State<AddToMealPlanner> {
   // Initialization for familySize
   Future<void> _initialize() async {
     try {
-      userId = await _accountService.getUserId();
-      Account user = await _accountService.fetchUser(userId);
+      Account user = await _accountService.fetchUser();
 
-      int userFamilySize =
-          user.familySize > 0 ? user.familySize : recipe.amountOfPeople;
+      int userFamilySize = widget.amountOfPeople;
+      if (userFamilySize == 0){
+        userFamilySize = user.familySize > 0 ? user.familySize : recipe.amountOfPeople;
+      }
 
-      double scaleFactor = userFamilySize / recipe.amountOfPeople;
+      // if the original amount is given, the ingredients in the given recipe need to be rescaled
+      // because they have been changed
+      bool needsToBeReScaled = false;
+      int originalAmount = widget.originalAmount;
+      if (originalAmount == 0) {
+        originalAmount = recipe.amountOfPeople;
+      } else {
+        needsToBeReScaled = true;
+      }
+      double scaleFactor = userFamilySize / originalAmount;
 
       setState(() {
         numberOfPeople = userFamilySize;
-        initialPeopleCount = recipe.amountOfPeople;
+        initialPeopleCount = originalAmount;
 
         for (var ingredient in ingredients) {
           String id = ingredient.ingredientQuantity.ingredientQuantityId;
           double originalQuantity =
-              originalQuantities[id] ?? ingredient.ingredientQuantity.quantity;
-          ingredient.ingredientQuantity.quantity =
-              originalQuantity * scaleFactor;
+              originalQuantities[id] ?? ingredient.ingredientQuantity.quantity / scaleFactor;
+          // re-scale the ingredients because they were changed in the previous screen
+          if(needsToBeReScaled) originalQuantities[id] = originalQuantity / scaleFactor;
+          // if not rescaled, scale ingredients based on the factor otherwise they are already in the right scale
+          ingredient.ingredientQuantity.quantity = (needsToBeReScaled) ? originalQuantity : originalQuantity * scaleFactor;
         }
       });
     } catch (e) {
@@ -219,7 +240,6 @@ class _AddToMealPlanner extends State<AddToMealPlanner> {
         ingredient.ingredientQuantityId: ingredient.quantity
     };
 
-    numberOfPeople = recipe.amountOfPeople;
     initialPeopleCount = recipe.amountOfPeople;
   }
 

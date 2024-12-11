@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:frontend/models/meal_planning/planned_meal.dart';
 import 'package:frontend/screens/detail_screen.dart';
 import 'package:frontend/services/planned_meals_service.dart';
-import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 
 class WeekoverviewScreen extends StatelessWidget {
@@ -273,7 +272,7 @@ class PlannedMealWidget extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) => DetailScreen(
-                            recipeId: plannedMeal.recipe.recipeId)));
+                            recipeId: plannedMeal.recipe.recipeId, amountOfPeople: plannedMeal.amountOfPeople,)));
               },
               child: Row(
                 children: [

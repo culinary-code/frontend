@@ -132,7 +132,7 @@ class _RecipeFormState extends State<RecipeForm> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => DetailScreen(recipeId: response),
+          builder: (context) => DetailScreen(recipeId: response, amountOfPeople: 0,),
         ),
       );
     }

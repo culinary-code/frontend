@@ -81,6 +81,7 @@ class _FavoriteRecipesState extends State<FavoriteRecipes> {
                 score: recipe.averageRating,
                 recipe: recipe,
                 imageUrl: recipe.imagePath,
+                recipeAmountOfPeople: 0,
               );
             },
           );

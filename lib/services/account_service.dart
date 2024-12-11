@@ -14,9 +14,9 @@ class AccountService {
       dotenv.env['BACKEND_BASE_URL'] ??
       (throw Exception('Environment variable BACKEND_BASE_URL not found'));
 
-  Future<Account> fetchUser(String accountId) async {
+  Future<Account> fetchUser() async {
     final apiClient = await ApiClient.create();
-    final response = await apiClient.authorizedGet('api/Account/$accountId');
+    final response = await apiClient.authorizedGet('api/Account/');
 
     if (response.statusCode == 200) {
       try {

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:frontend/models/accounts/account.dart';
 import 'package:frontend/models/accounts/review.dart';
 import 'package:frontend/models/recipes/difficulty.dart';
 import 'package:frontend/models/recipes/ingredients/ingredient_quantity.dart';
@@ -11,6 +12,7 @@ import 'package:frontend/models/recipes/recipe.dart';
 import 'package:frontend/models/recipes/recipe_type.dart';
 import 'package:frontend/screens/add_review_screen.dart';
 import 'package:frontend/screens/add_to_mealplanner_screen.dart';
+import 'package:frontend/services/account_service.dart';
 import 'package:frontend/services/favorite_recipes_service.dart';
 import 'package:frontend/services/recipe_service.dart';
 import 'package:frontend/services/review_service.dart';
@@ -20,8 +22,9 @@ import 'package:frontend/widgets/favorite/favorite_toggle_button.dart';
 
 class DetailScreen extends StatelessWidget {
   final String recipeId;
+  final int amountOfPeople;
 
-  const DetailScreen({super.key, required this.recipeId});
+  const DetailScreen({super.key, required this.recipeId, required this.amountOfPeople});
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +39,7 @@ class DetailScreen extends StatelessWidget {
             return Center(child: Text('Error: ${snapshot.error}'));
           } else {
             final recipe = snapshot.data;
-            return DetailOverview(recipe: recipe!);
+            return DetailOverview(recipe: recipe!, amountOfPeople: amountOfPeople,);
           }
         },
       ),
@@ -46,8 +49,9 @@ class DetailScreen extends StatelessWidget {
 
 class DetailOverview extends StatefulWidget {
   final Recipe recipe;
+  final int amountOfPeople;
 
-  const DetailOverview({super.key, required this.recipe});
+  const DetailOverview({super.key, required this.recipe, required this.amountOfPeople});
 
   @override
   State<DetailOverview> createState() => _DetailOverviewState();
@@ -56,14 +60,19 @@ class DetailOverview extends StatefulWidget {
 // Deze klasse combineert alle individueel aangemaakte klassen.
 class _DetailOverviewState extends State<DetailOverview> {
   late Recipe recipe = widget.recipe;
-  late final List<IngredientQuantity> _ingredients = recipe.ingredients;
+  late List<IngredientQuantity> _ingredients;
+  late int initialAmountOfPeople;
+  late int numberOfPeople = widget.amountOfPeople;
   late final List<InstructionStep> _instructionSteps = recipe.instructions;
   late final int cookingTime = recipe.cookingTime;
   late final RecipeType recipeType = recipe.recipeType;
   late final Difficulty difficulty = recipe.difficulty;
   late bool isFavorited = recipe.isFavorited;
   late var reviews = ReviewService().getReviewsByRecipeId(recipe.recipeId);
+  late Map<String, double> originalQuantities;
   Timer? _debounce;
+  final AccountService _accountService = AccountService();
+  late Future<void> _initFuture;
 
 
   final FavoriteRecipeService favoriteRecipeService = FavoriteRecipeService();
@@ -77,6 +86,18 @@ class _DetailOverviewState extends State<DetailOverview> {
   @override
   void initState() {
     super.initState();
+    _initFuture = _initialize();
+
+    recipe = widget.recipe;
+
+    _ingredients = recipe.ingredients;
+
+    // Store the original quantities for scaling purposes
+    originalQuantities = {
+      for (var ingredient in recipe.ingredients)
+        ingredient.ingredientQuantityId: ingredient.quantity
+    };
+
     searchRecipeInFavorite();
   }
 
@@ -96,6 +117,68 @@ class _DetailOverviewState extends State<DetailOverview> {
     });
   }
 
+  void _incrementPeople() {
+    setState(() {
+      numberOfPeople++;
+      _updateIngredientQuantities();
+      _ingredients;
+    });
+  }
+
+  void _decrementPeople() {
+    if (numberOfPeople > 1) {
+      setState(() {
+        numberOfPeople--;
+        _updateIngredientQuantities();
+        _ingredients;
+      });
+    }
+  }
+
+  void _updateIngredientQuantities() {
+    double scaleFactor = numberOfPeople / initialAmountOfPeople;
+    for (var ingredient in _ingredients) {
+      // Use the id to look up the original quantity in the map
+      double originalQuantity = originalQuantities[
+      ingredient.ingredientQuantityId] ??
+          0;
+      ingredient.quantity = originalQuantity * scaleFactor;
+    }
+  }
+
+  // Initialization for familySize
+  Future<void> _initialize() async {
+    try {
+      Account user = await _accountService.fetchUser();
+
+      int userFamilySize = widget.amountOfPeople;
+      if (userFamilySize == 0){
+        userFamilySize = user.familySize > 0 ? user.familySize : recipe.amountOfPeople;
+      }
+
+      double scaleFactor = userFamilySize / recipe.amountOfPeople;
+
+      setState(() {
+        numberOfPeople = userFamilySize;
+        initialAmountOfPeople = recipe.amountOfPeople;
+
+        for (var ingredient in _ingredients) {
+          String id = ingredient.ingredientQuantityId;
+          double originalQuantity =
+              originalQuantities[id] ?? ingredient.quantity;
+          ingredient.quantity =
+              originalQuantity * scaleFactor;
+        }
+      });
+    } catch (e) {
+      // When no familySize is installed, use default recipe size
+      setState(() {
+        numberOfPeople = recipe.amountOfPeople;
+        initialAmountOfPeople = recipe.amountOfPeople;
+      });
+    }
+  }
+
   @override
   void dispose() {
     _debounce?.cancel();
@@ -104,6 +187,18 @@ class _DetailOverviewState extends State<DetailOverview> {
 
   @override
   Widget build(BuildContext context) {
+    return FutureBuilder(
+      future: _initFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator());
+        }
+        return _buildContent(context);
+      },
+    );
+  }
+
+  Widget _buildContent(BuildContext context) {
     return Scaffold(
         body: SingleChildScrollView(
       child: Padding(
@@ -128,7 +223,7 @@ class _DetailOverviewState extends State<DetailOverview> {
                   style: const TextStyle(fontSize: 18)),
             ),
             PortionSelector(
-              recipeAmountOfPeople: widget.recipe.amountOfPeople,
+              recipeAmountOfPeople: numberOfPeople, addPortions: _incrementPeople, removePortions: _decrementPeople,
             ),
             const SizedBox(height: 16.0),
             IngredientsOverview(ingredientList: _ingredients),
@@ -147,6 +242,8 @@ class _DetailOverviewState extends State<DetailOverview> {
                             MaterialPageRoute(
                                 builder: (context) => AddToMealplannerScreen(
                                       recipe: recipe,
+                                      amountOfPeople: numberOfPeople,
+                                      originalAmount: recipe.amountOfPeople,
                                     )));
                       },
                       style: ElevatedButton.styleFrom(
@@ -345,32 +442,22 @@ class GridItem extends StatelessWidget {
 // Hierin maak je een functie waarmee je het aantal porties bepaald.
 class PortionSelector extends StatefulWidget {
   final int recipeAmountOfPeople;
+  final VoidCallback addPortions;
+  final VoidCallback removePortions;
 
-  const PortionSelector({super.key, required this.recipeAmountOfPeople});
+  const PortionSelector({super.key,
+    required this.recipeAmountOfPeople,
+    required this.addPortions, required this.removePortions});
 
   @override
   State<PortionSelector> createState() => _PortionSelectorState();
 }
 
 class _PortionSelectorState extends State<PortionSelector> {
-  late int portions;
-
-  void addPortions() {
-    setState(() {
-      portions++;
-    });
-  }
-
-  void removePortions() {
-    setState(() {
-      if (portions > 1) portions--;
-    });
-  }
 
   @override
   void initState() {
     super.initState();
-    portions = widget.recipeAmountOfPeople;
   }
 
   @override
@@ -404,7 +491,7 @@ class _PortionSelectorState extends State<PortionSelector> {
                     width: 12,
                   ),
                   GestureDetector(
-                    onTap: removePortions,
+                    onTap: widget.removePortions,
                     child: CircleAvatar(
                       radius: 10,
                       backgroundColor: Colors.blueGrey[200],
@@ -417,12 +504,12 @@ class _PortionSelectorState extends State<PortionSelector> {
                   ),
                   const SizedBox(width: 10),
                   Text(
-                    '$portions',
+                    '${widget.recipeAmountOfPeople}',
                     style: const TextStyle(fontSize: 22),
                   ),
                   const SizedBox(width: 10),
                   GestureDetector(
-                    onTap: addPortions,
+                    onTap: widget.addPortions,
                     child: CircleAvatar(
                       radius: 10,
                       backgroundColor: Colors.blueGrey[200],
