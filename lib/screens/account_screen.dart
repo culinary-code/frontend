@@ -10,11 +10,11 @@ import 'package:frontend/models/accounts/preferencedto.dart';
 import 'package:frontend/screens/keycloak/login_screen.dart';
 import 'package:frontend/services/account_service.dart';
 import 'package:frontend/services/group_service.dart';
+import 'package:frontend/services/invitation_service.dart';
 import 'package:frontend/services/preference_service.dart';
 import 'package:multi_dropdown/multi_dropdown.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../services/invitation_service.dart';
 
 class AccountScreen extends StatelessWidget {
   const AccountScreen({super.key});
@@ -625,7 +625,6 @@ class _GroupOverviewState extends State<GroupOverview> {
   void _showCreateGroupDialog() {
     final TextEditingController groupNameController = TextEditingController();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
       showDialog(
         context: context,
         builder: (context) {
@@ -659,7 +658,6 @@ class _GroupOverviewState extends State<GroupOverview> {
           );
         },
       );
-    });
   }
 
   Future<void> _initialize() async {
