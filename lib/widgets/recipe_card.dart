@@ -2,7 +2,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/models/recipes/recipe.dart';
 import 'package:frontend/screens/detail_screen.dart';
-import 'package:http/http.dart' as http;
 
 import 'favorite/favorite_toggle_button.dart';
 
@@ -12,6 +11,7 @@ class RecipeCard extends StatelessWidget {
   final double score;
   final Recipe recipe;
   final String imageUrl;
+  final int recipeAmountOfPeople;
 
   const RecipeCard({
     super.key,
@@ -20,6 +20,7 @@ class RecipeCard extends StatelessWidget {
     required this.score,
     required this.recipe,
     required this.imageUrl,
+    required this.recipeAmountOfPeople,
   });
 
   @override
@@ -33,6 +34,7 @@ class RecipeCard extends StatelessWidget {
             MaterialPageRoute(
               builder: (context) => DetailScreen(
                 recipeId: recipeId,
+                amountOfPeople: recipeAmountOfPeople,
               ),
             ),
           );
@@ -104,6 +106,7 @@ class RecipeCard extends StatelessWidget {
                             MaterialPageRoute(
                               builder: (context) => DetailScreen(
                                 recipeId: recipeId,
+                                amountOfPeople: recipeAmountOfPeople,
                               ),
                             ),
                           );

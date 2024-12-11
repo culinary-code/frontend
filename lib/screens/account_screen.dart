@@ -155,8 +155,7 @@ class _AccountSettingsState extends State<AccountSettings> {
 
   Future<void> _initialize() async {
     try {
-      userId = await _accountService.getUserId();
-      Account user = await _accountService.fetchUser(userId);
+      Account user = await _accountService.fetchUser();
       setState(() {
         _currentUsername = user.username;
         _usernameController.text = _currentUsername;

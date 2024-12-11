@@ -79,8 +79,9 @@ class FilterOptionChip extends StatelessWidget {
 }
 
 class FilterOptionsDisplayWidget extends StatefulWidget {
+  final VoidCallback onDelete;
   const FilterOptionsDisplayWidget({
-    super.key,
+    super.key, required this.onDelete,
   });
 
   @override
@@ -120,6 +121,7 @@ class FilterOptionsDisplayWidgetState
                     filter: filter,
                     onDelete: () => setState(() {
                       filterProvider.deleteFilter(filter);
+                      widget.onDelete();
                     }),
                   );
                 }),

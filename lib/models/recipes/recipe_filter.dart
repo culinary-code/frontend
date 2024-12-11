@@ -14,7 +14,7 @@ extension FilterTypeExtension on FilterType {
       case FilterType.cookTime:
         return "Kooktijd";
       case FilterType.mealType:
-        return "maaltijdtype";
+        return "Maaltijdtype";
     }
   }
 }

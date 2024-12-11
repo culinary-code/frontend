@@ -7,19 +7,20 @@ import 'package:frontend/widgets/filter/filter_popup.dart';
 import 'package:provider/provider.dart';
 
 class FilterButton extends StatelessWidget {
-  const FilterButton({super.key});
+  final ValueChanged<bool> onFilterChanged;
+  const FilterButton({super.key, required this.onFilterChanged});
 
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
-      onPressed: () => showFilterDialog(context),
+      onPressed: () => showFilterDialog(context, onFilterChanged: (bool value) { onFilterChanged(value); }),
       child: const Icon(Icons.filter_alt),
     );
   }
 }
 
 // Reusable function to show the filter dialog
-Future<void> showFilterDialog(BuildContext context) {
+Future<void> showFilterDialog(BuildContext context, {required ValueChanged<bool> onFilterChanged}) {
   final filterProvider = Provider.of<RecipeFilterOptionsProvider>(context, listen: false);
 
   return showDialog(
@@ -64,6 +65,7 @@ Future<void> showFilterDialog(BuildContext context) {
 
           // rerender the filteroptions
           filterProvider.onFilterChanged();
+          onFilterChanged(true);
         },
       );
     },
