@@ -762,10 +762,9 @@ class _GroupOverviewState extends State<GroupOverview> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           backgroundColor: Colors.red,
-          content: Text('De uitnodigingslink kon niet aangemaakt worden'),
+          content: Text('De uitnodigingslink kon niet aangemaakt worden!'),
         ),
       );
-      throw Exception('De uitnodigingslink is leeg!');
     }
   }
 

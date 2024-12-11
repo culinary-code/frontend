@@ -42,15 +42,4 @@ class GroupService {
       throw Exception('Error removing user from group: ${response.statusCode}, ${response.body}');
     }
   }
-
-  Future<void> addUserToGroup(String groupId) async {
-    final endpoint = 'api/Group/$groupId/addUserToGroup';
-    final apiClient = await ApiClient.create();
-
-    final response = await apiClient.authorizedPost(endpoint, {});
-
-    if (response.statusCode != 200) {
-      throw Exception('Error adding user to group: ${response.statusCode}, ${response.body}');
-    }
-  }
 }

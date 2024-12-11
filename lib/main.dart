@@ -107,7 +107,7 @@ class _MainState extends State<Main> {
   void initState() {
     super.initState();
     _checkLoginStatus();
-    _initDeepLinkListener(); // Initialize deep link listener
+    _initDeepLinkListener();
   }
 
   Future<void> _checkLoginStatus() async {
@@ -170,7 +170,6 @@ class _MainState extends State<Main> {
       );
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
