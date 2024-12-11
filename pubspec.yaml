@@ -76,6 +76,9 @@ dependencies:
   # Save invitation token
   shared_preferences: ^2.1.0
 
+  # Share invitationlinks
+  share_plus: ^10.1.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

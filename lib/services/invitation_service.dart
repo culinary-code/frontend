@@ -1,22 +1,38 @@
+import 'dart:convert';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'api_client.dart';
 
 class InvitationService {
-  Future<void> sendInvitation(String groupId, String groupName, String email,
-      String inviterName, String invitedUserName) async {
+
+  Future<String> sendInvitation(
+    String groupId,
+    String groupName,
+  ) async {
     final endpoint = 'api/Invitation/sendInvitation';
     final apiClient = await ApiClient.create();
 
     final Map<String, dynamic> body = {
       'groupId': groupId,
       'groupName': groupName,
-      'email': email,
-      'inviterName': inviterName,
-      'invitedUserName': invitedUserName
+      'inviterName': '',
     };
 
-    await apiClient.authorizedPost(endpoint, body);
+    final response = await apiClient.authorizedPost(endpoint, body);
+
+    if (response.statusCode == 200) {
+      final responseBody = jsonDecode(response.body);
+      final invitationLink = responseBody['link'];
+
+      if (invitationLink != null && invitationLink.isNotEmpty) {
+        return invitationLink;
+      } else {
+        throw Exception('Error: Invitation link is empty or invalid');
+      }
+    } else {
+      throw Exception('Error sending invitation: ${response.body}');
+    }
   }
 
   Future<void> acceptInvitation(String token) async {

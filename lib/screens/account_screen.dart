@@ -1,6 +1,7 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:frontend/Services/keycloak_service.dart';
 import 'package:frontend/models/accounts/account.dart';
@@ -11,6 +12,7 @@ import 'package:frontend/services/account_service.dart';
 import 'package:frontend/services/group_service.dart';
 import 'package:frontend/services/preference_service.dart';
 import 'package:multi_dropdown/multi_dropdown.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../services/invitation_service.dart';
 
@@ -675,47 +677,61 @@ class _GroupOverviewState extends State<GroupOverview> {
     _initialize();
   }
 
-  // Function to invite a user to a group
-  void _inviteUserToGroup(Group group) {
-    final TextEditingController emailController = TextEditingController();
+  void _inviteUserToGroup(Group group) async {
+    try {
+      final link = await _invitationService.sendInvitation(
+        group.groupId,
+        group.groupName,
+      );
 
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Nodig een gebruiker uit voor jouw groep!'),
-          content: TextField(
-            controller: emailController,
-            decoration: const InputDecoration(labelText: 'Voer de email van de gebruiker in'),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                final email = emailController.text.trim();
-                if (email.isNotEmpty) {
-                  await _invitationService.sendInvitation(
-                      group.groupId, group.groupName, email, '', '');
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Invitation sent successfully!')),
-                  );
-
-                  Navigator.pop(context);
-                }
-              },
-              child: const Text('Send Invitation'),
-            ),
-          ],
+      if (link.isNotEmpty) {
+        showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: const Text('Deel Uitnodigings Link!'),
+              content: Text('Wil je deze uitnodigings link kopiëeren of delen?'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Annuleer'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    // Trigger the share action
+                    await Share.share('Word lid van mijn groep met deze link: $link');
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Uitnodigingslink gedeeld!')),
+                    );
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Deel'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    // Copy the invitation link to the clipboard
+                    await Clipboard.setData(ClipboardData(text: link));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Uitnodigingslink is gekopiëerd naar clipboard!')),
+                    );
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Kopiëer Link'),
+                ),
+              ],
+            );
+          },
         );
-      },
-    );
+      } else {
+        throw Exception('De uitnodigingslink is leeg!');
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error creating invitation link: $e')),
+      );
+    }
   }
 
   void _leaveGroup(Group group) async {

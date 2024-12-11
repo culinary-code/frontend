@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/navigation_menu.dart';
+import 'package:frontend/services/group_service.dart';
 import 'package:frontend/services/invitation_service.dart';
 
 class InvitationScreen extends StatelessWidget {
   final String invitationCode;
   final InvitationService _invitationService = InvitationService();
+  final GroupService _groupService = GroupService();
 
   InvitationScreen({super.key, required this.invitationCode});
 
