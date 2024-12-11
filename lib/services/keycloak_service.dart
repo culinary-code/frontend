@@ -182,7 +182,7 @@ class KeycloakService {
         newRefreshToken = result.refreshToken!;
         newAccessToken = result.accessToken!;
       } catch (e) {
-        throw Exception('Failed to refresh token');
+        throw FormatException('Failed to refresh token');
       }
     } else {
       final response = await http.post(

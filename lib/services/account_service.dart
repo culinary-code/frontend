@@ -148,7 +148,7 @@ class AccountService {
 
 
   Future<void> deleteAccount() async {
-    try {
+    //try {
 
       final FlutterAppAuth appAuth = FlutterAppAuth();
 
@@ -157,25 +157,21 @@ class AccountService {
       final issuer = "$idpBaseUrl/realms/$realm";
 
 
-      final TokenResponse result =
-      await appAuth.token(
-        TokenRequest(
+      final AuthorizationResponse result =
+      await appAuth.authorize(
+        AuthorizationRequest(
           clientId,
           redirectUrl,
           issuer: issuer,
           additionalParameters: {
             'kc_action': 'delete_account',
           },
-          refreshToken: await storage.read(key: 'refresh_token'),
+
         ),
       );
 
-
-
-      print(result.tokenAdditionalParameters);
-
-
-
+      print(result.authorizationAdditionalParameters);
+      print(result.authorizationCode);
 
 
       final endpoint = 'api/Account/deleteAccount';
