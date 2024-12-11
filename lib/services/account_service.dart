@@ -1,9 +1,11 @@
 import 'dart:convert';
+import 'package:flutter_appauth/flutter_appauth.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:frontend/models/accounts/account.dart';
 import 'package:frontend/models/accounts/preferencedto.dart';
 import 'package:frontend/services/api_client.dart';
+import 'package:frontend/state/api_selection_provider.dart';
 
 class AccountService {
   final FlutterSecureStorage storage = FlutterSecureStorage();
@@ -132,8 +134,50 @@ class AccountService {
     }
   }
 
+
+
+  String get clientId =>
+      dotenv.env['KEYCLOAK_CLIENT_ID'] ??
+          (throw Exception('Environment variable KEYCLOAK_CLIENT_ID not found'));
+
+  String get realm =>
+      dotenv.env['KEYCLOAK_REALM'] ??
+          (throw Exception('Environment variable KEYCLOAK_REALM not found'));
+
+  final String redirectUrl = "com.culinarycode://login-callback";
+
+
   Future<void> deleteAccount() async {
     try {
+
+      final FlutterAppAuth appAuth = FlutterAppAuth();
+
+
+      final idpBaseUrl = await ApiSelectionProvider().keycloakUrl;
+      final issuer = "$idpBaseUrl/realms/$realm";
+
+
+      final TokenResponse result =
+      await appAuth.token(
+        TokenRequest(
+          clientId,
+          redirectUrl,
+          issuer: issuer,
+          additionalParameters: {
+            'kc_action': 'delete_account',
+          },
+          refreshToken: await storage.read(key: 'refresh_token'),
+        ),
+      );
+
+
+
+      print(result.tokenAdditionalParameters);
+
+
+
+
+
       final endpoint = 'api/Account/deleteAccount';
       final apiClient = await ApiClient.create();
 
@@ -143,8 +187,8 @@ class AccountService {
         throw Exception(
             'Error deleting account: ${response.statusCode}, ${response.body}');
       }
-    } catch (e) {
+    /*} catch (e) {
       throw Exception('Error deleting account: $e');
-    }
+    }*/
   }
 }

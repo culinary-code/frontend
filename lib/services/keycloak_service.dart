@@ -35,16 +35,15 @@ class KeycloakService {
           clientId,
           redirectUrl,
           issuer: issuer,
-          // TODO: test this out, check if kc_action can be passed here
-          additionalParameters: {
-            'prompt': 'login',
-          },
           scopes: ['openid', 'profile', 'email', 'offline_access'],
           promptValues: ['login'],
         ),
       );
 
       if (result != null) {
+
+        print(result.tokenAdditionalParameters);
+        print(result.authorizationAdditionalParameters);
 
         await storage.write(key: 'access_token', value: result.accessToken);
         await storage.write(key: 'refresh_token', value: result.refreshToken);
