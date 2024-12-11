@@ -57,49 +57,49 @@ class _AccountOverviewState extends State<AccountOverview> {
   Widget build(BuildContext context) {
     return SafeArea(
         child: SingleChildScrollView(
-          child: Column(
-            children: [
-              AccountSettings(key: _accountSettingsKey),
-              SizedBox(
-                height: 16,
-              ),
-              PreferencesSettings(key: _preferenceSettingsKey),
-              SizedBox(height: 16),
-              ElevatedButton(
-                  onPressed: _saveAll,
-                  style: ElevatedButton.styleFrom(
-                    elevation: 5,
-                    padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-                  ),
-                  child: Text(
-                    'Opslaan',
-                    style: TextStyle(fontSize: 20),
-                  )),
-              SizedBox(height: 16),
-              Align(
-                alignment: Alignment.bottomLeft,
-                child: GroupOverview(),
-              ),
-              SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () {
-                  _logout();
-                },
-                style: ElevatedButton.styleFrom(
-                  elevation: 5,
-                  padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-                  backgroundColor: Color(0xFFE72222),
-                ),
-                child: Text(
-                  'Uitloggen',
-                  style: TextStyle(
-                      fontSize: 20, color: Theme.of(context).colorScheme.onPrimary),
-                ),
-              ),
-              SizedBox(height: 16),
-            ],
+      child: Column(
+        children: [
+          AccountSettings(key: _accountSettingsKey),
+          SizedBox(
+            height: 16,
           ),
-        ));
+          PreferencesSettings(key: _preferenceSettingsKey),
+          SizedBox(height: 16),
+          ElevatedButton(
+              onPressed: _saveAll,
+              style: ElevatedButton.styleFrom(
+                elevation: 5,
+                padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+              ),
+              child: Text(
+                'Opslaan',
+                style: TextStyle(fontSize: 20),
+              )),
+          SizedBox(height: 16),
+          Align(
+            alignment: Alignment.bottomLeft,
+            child: GroupOverview(),
+          ),
+          SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: () {
+              _logout();
+            },
+            style: ElevatedButton.styleFrom(
+              elevation: 5,
+              padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+              backgroundColor: Color(0xFFE72222),
+            ),
+            child: Text(
+              'Uitloggen',
+              style: TextStyle(
+                  fontSize: 20, color: Theme.of(context).colorScheme.onPrimary),
+            ),
+          ),
+          SizedBox(height: 16),
+        ],
+      ),
+    ));
   }
 
   void _saveAll() async {
@@ -524,7 +524,7 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
                       chipDecoration: const ChipDecoration(
                           wrap: true, runSpacing: 2, spacing: 10),
                       fieldDecoration: FieldDecoration(
-                        hintText: 'Voorkeuren',
+                        hintText: 'Kies jouw voorkeuren',
                         prefixIcon: const Icon(CupertinoIcons.flag),
                         showClearIcon: false,
                         border: OutlineInputBorder(
@@ -678,59 +678,95 @@ class _GroupOverviewState extends State<GroupOverview> {
   }
 
   void _inviteUserToGroup(Group group) async {
-    try {
-      final link = await _invitationService.sendInvitation(
-        group.groupId,
-        group.groupName,
-      );
+    final link = await _invitationService.sendInvitation(
+      group.groupId,
+      group.groupName,
+    );
 
-      if (link.isNotEmpty) {
-        showDialog(
-          context: context,
-          builder: (context) {
-            return AlertDialog(
-              title: const Text('Deel Uitnodigings Link!'),
-              content: Text('Wil je deze uitnodigings link kopiëeren of delen?'),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text('Annuleer'),
+    if (link.isNotEmpty && mounted) {
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            backgroundColor: Theme.of(context).dialogBackgroundColor,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12.0),
+            ),
+            shadowColor: Theme.of(context).canvasColor,
+            title: Row(
+              children: [
+                Expanded(
+                  child: Row(
+                    children: [
+                      Icon(Icons.group_add_sharp, color: Colors.green),
+                      Expanded(
+                        child: Text(
+                          '  Deel ${group.groupName}',
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                          style: Theme.of(context).textTheme.headlineMedium,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                ElevatedButton(
-                  onPressed: () async {
-                    // Trigger the share action
-                    await Share.share('Word lid van mijn groep met deze link: $link');
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Uitnodigingslink gedeeld!')),
-                    );
-                    Navigator.pop(context);
-                  },
-                  child: const Text('Deel'),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    // Copy the invitation link to the clipboard
-                    await Clipboard.setData(ClipboardData(text: link));
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Uitnodigingslink is gekopiëerd naar clipboard!')),
-                    );
-                    Navigator.pop(context);
-                  },
-                  child: const Text('Kopiëer Link'),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.pop(context),
+                  tooltip: 'Sluit',
                 ),
               ],
-            );
-          },
-        );
-      } else {
-        throw Exception('De uitnodigingslink is leeg!');
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error creating invitation link: $e')),
+            ),
+            content: Text(
+              'Nodig nieuwe groepsleden uit!',
+              style: TextStyle(
+                  color: Theme.of(context).textTheme.bodyMedium?.color),
+            ),
+            actionsAlignment: MainAxisAlignment.spaceBetween,
+            actions: [
+              IconButton(
+                icon: Icon(
+                  Icons.ios_share,
+                  color: Theme.of(context).iconTheme.color,
+                  size: 30,
+                ),
+                onPressed: () async {
+                   Share.share(
+                      'Hey, word lid van mijn groep ${group.groupName} met deze link: $link');
+                  Navigator.pop(context);
+                },
+                tooltip: 'Deel link',
+              ),
+              IconButton(
+                icon: Icon(
+                  Icons.copy,
+                  color: Theme.of(context).iconTheme.color,
+                  size: 30,
+                ),
+                onPressed: () async {
+                  await Clipboard.setData(ClipboardData(text: link));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content:
+                          Text('Uitnodigingslink gekopieerd naar clipboard!'),
+                    ),
+                  );
+                  Navigator.pop(context);
+                },
+                tooltip: 'Kopieer link',
+              ),
+            ],
+          );
+        },
       );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.red,
+          content: Text('De uitnodigingslink kon niet aangemaakt worden'),
+        ),
+      );
+      throw Exception('De uitnodigingslink is leeg!');
     }
   }
 
@@ -766,29 +802,24 @@ class _GroupOverviewState extends State<GroupOverview> {
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: ElevatedButton(
             onPressed: _showCreateGroupDialog,
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8.0),
-              ),
-            ),
-            child: const Text('\u{2795} Nieuw', style: TextStyle(fontSize: 16)),
+            child: const Text('\u{2795} Nieuw'),
           ),
         ),
-
         const SizedBox(height: 8),
-
         ListView(
-          shrinkWrap: true,  // Ensures the ListView only takes up as much space as needed
+          shrinkWrap: true, // Ensures the ListView only takes up as much space as needed
           children: [
             ..._groups.map((group) {
               return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
                 child: Container(
                   decoration: BoxDecoration(
                     color: Theme.of(context).colorScheme.onPrimary,
                     borderRadius: BorderRadius.circular(8.0),
-                    boxShadow: [BoxShadow(color: Colors.grey.shade200, blurRadius: 6)],
+                    boxShadow: [
+                      BoxShadow(color: Colors.grey.shade200, blurRadius: 6)
+                    ],
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -797,24 +828,45 @@ class _GroupOverviewState extends State<GroupOverview> {
                         padding: const EdgeInsets.all(16.0),
                         child: Text(group.groupName),
                       ),
-
                       Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Row(
                           children: [
                             IconButton(
-                              icon: const Icon(Icons.person_add),
+                              icon: const Icon(Icons.person_add, color: Colors.green,),
                               onPressed: () {
                                 _inviteUserToGroup(group);
                               },
                             ),
-
                             IconButton(
-                              icon: const Icon(Icons.exit_to_app),
+                              icon: const Icon(Icons.exit_to_app, color: Colors.red),
                               onPressed: () {
-                                setState(() {
-                                  _leaveGroup(group);
-                                });
+                                showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return AlertDialog(
+                                      title: const Text('Bevestig Verlaten Groep'),
+                                      content: Text('Weet je zeker dat je ${group.groupName} wilt verlaten?'),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () {
+                                            Navigator.of(context).pop();
+                                          },
+                                          child: const Text('Annuleren'),
+                                        ),
+                                        TextButton(
+                                          onPressed: () {
+                                            setState(() {
+                                              _leaveGroup(group);
+                                            });
+                                            Navigator.of(context).pop();
+                                          },
+                                          child: const Text('Verlaten', style: TextStyle(color: Colors.red)),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
                               },
                             ),
                           ],
