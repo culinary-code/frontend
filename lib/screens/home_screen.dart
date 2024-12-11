@@ -248,6 +248,7 @@ class _RecipeOverviewState extends State<RecipeOverview> {
                                 score: recipes[index].averageRating,
                                 recipe: recipes[index],
                                 imageUrl: recipes[index].imagePath,
+                                recipeAmountOfPeople: 0,
                               );
                             }
                           },
