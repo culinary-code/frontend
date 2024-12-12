@@ -616,11 +616,10 @@ class GroupOverview extends StatefulWidget {
 
 class _GroupOverviewState extends State<GroupOverview> {
   late List<Group> _groups = [];
+  bool _isLoading = true;  // Add a loading state
   final _groupService = GroupService();
-  final _accountService = AccountService();
   final _invitationService = InvitationService();
 
-  var userId = '';
 
   void _showCreateGroupDialog() {
     final TextEditingController groupNameController = TextEditingController();
@@ -660,9 +659,21 @@ class _GroupOverviewState extends State<GroupOverview> {
       );
   }
 
+  // Method to load groups
   Future<void> _initialize() async {
-    userId = await _accountService.getUserId();
-    _groups = await _groupService.getGroupsByUserId(userId);
+    try {
+      _groups = await _groupService.getGroupsByUserId();
+    } catch (e) {
+      // Handle errors if necessary
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load groups: $e')),
+      );
+    }
+    if (mounted) {
+      setState(() {
+        _isLoading = false;  // Set loading state to false once data is fetched
+      });
+    }
   }
 
   @override
@@ -781,7 +792,9 @@ class _GroupOverviewState extends State<GroupOverview> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return _isLoading
+        ? const Center(child: CircularProgressIndicator())  // Show a loading indicator while fetching
+        : Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
