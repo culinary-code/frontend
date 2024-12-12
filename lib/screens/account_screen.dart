@@ -1,16 +1,22 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:frontend/Services/keycloak_service.dart';
 import 'package:frontend/models/accounts/account.dart';
+import 'package:frontend/models/accounts/group.dart';
 import 'package:frontend/models/accounts/preferencedto.dart';
 import 'package:frontend/screens/keycloak/login_screen.dart';
 import 'package:frontend/services/account_service.dart';
+import 'package:frontend/services/group_service.dart';
+import 'package:frontend/services/invitation_service.dart';
 import 'package:frontend/services/preference_service.dart';
 import 'package:frontend/state/recipe_filter_options_provider.dart';
 import 'package:multi_dropdown/multi_dropdown.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
+
 
 class AccountScreen extends StatelessWidget {
   const AccountScreen({super.key});
@@ -53,7 +59,8 @@ class _AccountOverviewState extends State<AccountOverview> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
+    return SafeArea(
+      child: SingleChildScrollView(
       child: Column(
         children: [
           AccountSettings(key: _accountSettingsKey),
@@ -72,6 +79,11 @@ class _AccountOverviewState extends State<AccountOverview> {
                 'Opslaan',
                 style: TextStyle(fontSize: 20),
               )),
+          SizedBox(height: 16),
+          Align(
+            alignment: Alignment.bottomLeft,
+            child: GroupOverview(),
+          ),
           SizedBox(height: 116),
           ElevatedButton(
             onPressed: () {
@@ -191,7 +203,7 @@ class _AccountOverviewState extends State<AccountOverview> {
           SizedBox(height: 16),
         ],
       ),
-    );
+    ));
   }
 
   void _saveAll() async {
@@ -615,7 +627,7 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
                       chipDecoration: const ChipDecoration(
                           wrap: true, runSpacing: 2, spacing: 10),
                       fieldDecoration: FieldDecoration(
-                        hintText: 'Voorkeuren',
+                        hintText: 'Kies jouw voorkeuren',
                         prefixIcon: const Icon(CupertinoIcons.flag),
                         showClearIcon: false,
                         border: OutlineInputBorder(
@@ -695,6 +707,289 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class GroupOverview extends StatefulWidget {
+  const GroupOverview({super.key});
+
+  @override
+  State<GroupOverview> createState() => _GroupOverviewState();
+}
+
+class _GroupOverviewState extends State<GroupOverview> {
+  late List<Group> _groups = [];
+  bool _isLoading = true;  // Add a loading state
+  final _groupService = GroupService();
+  final _invitationService = InvitationService();
+
+
+  void _showCreateGroupDialog() {
+    final TextEditingController groupNameController = TextEditingController();
+
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('Maak een nieuwe groep aan'),
+            content: TextField(
+              controller: groupNameController,
+              decoration: const InputDecoration(labelText: 'Groepsnaam'),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: const Text('Annuleer'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  final groupName = groupNameController.text.trim();
+                  if (groupName.isNotEmpty) {
+                    setState(() {
+                      _groups.add(Group(groupId: '', groupName: groupName));
+                      _groupService.createGroup(groupName);
+                    });
+                    Navigator.pop(context);
+                  }
+                },
+                child: const Text('Maak aan'),
+              ),
+            ],
+          );
+        },
+      );
+  }
+
+  // Method to load groups
+  Future<void> _initialize() async {
+    try {
+      _groups = await _groupService.getGroupsByUserId();
+    } catch (e) {
+      // Handle errors if necessary
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load groups: $e')),
+      );
+    }
+    if (mounted) {
+      setState(() {
+        _isLoading = false;  // Set loading state to false once data is fetched
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _initialize();
+  }
+
+  void _inviteUserToGroup(Group group) async {
+    final link = await _invitationService.sendInvitation(
+      group.groupId,
+      group.groupName,
+    );
+
+    if (link.isNotEmpty && mounted) {
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            backgroundColor: Theme.of(context).dialogBackgroundColor,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12.0),
+            ),
+            shadowColor: Theme.of(context).canvasColor,
+            title: Row(
+              children: [
+                Expanded(
+                  child: Row(
+                    children: [
+                      Icon(Icons.group_add_sharp, color: Colors.green),
+                      Expanded(
+                        child: Text(
+                          '  Deel ${group.groupName}',
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                          style: Theme.of(context).textTheme.headlineMedium,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.pop(context),
+                  tooltip: 'Sluit',
+                ),
+              ],
+            ),
+            content: Text(
+              'Nodig nieuwe groepsleden uit!',
+              style: TextStyle(
+                  color: Theme.of(context).textTheme.bodyMedium?.color),
+            ),
+            actionsAlignment: MainAxisAlignment.spaceBetween,
+            actions: [
+              IconButton(
+                icon: Icon(
+                  Icons.ios_share,
+                  color: Theme.of(context).iconTheme.color,
+                  size: 30,
+                ),
+                onPressed: () async {
+                   Share.share(
+                      'Hey, word lid van mijn groep ${group.groupName} met deze link: $link');
+                  Navigator.pop(context);
+                },
+                tooltip: 'Deel link',
+              ),
+              IconButton(
+                icon: Icon(
+                  Icons.copy,
+                  color: Theme.of(context).iconTheme.color,
+                  size: 30,
+                ),
+                onPressed: () async {
+                  await Clipboard.setData(ClipboardData(text: link));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content:
+                          Text('Uitnodigingslink gekopieerd naar klembord!'),
+                    ),
+                  );
+                  Navigator.pop(context);
+                },
+                tooltip: 'Kopieer link',
+              ),
+            ],
+          );
+        },
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.red,
+          content: Text('De uitnodigingslink kon niet aangemaakt worden!'),
+        ),
+      );
+    }
+  }
+
+  void _leaveGroup(Group group) async {
+    try {
+      await _groupService.removeUserFromGroup(group.groupId);
+      setState(() {
+        _groups.remove(group);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Je hebt de groep verlaten!')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Groep verlaten mislukt: $e')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _isLoading
+        ? const Center(child: CircularProgressIndicator())  // Show a loading indicator while fetching
+        : Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+          child: const Text(
+            'Jouw Groepen',
+            style: TextStyle(fontSize: 30),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: ElevatedButton(
+            onPressed: _showCreateGroupDialog,
+            child: const Text('\u{2795} Nieuw'),
+          ),
+        ),
+        const SizedBox(height: 8),
+        ListView(
+          shrinkWrap: true, // Ensures the ListView only takes up as much space as needed
+          children: [
+            ..._groups.map((group) {
+              return Padding(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.onPrimary,
+                    borderRadius: BorderRadius.circular(8.0),
+                    boxShadow: [
+                      BoxShadow(color: Colors.grey.shade200, blurRadius: 6)
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Text(group.groupName),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Row(
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.person_add, color: Colors.green,),
+                              onPressed: () {
+                                _inviteUserToGroup(group);
+                              },
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.exit_to_app, color: Colors.red),
+                              onPressed: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return AlertDialog(
+                                      title: const Text('Bevestig Verlaten Groep'),
+                                      content: Text('Weet je zeker dat je ${group.groupName} wilt verlaten?'),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () {
+                                            Navigator.of(context).pop();
+                                          },
+                                          child: const Text('Annuleren'),
+                                        ),
+                                        TextButton(
+                                          onPressed: () {
+                                            setState(() {
+                                              _leaveGroup(group);
+                                            });
+                                            Navigator.of(context).pop();
+                                          },
+                                          child: const Text('Verlaten', style: TextStyle(color: Colors.red)),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            })
+          ],
+        ),
+      ],
     );
   }
 }

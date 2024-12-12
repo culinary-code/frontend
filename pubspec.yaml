@@ -70,6 +70,16 @@ dependencies:
   # Cache network images
   cached_network_image: ^3.4.1
 
+  # Handle invitation
+  uni_links: ^0.5.1
+
+  # Save invitation token
+  shared_preferences: ^2.1.0
+
+  # Share invitationlinks
+  share_plus: ^10.1.2
+  url_launcher: ^6.2.5
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

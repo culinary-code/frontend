@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_appauth/flutter_appauth.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:frontend/screens/invitation_screen.dart';
 import 'package:frontend/services/api_checker_service.dart';
 import 'package:frontend/services/keycloak_service.dart';
 import 'package:frontend/navigation_menu.dart';
 import 'package:frontend/state/api_selection_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -47,10 +49,27 @@ class LoginPageState extends State<LoginPage> {
       if (!mounted) return;
 
       if (success) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const NavigationMenu()),
-        );
+        // After a successful login, check if there is a pending invitation code
+        final prefs = await SharedPreferences.getInstance();
+        String? invitationCode = prefs.getString('pending_invitation_code');
+
+        if (invitationCode != null) {
+          // Clear the stored invitation code
+          prefs.remove('pending_invitation_code');
+
+          // Navigate to the InvitationScreen
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => InvitationScreen(invitationCode: invitationCode),
+            ),
+          );
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const NavigationMenu()),
+          );
+        }
       } else {
         setState(() {
           _errorMessage = 'Login mislukt.';
