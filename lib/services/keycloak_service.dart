@@ -41,14 +41,9 @@ class KeycloakService {
       );
 
       if (result != null) {
-
-        print(result.tokenAdditionalParameters);
-        print(result.authorizationAdditionalParameters);
-
         await storage.write(key: 'access_token', value: result.accessToken);
         await storage.write(key: 'refresh_token', value: result.refreshToken);
         await storage.write(key: 'id_token', value: result.idToken);
-
 
         // check account exists in backend on login on /KeyCloak/login
         final apiClient = await ApiClient.create();
