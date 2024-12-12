@@ -6,10 +6,7 @@ import 'api_client.dart';
 
 class InvitationService {
 
-  Future<String> sendInvitation(
-    String groupId,
-    String groupName,
-  ) async {
+  Future<String> sendInvitation(String groupId, String groupName) async {
     final endpoint = 'api/Invitation/sendInvitation';
     final apiClient = await ApiClient.create();
 
@@ -26,7 +23,7 @@ class InvitationService {
       final invitationLink = responseBody['link'];
 
       if (invitationLink != null && invitationLink.isNotEmpty) {
-        return invitationLink;
+        return 'https://culinarycode.com/accept-invitation/$invitationLink';
       } else {
         throw Exception('Error: Invitation link is empty or invalid');
       }
@@ -34,6 +31,7 @@ class InvitationService {
       throw Exception('Error sending invitation: ${response.body}');
     }
   }
+
 
   Future<void> acceptInvitation(String token) async {
     final endpoint = 'api/Invitation/acceptInvitation/$token';

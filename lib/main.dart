@@ -19,7 +19,6 @@ import 'package:provider/provider.dart';
 import 'package:uni_links/uni_links.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-
 void main() async {
   await dotenv.load(fileName: ".env");
   await Settings.init(cacheProvider: SharePreferenceCache());
@@ -125,6 +124,11 @@ class _MainState extends State<Main> {
         _isCheckingLoginStatus = false;
       });
     }
+
+    // Once login status is checked, initialize the deep link listener
+    if (!_isCheckingLoginStatus) {
+      _initDeepLinkListener();
+    }
   }
 
   Future<void> _initDeepLinkListener() async {
@@ -143,32 +147,39 @@ class _MainState extends State<Main> {
   }
 
   void _processDeepLink(Uri link) async {
-    if (link.host != 'accept-invitation') return;
+    if (link.host == 'culinarycode.com' &&
+        link.path.startsWith('/accept-invitation/')) {
+      final invitationCode = link.queryParameters['invitation_code'] ??
+          (link.pathSegments.isNotEmpty ? link.pathSegments.last : 'Uitnodiging is vervallen!');
 
-    final invitationCode = link.queryParameters['invitation_code'] ??
-        (link.pathSegments.isNotEmpty
-            ? link.pathSegments.last
-            : 'Uitnodiging is vervallen!');
+      if (_isLoggedIn) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => InvitationScreen(invitationCode: invitationCode),
+          ),
+        );
+      } else {
+        // Store the invitation code for later use after login
+        final prefs = await SharedPreferences.getInstance();
+        prefs.setString('pending_invitation_code', invitationCode);
 
-    if (_isLoggedIn) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) =>
-              InvitationScreen(invitationCode: invitationCode),
-        ),
-      );
-    } else {
-      // Store the invitation code in SharedPreferences
-      final prefs = await SharedPreferences.getInstance();
-      prefs.setString('pending_invitation_code', invitationCode);
+        setState(() {
+          _pendingInvitationCode = invitationCode;
+        });
 
-      setState(() => _pendingInvitationCode = invitationCode);
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const LoginPage()),
-      );
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginPage()),
+        );
+      }
     }
+  }
+
+  @override
+  void dispose() {
+    _linkSubscription.cancel(); // Unsubscribe from the link stream
+    super.dispose();
   }
 
   @override

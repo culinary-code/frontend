@@ -745,7 +745,7 @@ class _GroupOverviewState extends State<GroupOverview> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content:
-                          Text('Uitnodigingslink gekopieerd naar clipboard!'),
+                          Text('Uitnodigingslink gekopieerd naar klembord!'),
                     ),
                   );
                   Navigator.pop(context);
