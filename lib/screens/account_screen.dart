@@ -663,9 +663,6 @@ class _GroupOverviewState extends State<GroupOverview> {
   Future<void> _initialize() async {
     userId = await _accountService.getUserId();
     _groups = await _groupService.getGroupsByUserId(userId);
-    if (mounted) {
-      setState(() {});
-    }
   }
 
   @override
