@@ -36,8 +36,7 @@ class InvitationScreen extends StatelessWidget {
                     'Je hebt een uitnodiging!',
                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(height: 20),
-                  const SizedBox(height: 50),
+                  const SizedBox(height: 70),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 20),

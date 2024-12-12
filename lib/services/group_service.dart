@@ -18,7 +18,7 @@ class GroupService {
     }
   }
 
-  Future<List<Group>> getGroupsByUserId(String userId) async {
+  Future<List<Group>> getGroupsByUserId() async {
     final endpoint = 'api/Group/getGroups';
     final apiClient = await ApiClient.create();
     final response = await apiClient.authorizedGet(endpoint);
