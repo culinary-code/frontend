@@ -41,11 +41,9 @@ class KeycloakService {
       );
 
       if (result != null) {
-
         await storage.write(key: 'access_token', value: result.accessToken);
         await storage.write(key: 'refresh_token', value: result.refreshToken);
         await storage.write(key: 'id_token', value: result.idToken);
-
 
         // check account exists in backend on login on /KeyCloak/login
         final apiClient = await ApiClient.create();
@@ -112,6 +110,10 @@ class KeycloakService {
     }
 
     // Clear stored tokens on logout
+    await clearTokens();
+  }
+
+  Future<void> clearTokens() async {
     await storage.delete(key: 'access_token');
     await storage.delete(key: 'refresh_token');
   }
@@ -179,7 +181,7 @@ class KeycloakService {
         newRefreshToken = result.refreshToken!;
         newAccessToken = result.accessToken!;
       } catch (e) {
-        throw Exception('Failed to refresh token');
+        throw FormatException('Failed to refresh token');
       }
     } else {
       final response = await http.post(

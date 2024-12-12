@@ -102,4 +102,14 @@ class RecipeFilterOptionsProvider with ChangeNotifier {
     filterOptions.remove(filter);
     onFilterChanged();
   }
+
+  void clearFilters() {
+    _recipeName = '';
+    _filterOptions.clear();
+    _ingredientFilter = '';
+    _recipeTypeFilter = RecipeType.snack;
+    _recipeDifficultyFilter = Difficulty.easy;
+    _cookTimeFilter = '';
+    onFilterChanged();
+  }
 }

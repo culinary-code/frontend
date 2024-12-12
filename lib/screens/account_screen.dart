@@ -12,7 +12,9 @@ import 'package:frontend/services/account_service.dart';
 import 'package:frontend/services/group_service.dart';
 import 'package:frontend/services/invitation_service.dart';
 import 'package:frontend/services/preference_service.dart';
+import 'package:frontend/state/recipe_filter_options_provider.dart';
 import 'package:multi_dropdown/multi_dropdown.dart';
+import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 
@@ -40,6 +42,8 @@ class _AccountOverviewState extends State<AccountOverview> {
   final GlobalKey<_PreferencesSettingsState> _preferenceSettingsKey =
       GlobalKey();
 
+  final TextEditingController usernameController = TextEditingController();
+
   void _logout() async {
     await KeycloakService().logout();
     if (mounted) {
@@ -56,7 +60,7 @@ class _AccountOverviewState extends State<AccountOverview> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-        child: SingleChildScrollView(
+      child: SingleChildScrollView(
       child: Column(
         children: [
           AccountSettings(key: _accountSettingsKey),
@@ -80,7 +84,7 @@ class _AccountOverviewState extends State<AccountOverview> {
             alignment: Alignment.bottomLeft,
             child: GroupOverview(),
           ),
-          SizedBox(height: 16),
+          SizedBox(height: 116),
           ElevatedButton(
             onPressed: () {
               _logout();
@@ -92,6 +96,106 @@ class _AccountOverviewState extends State<AccountOverview> {
             ),
             child: Text(
               'Uitloggen',
+              style: TextStyle(
+                  fontSize: 20, color: Theme.of(context).colorScheme.onPrimary),
+            ),
+          ),
+          SizedBox(height: 8),
+          ElevatedButton(
+            onPressed: () {
+              showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    String errorMessage = '';
+
+                    return StatefulBuilder(
+                      builder: (context, setState) {
+                        return AlertDialog(
+                          title: Text('Account verwijderen'),
+                          content: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                  'Weet je zeker dat je je account wilt verwijderen?'),
+                              Text('Dit kan niet ongedaan worden gemaakt.'),
+                              SizedBox(height: 16),
+                              TextField(
+                                controller: usernameController,
+                                onChanged: (value) {
+                                  setState(() {
+                                    errorMessage = '';
+                                  });
+                                },
+                                decoration: InputDecoration(
+                                  labelText: 'Bevestig gebruikersnaam',
+                                  border: OutlineInputBorder(),
+                                  errorText: errorMessage.isNotEmpty
+                                      ? errorMessage
+                                      : null,
+                                ),
+                              ),
+                            ],
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
+                              child: Text('Annuleer'),
+                            ),
+                            ElevatedButton(
+                              onPressed: () async {
+                                if (usernameController.text ==
+                                    _accountSettingsKey
+                                        .currentState?._currentUsername) {
+
+                                  if (!mounted) return;
+                                  final filterprovider =
+                                  Provider.of<RecipeFilterOptionsProvider>(
+                                      context,
+                                      listen: false
+
+                                  );
+                                  filterprovider.clearFilters();
+
+                                  await AccountService().deleteAccount();
+                                  await KeycloakService().clearTokens();
+
+                                  if (!mounted) return;
+                                  Navigator.pushAndRemoveUntil(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const LoginPage(),
+                                    ),
+                                    (route) =>
+                                        false, // This removes all previous routes
+                                  );
+                                } else {
+                                  setState(() {
+                                    errorMessage =
+                                        'Gebruikersnaam komt niet overeen';
+                                  });
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Color(0xFFE72222),
+                              ),
+                              child: Text('Verwijder account',
+                                  style: TextStyle(color: Colors.white)),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  });
+            },
+            style: ElevatedButton.styleFrom(
+              elevation: 5,
+              padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+              backgroundColor: Color(0xFFE72222),
+            ),
+            child: Text(
+              'Account verwijderen',
               style: TextStyle(
                   fontSize: 20, color: Theme.of(context).colorScheme.onPrimary),
             ),
