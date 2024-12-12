@@ -115,6 +115,10 @@ class KeycloakService {
     }
 
     // Clear stored tokens on logout
+    await clearTokens();
+  }
+
+  Future<void> clearTokens() async {
     await storage.delete(key: 'access_token');
     await storage.delete(key: 'refresh_token');
   }

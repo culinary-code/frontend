@@ -148,32 +148,6 @@ class AccountService {
 
 
   Future<void> deleteAccount() async {
-    //try {
-
-      final FlutterAppAuth appAuth = FlutterAppAuth();
-
-
-      final idpBaseUrl = await ApiSelectionProvider().keycloakUrl;
-      final issuer = "$idpBaseUrl/realms/$realm";
-
-
-      final AuthorizationResponse result =
-      await appAuth.authorize(
-        AuthorizationRequest(
-          clientId,
-          redirectUrl,
-          issuer: issuer,
-          additionalParameters: {
-            'kc_action': 'delete_account',
-          },
-
-        ),
-      );
-
-      print(result.authorizationAdditionalParameters);
-      print(result.authorizationCode);
-
-
       final endpoint = 'api/Account/deleteAccount';
       final apiClient = await ApiClient.create();
 
@@ -183,8 +157,5 @@ class AccountService {
         throw Exception(
             'Error deleting account: ${response.statusCode}, ${response.body}');
       }
-    /*} catch (e) {
-      throw Exception('Error deleting account: $e');
-    }*/
   }
 }
