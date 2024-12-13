@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/ErrorNotifier.dart';
 import 'package:frontend/screens/account_screen.dart';
 import 'package:frontend/screens/favorite_screen.dart';
 import 'package:frontend/screens/grocery_screen.dart';
 import 'package:frontend/screens/home_screen.dart';
 import 'package:frontend/screens/weekoverview_screen.dart';
+import 'package:provider/provider.dart';
 
 class NavigationMenu extends StatefulWidget {
   final int initialIndex;
+
   const NavigationMenu({super.key, this.initialIndex = 0});
 
   @override
@@ -27,15 +30,28 @@ class _NavigationMenuState extends State<NavigationMenu> {
   @override
   void initState() {
     super.initState();
-    _currentIndex = widget.initialIndex;  // Set the starting index based on the passed parameter
+    _currentIndex = widget
+        .initialIndex; // Set the starting index based on the passed parameter
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        child: screens[_currentIndex],
-      ),
+      body: Consumer<ErrorNotifier>(builder: (context, errorNotifier, child) {
+        // Display error message if available
+        if (errorNotifier.errorMessage != null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(errorNotifier.errorMessage!)),
+            );
+            errorNotifier.clearError(); // Clear the error after displaying
+          });
+        }
+
+        return Container(
+          child: screens[_currentIndex],
+        );
+      }),
       bottomNavigationBar: BottomNavigationBar(
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),

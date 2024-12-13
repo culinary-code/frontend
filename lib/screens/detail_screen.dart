@@ -30,8 +30,8 @@ class DetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Laten we koken!")),
-      body: FutureBuilder<Recipe>(
-        future: RecipeService().getRecipeById(recipeId),
+      body: FutureBuilder<Recipe?>(
+        future: RecipeService().getRecipeById(context, recipeId),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -39,7 +39,8 @@ class DetailScreen extends StatelessWidget {
             return Center(child: Text('Error: ${snapshot.error}'));
           } else {
             final recipe = snapshot.data;
-            return DetailOverview(recipe: recipe!, amountOfPeople: amountOfPeople,);
+            if (recipe == null) return Text("Er ging iets mis? Probeer later opnieuw"); // TODO: what doing when recipe fails?
+            return DetailOverview(recipe: recipe, amountOfPeople: amountOfPeople,);
           }
         },
       ),
@@ -68,7 +69,7 @@ class _DetailOverviewState extends State<DetailOverview> {
   late final RecipeType recipeType = recipe.recipeType;
   late final Difficulty difficulty = recipe.difficulty;
   late bool isFavorited = recipe.isFavorited;
-  late var reviews = ReviewService().getReviewsByRecipeId(recipe.recipeId);
+  late var reviews = ReviewService().getReviewsByRecipeId(context, recipe.recipeId);
   late Map<String, double> originalQuantities;
   Timer? _debounce;
   final AccountService _accountService = AccountService();
@@ -79,7 +80,7 @@ class _DetailOverviewState extends State<DetailOverview> {
   late List<Recipe> favoriteRecipes = [];
 
   Future<List<Recipe>> getFavoriteRecipes() async {
-    favoriteRecipes = await favoriteRecipeService.getFavoriteRecipes();
+    favoriteRecipes = await favoriteRecipeService.getFavoriteRecipes(context);
     return favoriteRecipes;
   }
 
@@ -102,7 +103,7 @@ class _DetailOverviewState extends State<DetailOverview> {
   }
 
   Future<void> searchRecipeInFavorite() async {
-    List<Recipe> recipes = await favoriteRecipeService.getFavoriteRecipes();
+    List<Recipe> recipes = await favoriteRecipeService.getFavoriteRecipes(context);
 
     setState(() {
       favoriteRecipes = recipes;
@@ -149,7 +150,8 @@ class _DetailOverviewState extends State<DetailOverview> {
   // Initialization for familySize
   Future<void> _initialize() async {
     try {
-      Account user = await _accountService.fetchUser();
+      Account? user = await _accountService.fetchUser(context);
+      if (user == null) return; //TODO: this might give an error, make sure it doesnt
 
       int userFamilySize = widget.amountOfPeople;
       if (userFamilySize == 0){
@@ -266,13 +268,13 @@ class _DetailOverviewState extends State<DetailOverview> {
                             _debounce =
                                 Timer(const Duration(milliseconds: 500), () {
                               reviews = ReviewService()
-                                  .getReviewsByRecipeId(recipe.recipeId);
+                                  .getReviewsByRecipeId(context, recipe.recipeId);
                               // Update recipe to get the new average rating
                               RecipeService()
-                                  .getRecipeById(recipe.recipeId)
+                                  .getRecipeById(context, recipe.recipeId)
                                   .then((value) {
                                 setState(() {
-                                  recipe = value;
+                                  if (value != null) recipe = value;
                                 });
                               });
                             });

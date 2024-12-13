@@ -8,10 +8,11 @@ class GroceryListProvider with ChangeNotifier {
   List<Map<String, dynamic>> _ingredientData = [];
   List<Map<String, dynamic>> _data = [];
 
+  //TODO: test if the grocerylist is still being loaded correctly without the constructor
   // constructor
-  GroceryListProvider() {
-    getGroceryListFromDatabase();
-  }
+  // GroceryListProvider() {
+  //   getGroceryListFromDatabase();
+  // }
 
   // getters
   List<Map<String, dynamic>> get ingredientData => _ingredientData;
@@ -101,8 +102,8 @@ class GroceryListProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> getGroceryListFromDatabase() async {
-    var response = await groceryListService.fetchGroceryListByAccountId();
+  Future<void> getGroceryListFromDatabase(BuildContext context) async {
+    var response = await groceryListService.fetchGroceryListByAccountId(context);
 
     if (response != null) {
       var ingredients = response['ingredients'];

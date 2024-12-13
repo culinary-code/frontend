@@ -9,6 +9,8 @@ import 'package:frontend/state/api_selection_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../ErrorNotifier.dart';
+
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -42,7 +44,7 @@ class LoginPageState extends State<LoginPage> {
 
   void _loginSecured() async {
     try {
-      final success = await _keycloakService.loginSecured();
+      final success = await _keycloakService.loginSecured(context);
 
       if (!mounted) return;
 
@@ -90,6 +92,7 @@ class LoginPageState extends State<LoginPage> {
   void _loginDevelopment() async {
     try {
       final success = await _keycloakService.loginDevelopment(
+        context,
         _usernameController.text,
         _passwordController.text,
       );
@@ -128,7 +131,7 @@ class LoginPageState extends State<LoginPage> {
 
   Future<void> clearApiUrl() async {
     final apiSelectionProvider =
-        Provider.of<ApiSelectionProvider>(context, listen: false);
+    Provider.of<ApiSelectionProvider>(context, listen: false);
 
     await apiSelectionProvider.clearSelectedApi();
     await apiSelectionProvider.clearSelectedKeycloak();
@@ -142,7 +145,7 @@ class LoginPageState extends State<LoginPage> {
   // Method to set the API URL
   Future<void> setApiUrl() async {
     final apiSelectionProvider =
-        Provider.of<ApiSelectionProvider>(context, listen: false);
+    Provider.of<ApiSelectionProvider>(context, listen: false);
 
     if (_apiUrlController.text.isEmpty) {
       await clearApiUrl();
@@ -183,7 +186,7 @@ class LoginPageState extends State<LoginPage> {
     final apiSelectionProvider =
     Provider.of<ApiSelectionProvider>(context, listen: false);
     _useOwnAPI = await apiSelectionProvider.hasSelectedApiSet();
-    if(_useOwnAPI){
+    if (_useOwnAPI) {
       var fullUrl = await apiSelectionProvider.backendUrl;
       _apiUrlController.text = fullUrl.replaceFirst("https://", "");
     }
@@ -197,57 +200,72 @@ class LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      resizeToAvoidBottomInset: true,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              children: [
-                SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.15,
-                  // Responsive to screen height
-                ),
-                Align(
-                  alignment: Alignment.center,
-                  child: Image.asset(
-                    'assets/images/culinarycode_logo.png',
-                    height: 200,
-                  ),
-                ),
-                Align(
-                  alignment: Alignment.center,
-                  child: Text(
-                    'Culinary Code',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                SizedBox(height: 30),
-                // Spacer between title and fields
+    return Consumer<ErrorNotifier>(
+        builder: (context, errorNotifier, child) {
+          // Display error message if available
+          if (errorNotifier.errorMessage != null) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(errorNotifier.errorMessage!)),
+              );
+              errorNotifier.clearError(); // Clear the error after displaying
+            });
+          }
 
-                if (_errorMessage != null) ...[
-                  const SizedBox(height: 20),
-                  Text(_errorMessage!,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(color: Colors.red)),
-                ],
+          return Scaffold(
+            resizeToAvoidBottomInset: true,
+            body: SafeArea(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [
+                      SizedBox(
+                        height: MediaQuery
+                            .of(context)
+                            .size
+                            .height * 0.15,
+                        // Responsive to screen height
+                      ),
+                      Align(
+                        alignment: Alignment.center,
+                        child: Image.asset(
+                          'assets/images/culinarycode_logo.png',
+                          height: 200,
+                        ),
+                      ),
+                      Align(
+                        alignment: Alignment.center,
+                        child: Text(
+                          'Culinary Code',
+                          style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 30),
+                      // Spacer between title and fields
 
-                // Spacer between password field and buttons
-                SizedBox(height: 30),
+                      if (_errorMessage != null) ...[
+                        const SizedBox(height: 20),
+                        Text(_errorMessage!,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(color: Colors.red)),
+                      ],
 
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    (developmentMode)
-                        ? Column(
+                      // Spacer between password field and buttons
+                      SizedBox(height: 30),
+
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          (developmentMode)
+                              ? Column(
                             children: [
                               Padding(
                                 padding:
-                                    const EdgeInsets.symmetric(horizontal: 8.0),
+                                const EdgeInsets.symmetric(horizontal: 8.0),
                                 child: TextField(
                                   controller: _usernameController,
                                   decoration: InputDecoration(
@@ -260,7 +278,7 @@ class LoginPageState extends State<LoginPage> {
                               SizedBox(height: 10),
                               Padding(
                                 padding:
-                                    const EdgeInsets.symmetric(horizontal: 8.0),
+                                const EdgeInsets.symmetric(horizontal: 8.0),
                                 child: TextField(
                                   controller: _passwordController,
                                   decoration: InputDecoration(
@@ -274,13 +292,14 @@ class LoginPageState extends State<LoginPage> {
                               SizedBox(height: 10),
                               Padding(
                                 padding:
-                                    const EdgeInsets.symmetric(horizontal: 8.0),
+                                const EdgeInsets.symmetric(horizontal: 8.0),
                                 child: ElevatedButton(
                                   style: ElevatedButton.styleFrom(
                                     minimumSize: Size(double.infinity, 40),
                                   ),
                                   onPressed: () {
                                     _keycloakService.createUserDevelopment(
+                                      context,
                                       username: _usernameController.text,
                                       password: _passwordController.text,
                                     );
@@ -296,32 +315,33 @@ class LoginPageState extends State<LoginPage> {
                               SizedBox(height: 10),
                             ],
                           )
-                        : Container(),
+                              : Container(),
 
-                    // Log in button
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          minimumSize: Size(double.infinity, 40),
-                        ),
-                        onPressed: () {
-                          // Handle login logic
-                          _login();
-                        },
-                        child: Text(
-                          'Aanmelden',
-                          style: TextStyle(
-                            fontSize: 20, // Set the text size here
+                          // Log in button
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8.0),
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                minimumSize: Size(double.infinity, 40),
+                              ),
+                              onPressed: () {
+                                // Handle login logic
+                                _login();
+                              },
+                              child: Text(
+                                'Aanmelden',
+                                style: TextStyle(
+                                  fontSize: 20, // Set the text size here
+                                ),
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 20),
-                    (!_useOwnAPI)
-                        ? Padding(
+                          SizedBox(height: 20),
+                          (!_useOwnAPI)
+                              ? Padding(
                             padding:
-                                const EdgeInsets.symmetric(horizontal: 8.0),
+                            const EdgeInsets.symmetric(horizontal: 8.0),
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(
                                 minimumSize: Size(double.infinity, 40),
@@ -339,7 +359,7 @@ class LoginPageState extends State<LoginPage> {
                               ),
                             ),
                           )
-                        : Column(children: [
+                              : Column(children: [
                             SizedBox(height: 20),
                             SizedBox(
                               width: double.infinity,
@@ -348,7 +368,7 @@ class LoginPageState extends State<LoginPage> {
                                   // dropdown menu to swap between http:// and https://
                                   Padding(
                                       padding:
-                                          const EdgeInsets.fromLTRB(8, 0, 2, 0),
+                                      const EdgeInsets.fromLTRB(8, 0, 2, 0),
                                       child: Text("https://")),
                                   // input field for a url or IP address
                                   Expanded(
@@ -371,7 +391,7 @@ class LoginPageState extends State<LoginPage> {
                             ),
                             Padding(
                               padding:
-                                  const EdgeInsets.symmetric(horizontal: 8.0),
+                              const EdgeInsets.symmetric(horizontal: 8.0),
                               child: Text(
                                 'Vul de URL in van je lokaal draaiende API.',
                                 style: TextStyle(
@@ -390,7 +410,7 @@ class LoginPageState extends State<LoginPage> {
                                   child: ElevatedButton(
                                     style: ElevatedButton.styleFrom(
                                       foregroundColor:
-                                          _ownApiSet ? Colors.grey : null,
+                                      _ownApiSet ? Colors.grey : null,
                                     ),
                                     onPressed: () {
                                       setState(() {
@@ -412,23 +432,23 @@ class LoginPageState extends State<LoginPage> {
                                   child: ElevatedButton(
                                       style: ElevatedButton.styleFrom(
                                         foregroundColor:
-                                            _ownApiSet ? Colors.green : null,
+                                        _ownApiSet ? Colors.green : null,
                                       ),
                                       onPressed: () {
                                         setApiUrl();
                                       },
                                       child: _isCheckingApi
                                           ? SizedBox(
-                                              width: 20,
-                                              height: 20,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                              ),
-                                            )
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      )
                                           : Icon(
-                                              Icons.check,
-                                              size: 30,
-                                            )),
+                                        Icons.check,
+                                        size: 30,
+                                      )),
                                 ),
                               ],
                             ),
@@ -441,13 +461,14 @@ class LoginPageState extends State<LoginPage> {
                               ),
                             ),
                           ])
-                  ],
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ],
+              ),
             ),
-          ),
-        ),
-      ),
-    );
+          );
+        });
   }
 }

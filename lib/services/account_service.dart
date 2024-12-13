@@ -1,9 +1,12 @@
 import 'dart:convert';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:frontend/ErrorNotifier.dart';
 import 'package:frontend/models/accounts/account.dart';
 import 'package:frontend/models/accounts/preferencedto.dart';
 import 'package:frontend/services/api_client.dart';
+import 'package:provider/provider.dart';
 
 class AccountService {
   final FlutterSecureStorage storage = FlutterSecureStorage();
@@ -12,40 +15,45 @@ class AccountService {
       dotenv.env['BACKEND_BASE_URL'] ??
       (throw Exception('Environment variable BACKEND_BASE_URL not found'));
 
-  Future<Account> fetchUser() async {
+  Future<Account?> fetchUser(BuildContext context) async {
     final apiClient = await ApiClient.create();
-    final response = await apiClient.authorizedGet('api/Account/');
-
+    final response = await apiClient.authorizedGet(context, 'api/Account/');
+    if (response == null) return null;
     if (response.statusCode == 200) {
       try {
         var jsonResponse = json.decode(response.body);
         return Account.fromJson(jsonResponse);
       } catch (e) {
-        throw FormatException('Error parsing response: $e');
+        Provider.of<ErrorNotifier>(context, listen: false).showError("Er is een probleem opgetreden bij het weergeven van je account. Probeer later opnieuw.");
       }
+    } else if (response.statusCode == 404) {
+      Provider.of<ErrorNotifier>(context, listen: false).showError("Geen account gevonden. Probeer later opnieuw.");
     } else {
-      throw Exception('Failed to load user: ${response.body}');
+      Provider.of<ErrorNotifier>(context, listen: false).showError("Er ging iets mis met het ophalen van je account. Probeer later opnieuw.");
     }
+    return null;
   }
 
-  Future<String> getUserId() async {
+  Future<String?> getUserId(BuildContext context) async {
     try {
       String? accessToken = await storage.read(key: 'access_token');
       if (accessToken != null) {
-        Map<String, dynamic> payload = _decodeJwt(accessToken);
-        return payload['sub'];
+        Map<String, dynamic>? payload = _decodeJwt(context, accessToken);
+        if (payload != null) return payload['sub'];
       } else {
-        throw Exception('Access token not found');
+        Provider.of<ErrorNotifier>(context, listen: false).showError("Er ging iets mis met het ophalen van je account. Probeer later opnieuw.");
       }
     } catch (e) {
-      throw Exception('Error loading user ID: $e');
+      Provider.of<ErrorNotifier>(context, listen: false).showError("Er ging iets mis met het ophalen van je account. Probeer later opnieuw.");
     }
+    return null;
   }
 
-  Map<String, dynamic> _decodeJwt(String token) {
+  Map<String, dynamic>? _decodeJwt(BuildContext context, String token) {
     final parts = token.split('.');
     if (parts.length != 3) {
-      throw Exception('Invalid token');
+      Provider.of<ErrorNotifier>(context, listen: false).showError("Er ging iets mis met het ophalen van je account. Probeer later opnieuw.");
+      return null;
     }
 
     final payload =
@@ -53,82 +61,90 @@ class AccountService {
     return jsonDecode(payload);
   }
 
-  Future<void> updateUsername(String newUsername) async {
+  Future<void> updateUsername(BuildContext context, String newUsername) async {
     try {
       final endpoint = 'api/Account/updateAccount?actionType=updateusername';
 
       final apiClient = await ApiClient.create();
-      final response = await apiClient.authorizedPut(endpoint, {
+      final response = await apiClient.authorizedPut(context, endpoint, {
         'Name': newUsername,
       });
+      if (response == null) return;
 
       if (response.statusCode != 200) {
-        throw Exception(
-            'Error updating username: ${response.statusCode}, ${response.body}');
+        Provider.of<ErrorNotifier>(context, listen: false).showError("Er ging iets mis met het updaten van je gebruikersnaam. Probeer later opnieuw.");
+
       }
     } catch (e) {
-      throw Exception('Error updating username: $e');
+      Provider.of<ErrorNotifier>(context, listen: false).showError("Er ging iets mis met het updaten van je gebruikersnaam. Probeer later opnieuw.");
     }
   }
 
-  Future<void> updateFamilySize(int newFamilySize) async {
+  Future<void> updateFamilySize(BuildContext context, int newFamilySize) async {
     try {
       final endpoint = 'api/Account/updateAccount?actionType=updatefamilysize';
 
       final apiClient = await ApiClient.create();
-      final response = await apiClient.authorizedPut(endpoint, {
+      final response = await apiClient.authorizedPut(context, endpoint, {
         'FamilySize': newFamilySize,
       });
+      if (response == null) return;
 
       if (response.statusCode != 200) {
-        throw Exception(
-            'Error updating familySize: ${response.statusCode}, ${response.body}');
+        Provider.of<ErrorNotifier>(context, listen: false).showError("Er ging iets mis met het updaten van je familie grootte. Probeer later opnieuw.");
+
       }
     } catch (e) {
-      throw Exception('Error updating familySize: $e');
+      Provider.of<ErrorNotifier>(context, listen: false).showError("Er ging iets mis met het updaten van je familie grootte. Probeer later opnieuw.");
     }
   }
 
-  Future<List<PreferenceDto>> getPreferencesByUserId() async {
+  Future<List<PreferenceDto>> getPreferencesByUserId(BuildContext context) async {
     final endpoint = 'api/Account/getPreferences';
     final apiClient = await ApiClient.create();
-    final response = await apiClient.authorizedGet(endpoint);
+    final response = await apiClient.authorizedGet(context, endpoint);
+    if (response == null) return [];
 
     if (response.statusCode == 200) {
       List<dynamic> preferencesJson = json.decode(response.body);
       return preferencesJson.map((p) => PreferenceDto.fromJson(p)).toList();
     } else {
-      throw Exception('Error fetching preferences');
+      Provider.of<ErrorNotifier>(context, listen: false).showError(
+          "Er is iets misgegaan bij het ophalen van uw voorkeuren. Probeer het later opnieuw.");
+      return [];
     }
   }
 
-  Future<void> addPreference(PreferenceDto preference) async {
+  Future<void> addPreference(BuildContext context, PreferenceDto preference) async {
     final endpoint = 'api/Account/addPreference';
     final apiClient = await ApiClient.create();
 
-    final response = await apiClient.authorizedPost(endpoint, {
+    final response = await apiClient.authorizedPost(context, endpoint, {
       'PreferenceName': preference.preferenceName,
     });
+    if (response == null) return;
 
     if (response.statusCode != 200) {
-      throw Exception(
-          'Error adding preference: ${response.statusCode}, ${response.body}');
+      Provider.of<ErrorNotifier>(context, listen: false).showError(
+          "Er is iets misgegaan bij het verwijderen van uw voorkeur. Probeer het later opnieuw.");
     }
   }
 
-  Future<void> deletePreference(String preferenceId) async {
+  Future<void> deletePreference(BuildContext context, String preferenceId) async {
     try {
       final endpoint = 'api/Account/deletePreference/$preferenceId';
       final apiClient = await ApiClient.create();
 
-      final response = await apiClient.authorizedDelete(endpoint);
+      final response = await apiClient.authorizedDelete(context, endpoint);
+      if (response == null) return;
 
       if (response.statusCode != 200) {
-        throw Exception(
-            'Error deleting preference: ${response.statusCode}, ${response.body}');
+        Provider.of<ErrorNotifier>(context, listen: false).showError(
+            "Er is iets misgegaan bij het verwijderen van uw voorkeur. Probeer het later opnieuw.");
       }
     } catch (e) {
-      throw Exception('Error deleting preference: $e');
+      Provider.of<ErrorNotifier>(context, listen: false).showError(
+          "Er is iets misgegaan bij het verwijderen van uw voorkeur. Probeer het later opnieuw.");
     }
   }
 
@@ -145,15 +161,16 @@ class AccountService {
   final String redirectUrl = "com.culinarycode://login-callback";
 
 
-  Future<void> deleteAccount() async {
+  Future<void> deleteAccount(BuildContext context) async {
       final endpoint = 'api/Account/deleteAccount';
       final apiClient = await ApiClient.create();
 
-      final response = await apiClient.authorizedDelete(endpoint);
+      final response = await apiClient.authorizedDelete(context, endpoint);
+      if (response == null) return;
 
       if (response.statusCode != 200) {
-        throw Exception(
-            'Error deleting account: ${response.statusCode}, ${response.body}');
+        Provider.of<ErrorNotifier>(context, listen: false).showError(
+            "Er is iets misgegaan bij het verwijderen van uw account. Probeer het later opnieuw.");
       }
   }
 }

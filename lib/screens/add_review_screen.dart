@@ -46,7 +46,7 @@ class _AddReviewScreenState extends State<AddReviewScreen> {
       return;
     }
     Map<bool, String> result = await ReviewService()
-        .submitReview(widget.recipeId, _rating, _descriptionController.text);
+        .submitReview(context, widget.recipeId, _rating, _descriptionController.text);
 
     if (!mounted) return;
 
@@ -54,14 +54,9 @@ class _AddReviewScreenState extends State<AddReviewScreen> {
       // force refresh of recipes in the home screen to show the new recipe
       final filterProvider =
       Provider.of<RecipeFilterOptionsProvider>(context, listen: false);
-      filterProvider.onFilterChanged();
+      filterProvider.onFilterChanged(context);
 
       Navigator.pop(context);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(result.values.first),
-        backgroundColor: Colors.red,
-      ));
     }
   }
 

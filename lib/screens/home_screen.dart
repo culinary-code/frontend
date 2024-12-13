@@ -73,14 +73,14 @@ class _RecipeOverviewState extends State<RecipeOverview> {
     final filterProvider =
         Provider.of<RecipeFilterOptionsProvider>(context, listen: false);
     setState(() {
-      filterProvider.onFilterChanged();
+      filterProvider.onFilterChanged(context);
     });
     _loadRecipes();
   }
 
   Future<void> _loadRecipes() async {
     final favoriteRecipeProvider = Provider.of<FavoriteRecipeProvider>(context, listen: false);
-    await favoriteRecipeProvider.loadFavoriteRecipes();
+    await favoriteRecipeProvider.loadFavoriteRecipes(context);
 
     final filterProvider = Provider.of<RecipeFilterOptionsProvider>(context, listen: false);
     final filteredRecipes = await filterProvider.recipes;

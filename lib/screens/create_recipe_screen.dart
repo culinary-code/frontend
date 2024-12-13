@@ -60,6 +60,7 @@ class _RecipeFormState extends State<RecipeForm> {
       });
 
       final suggestions = await RecipeService().getRecipeSuggestions(
+        context,
           _recipeNameController.text, filterProvider.filterOptions);
 
       if (suggestions.isEmpty) {
@@ -93,10 +94,12 @@ class _RecipeFormState extends State<RecipeForm> {
         const SnackBar(content: Text('Recept aangevraagd')),
       );
 
-      String response = await RecipeService().createRecipe(
+      String? responseResult = await RecipeService().createRecipe(
+        context,
           _recipeNameController.text,
           description,
           filterProvider.filterOptions);
+      String response = (responseResult == null)? '' : responseResult;
 
       // Check if the response is a valid recipe UUID, otherwise it's an error message
       final uuidRegExp = RegExp(
@@ -205,7 +208,7 @@ class _RecipeFormState extends State<RecipeForm> {
                   FilterOptionsDisplayWidget(
                     onDelete: () {
                       filterProvider.filterOptions.clear();
-                      filterProvider.onFilterChanged();
+                      filterProvider.onFilterChanged(context);
                     },
                   ),
                   const SizedBox(height: 12),
@@ -253,7 +256,7 @@ class _RecipeFormState extends State<RecipeForm> {
                         });
                         await createRecipe(
                             context, recipeName, recipeDescription);
-                        filterProvider.onFilterChanged();
+                        filterProvider.onFilterChanged(context);
                       },
                     ),
                 ],
