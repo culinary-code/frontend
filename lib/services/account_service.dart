@@ -134,28 +134,38 @@ class AccountService {
     }
   }
 
-
-
   String get clientId =>
       dotenv.env['KEYCLOAK_CLIENT_ID'] ??
-          (throw Exception('Environment variable KEYCLOAK_CLIENT_ID not found'));
+      (throw Exception('Environment variable KEYCLOAK_CLIENT_ID not found'));
 
   String get realm =>
       dotenv.env['KEYCLOAK_REALM'] ??
-          (throw Exception('Environment variable KEYCLOAK_REALM not found'));
+      (throw Exception('Environment variable KEYCLOAK_REALM not found'));
 
   final String redirectUrl = "com.culinarycode://login-callback";
 
-
   Future<void> deleteAccount() async {
-      final endpoint = 'api/Account/deleteAccount';
-      final apiClient = await ApiClient.create();
+    final endpoint = 'api/Account/deleteAccount';
+    final apiClient = await ApiClient.create();
 
-      final response = await apiClient.authorizedDelete(endpoint);
+    final response = await apiClient.authorizedDelete(endpoint);
 
-      if (response.statusCode != 200) {
-        throw Exception(
-            'Error deleting account: ${response.statusCode}, ${response.body}');
-      }
+    if (response.statusCode != 200) {
+      throw Exception(
+          'Error deleting account: ${response.statusCode}, ${response.body}');
+    }
+  }
+
+  Future<void> updateChosenGroupId(String? chosenGroupId) async {
+    final endpoint = 'api/Account/setChosenGroup';
+    final apiClient = await ApiClient.create();
+
+    final response = await apiClient.authorizedPut(endpoint, {
+      'ChosenGroupId': chosenGroupId,
+    });
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update ChosenGroupId: ${response.body}');
+    }
   }
 }

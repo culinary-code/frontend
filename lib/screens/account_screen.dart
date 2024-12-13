@@ -16,7 +16,7 @@ import 'package:frontend/state/recipe_filter_options_provider.dart';
 import 'package:multi_dropdown/multi_dropdown.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AccountScreen extends StatelessWidget {
   const AccountScreen({super.key});
@@ -60,7 +60,7 @@ class _AccountOverviewState extends State<AccountOverview> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: SingleChildScrollView(
+        child: SingleChildScrollView(
       child: Column(
         children: [
           AccountSettings(key: _accountSettingsKey),
@@ -148,14 +148,11 @@ class _AccountOverviewState extends State<AccountOverview> {
                                 if (usernameController.text ==
                                     _accountSettingsKey
                                         .currentState?._currentUsername) {
-
                                   if (!mounted) return;
                                   final filterprovider =
-                                  Provider.of<RecipeFilterOptionsProvider>(
-                                      context,
-                                      listen: false
-
-                                  );
+                                      Provider.of<RecipeFilterOptionsProvider>(
+                                          context,
+                                          listen: false);
                                   filterprovider.clearFilters();
 
                                   await AccountService().deleteAccount();
@@ -711,6 +708,7 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
   }
 }
 
+// TODO: make sure state of switch is remembered when restarting app
 class GroupOverview extends StatefulWidget {
   const GroupOverview({super.key});
 
@@ -720,62 +718,69 @@ class GroupOverview extends StatefulWidget {
 
 class _GroupOverviewState extends State<GroupOverview> {
   late List<Group> _groups = [];
-  bool _isLoading = true;  // Add a loading state
+  bool _isLoading = true;
   final _groupService = GroupService();
   final _invitationService = InvitationService();
+  final _accountService = AccountService();
 
+  String _selectedGroup = '';
 
   void _showCreateGroupDialog() {
     final TextEditingController groupNameController = TextEditingController();
 
-      showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: const Text('Maak een nieuwe groep aan'),
-            content: TextField(
-              controller: groupNameController,
-              decoration: const InputDecoration(labelText: 'Groepsnaam'),
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Maak een nieuwe groep aan'),
+          content: TextField(
+            controller: groupNameController,
+            decoration: const InputDecoration(labelText: 'Groepsnaam'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Annuleer'),
             ),
-            actions: [
-              TextButton(
-                onPressed: () {
+            ElevatedButton(
+              onPressed: () {
+                final groupName = groupNameController.text.trim();
+                if (groupName.isNotEmpty) {
+                  setState(() {
+                    _groups.add(Group(groupId: '', groupName: groupName));
+                    _groupService.createGroup(groupName);
+                  });
                   Navigator.pop(context);
-                },
-                child: const Text('Annuleer'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  final groupName = groupNameController.text.trim();
-                  if (groupName.isNotEmpty) {
-                    setState(() {
-                      _groups.add(Group(groupId: '', groupName: groupName));
-                      _groupService.createGroup(groupName);
-                    });
-                    Navigator.pop(context);
-                  }
-                },
-                child: const Text('Maak aan'),
-              ),
-            ],
-          );
-        },
-      );
+                }
+              },
+              child: const Text('Maak aan'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   // Method to load groups
   Future<void> _initialize() async {
     try {
       _groups = await _groupService.getGroupsByUserId();
+
+      // After fetching groups, load the group mode state from SharedPreferences
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      for (var group in _groups) {
+        group.isGroupMode = prefs.getBool(group.groupId) ?? false;
+      }
     } catch (e) {
-      // Handle errors if necessary
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to load groups: $e')),
       );
     }
     if (mounted) {
       setState(() {
-        _isLoading = false;  // Set loading state to false once data is fetched
+        _isLoading = false;
       });
     }
   }
@@ -840,7 +845,7 @@ class _GroupOverviewState extends State<GroupOverview> {
                   size: 30,
                 ),
                 onPressed: () async {
-                   Share.share(
+                  Share.share(
                       'Hey, word lid van mijn groep ${group.groupName} met deze link: $link');
                   Navigator.pop(context);
                 },
@@ -894,102 +899,132 @@ class _GroupOverviewState extends State<GroupOverview> {
     }
   }
 
+  // Switch toggle handler
+  void _toggleGroupMode(Group group) async {
+    setState(() {
+      // Turn off the group mode for all other groups
+      for (var g in _groups) {
+        if (g.groupId != group.groupId) {
+          g.isGroupMode = false;
+        }
+      }
+      // Toggle the current group mode
+      group.isGroupMode = !group.isGroupMode;
+      _selectedGroup = group.isGroupMode ? group.groupId : ''; // Update selected group
+    });
+
+    try {
+      // Update SharedPreferences to store the group mode state
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      for (var key in prefs.getKeys()) {
+        prefs.setBool(key, false);
+      }
+      prefs.setBool(group.groupId, group.isGroupMode);
+
+      await _accountService.updateChosenGroupId(group.isGroupMode ? group.groupId : null);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${group.groupName} is now ${group.isGroupMode ? 'in group mode' : 'in user mode'}')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to update group mode: $e')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return _isLoading
-        ? const Center(child: CircularProgressIndicator())  // Show a loading indicator while fetching
+        ? const Center(
+            child:
+                CircularProgressIndicator())
         : Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
-          child: const Text(
-            'Jouw Groepen',
-            style: TextStyle(fontSize: 30),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: ElevatedButton(
-            onPressed: _showCreateGroupDialog,
-            child: const Text('\u{2795} Nieuw'),
-          ),
-        ),
-        const SizedBox(height: 8),
-        ListView(
-          shrinkWrap: true, // Ensures the ListView only takes up as much space as needed
-          children: [
-            ..._groups.map((group) {
-              return Padding(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.onPrimary,
-                    borderRadius: BorderRadius.circular(8.0),
-                    boxShadow: [
-                      BoxShadow(color: Colors.grey.shade200, blurRadius: 6)
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Text(group.groupName),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Row(
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.person_add, color: Colors.green,),
-                              onPressed: () {
-                                _inviteUserToGroup(group);
-                              },
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.exit_to_app, color: Colors.red),
-                              onPressed: () {
-                                showDialog(
-                                  context: context,
-                                  builder: (BuildContext context) {
-                                    return AlertDialog(
-                                      title: const Text('Bevestig Verlaten Groep'),
-                                      content: Text('Weet je zeker dat je ${group.groupName} wilt verlaten?'),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () {
-                                            Navigator.of(context).pop();
-                                          },
-                                          child: const Text('Annuleren'),
-                                        ),
-                                        TextButton(
-                                          onPressed: () {
-                                            setState(() {
-                                              _leaveGroup(group);
-                                            });
-                                            Navigator.of(context).pop();
-                                          },
-                                          child: const Text('Verlaten', style: TextStyle(color: Colors.red)),
-                                        ),
-                                      ],
-                                    );
-                                  },
-                                );
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0, vertical: 16.0),
+                child: const Text(
+                  'Jouw Groepen',
+                  style: TextStyle(fontSize: 30),
                 ),
-              );
-            })
-          ],
-        ),
-      ],
-    );
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: ElevatedButton(
+                  onPressed: _showCreateGroupDialog,
+                  child: const Text('\u{2795} Nieuw'),
+                ),
+              ),
+              const SizedBox(height: 8),
+              ListView(
+                shrinkWrap: true,
+                // Ensures the ListView only takes up as much space as needed
+                children: [
+                  ..._groups.map((group) {
+                    final isSelected = _selectedGroup ==
+                        group.groupId;
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 8.0, horizontal: 16.0),
+                        // Select this group when tapped
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.onPrimary,
+                            borderRadius: BorderRadius.circular(8.0),
+                            boxShadow: [
+                              BoxShadow(
+                                  color: Colors.grey.shade200, blurRadius: 6)
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Text(
+                                  group.groupName,
+                                  style: TextStyle(
+                                    fontWeight: isSelected
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                                  ),
+                                ),
+                              ),
+                              Switch(
+                                value: group.isGroupMode,
+                                onChanged: (value) => _toggleGroupMode(group),
+                                activeColor: Colors.green,
+
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Row(
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(Icons.person_add,
+                                          color: Colors.green),
+                                      onPressed: () =>
+                                          _inviteUserToGroup(group),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.exit_to_app,
+                                          color: Colors.red),
+                                      onPressed: () =>
+                                          _leaveGroup(group),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    );
+                  })
+                ],
+              ),
+            ],
+          );
   }
 }
