@@ -246,7 +246,6 @@ class _AccountSettingsState extends State<AccountSettings> {
 
   String _currentUsername = '';
   int _currentFamilySize = 0;
-  late String userId;
 
   final storage = FlutterSecureStorage();
   bool _usernameError = false;
@@ -292,7 +291,7 @@ class _AccountSettingsState extends State<AccountSettings> {
     }
 
     try {
-      await _accountService.updateUsername(userId, newUsername);
+      await _accountService.updateUsername(newUsername);
       setState(() {
         _currentUsername = newUsername;
         _usernameError = false; // Clear error on successful save
@@ -304,7 +303,7 @@ class _AccountSettingsState extends State<AccountSettings> {
 
   Future<void> _saveFamilySize(int newFamilySize) async {
     try {
-      await _accountService.updateFamilySize(userId, newFamilySize);
+      await _accountService.updateFamilySize(newFamilySize);
       setState(() {
         _currentFamilySize = newFamilySize;
         _familySizeController.text = newFamilySize.toString();
@@ -475,7 +474,6 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
 
   final _accountService = AccountService();
   final _preferenceService = PreferenceService();
-  var userId = '';
 
   String? selectedValue;
 
@@ -512,7 +510,7 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
 
     // Get current user preferences to avoid duplicates
     List<PreferenceDto> preferencesForDelete =
-        await _accountService.getPreferencesByUserId(userId);
+        await _accountService.getPreferencesByUserId();
 
     if (selectedPreferences.isNotEmpty) {
       for (String preference in selectedPreferences) {
@@ -522,7 +520,6 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
         if (!isExistingPreference) {
           // Add custom preference
           _accountService.addPreference(
-            userId,
             PreferenceDto(
                 preferenceName: preference,
                 standardPreference: false,
@@ -569,9 +566,8 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
         );
       }).toList();
 
-      userId = await _accountService.getUserId();
       List<PreferenceDto> userPreferences =
-          await _accountService.getPreferencesByUserId(userId);
+          await _accountService.getPreferencesByUserId();
 
       setState(() {
         // Add userPreferences to tempPreferences if they're not already present
