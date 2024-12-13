@@ -101,12 +101,15 @@ class _MainState extends State<Main> {
   String? _pendingInvitationCode;
 
   late StreamSubscription _linkSubscription; // For listening to incoming links
+  bool get _isDevelopmentMode => dotenv.env['DEVELOPMENT_MODE']?.toLowerCase() == 'true';
 
   @override
   void initState() {
     super.initState();
     _checkLoginStatus();
-    _initDeepLinkListener();
+    if (!_isDevelopmentMode) {
+      _initDeepLinkListener();
+    }
   }
 
   Future<void> _checkLoginStatus() async {
@@ -120,13 +123,19 @@ class _MainState extends State<Main> {
         _isLoggedIn = false;
       });
     } finally {
+      // with this method running, it will make it so the login screen shows immediately with a provided api url
+      final apiSelectionProvider =
+      Provider.of<ApiSelectionProvider>(context, listen: false);
+      await apiSelectionProvider.backendUrl;
+
+
       setState(() {
         _isCheckingLoginStatus = false;
       });
     }
 
     // Once login status is checked, initialize the deep link listener
-    if (!_isCheckingLoginStatus) {
+    if (!_isCheckingLoginStatus && !_isDevelopmentMode) {
       _initDeepLinkListener();
     }
   }
@@ -178,7 +187,9 @@ class _MainState extends State<Main> {
 
   @override
   void dispose() {
-    _linkSubscription.cancel(); // Unsubscribe from the link stream
+    if (!_isDevelopmentMode) {
+      _linkSubscription.cancel(); // Unsubscribe from the link stream only if initialized
+    } // Unsubscribe from the link stream
     super.dispose();
   }
 
