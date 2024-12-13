@@ -21,8 +21,6 @@ class LoginPageState extends State<LoginPage> {
   String? _errorMessage;
 
   final TextEditingController _apiUrlController = TextEditingController();
-  final TextEditingController _apiUrlPrefixController =
-      TextEditingController(text: 'http://');
   bool _useOwnAPI = false;
   bool _isCheckingApi = false;
   String _apiErrorMessage = '';
@@ -61,7 +59,8 @@ class LoginPageState extends State<LoginPage> {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => InvitationScreen(invitationCode: invitationCode),
+              builder: (context) =>
+                  InvitationScreen(invitationCode: invitationCode),
             ),
           );
         } else {
@@ -127,19 +126,30 @@ class LoginPageState extends State<LoginPage> {
     return url;
   }
 
-  // Method to set the API URL
-  void setApiUrl() {
-    if (_apiUrlController.text.isEmpty) {
-      setState(() {
-        _apiErrorMessage = 'Vul een URL in.';
-      });
-      return;
-    }
-
+  Future<void> clearApiUrl() async {
     final apiSelectionProvider =
         Provider.of<ApiSelectionProvider>(context, listen: false);
 
-    String apiUrl = _apiUrlPrefixController.text + _apiUrlController.text;
+    await apiSelectionProvider.clearSelectedApi();
+    await apiSelectionProvider.clearSelectedKeycloak();
+    setState(() {
+      _ownApiSet = false;
+      _apiErrorMessage = '';
+      _apiUrlController.text = "";
+    });
+  }
+
+  // Method to set the API URL
+  Future<void> setApiUrl() async {
+    final apiSelectionProvider =
+        Provider.of<ApiSelectionProvider>(context, listen: false);
+
+    if (_apiUrlController.text.isEmpty) {
+      await clearApiUrl();
+      return;
+    }
+
+    String apiUrl = "https://${_apiUrlController.text}";
     apiUrl = stripTrailingSlash(apiUrl);
 
     setState(() {
@@ -147,7 +157,7 @@ class LoginPageState extends State<LoginPage> {
     });
 
     // check if the url is reachable
-    ApiCheckerService().checkApi(apiUrl).then((value) async {
+    await ApiCheckerService().checkApi(apiUrl).then((value) async {
       setState(() {
         _isCheckingApi = false;
       });
@@ -167,6 +177,22 @@ class LoginPageState extends State<LoginPage> {
         return;
       }
     });
+  }
+
+  Future<void> _initialize() async {
+    final apiSelectionProvider =
+    Provider.of<ApiSelectionProvider>(context, listen: false);
+    _useOwnAPI = await apiSelectionProvider.hasSelectedApiSet();
+    if(_useOwnAPI){
+      var fullUrl = await apiSelectionProvider.backendUrl;
+      _apiUrlController.text = fullUrl.replaceFirst("https://", "");
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _initialize();
   }
 
   @override
@@ -321,28 +347,9 @@ class LoginPageState extends State<LoginPage> {
                                 children: [
                                   // dropdown menu to swap between http:// and https://
                                   Padding(
-                                    padding:
-                                        const EdgeInsets.fromLTRB(8, 0, 2, 0),
-                                    child: DropdownButton<String>(
-                                      value: _apiUrlPrefixController.text,
-                                      isDense: false,
-                                      alignment: Alignment.centerRight,
-                                      borderRadius: BorderRadius.circular(5),
-                                      items: <String>['http://', 'https://']
-                                          .map<DropdownMenuItem<String>>(
-                                              (String value) {
-                                        return DropdownMenuItem<String>(
-                                          value: value,
-                                          child: Text(value),
-                                        );
-                                      }).toList(),
-                                      onChanged: (String? value) {
-                                        setState(() {
-                                          _apiUrlPrefixController.text = value!;
-                                        });
-                                      },
-                                    ),
-                                  ),
+                                      padding:
+                                          const EdgeInsets.fromLTRB(8, 0, 2, 0),
+                                      child: Text("https://")),
                                   // input field for a url or IP address
                                   Expanded(
                                     child: Padding(
@@ -366,7 +373,7 @@ class LoginPageState extends State<LoginPage> {
                               padding:
                                   const EdgeInsets.symmetric(horizontal: 8.0),
                               child: Text(
-                                'Vul de URL of IP-adres in van je lokaal draaiende API.',
+                                'Vul de URL in van je lokaal draaiende API.',
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: Colors.grey,
@@ -387,6 +394,7 @@ class LoginPageState extends State<LoginPage> {
                                     ),
                                     onPressed: () {
                                       setState(() {
+                                        clearApiUrl();
                                         _useOwnAPI = false;
                                       });
                                     },

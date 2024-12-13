@@ -34,4 +34,19 @@ class ApiSelectionProvider with ChangeNotifier {
   Future<bool> isSelectedApiSet() async {
     return await storage.read(key: 'api') != backendUrlEnv;
   }
+
+  Future<void> clearSelectedApi() async {
+    await storage.delete(key: 'api');
+    notifyListeners();
+  }
+
+  Future<void> clearSelectedKeycloak() async {
+    await storage.delete(key: 'keycloak');
+    notifyListeners();
+  }
+
+  Future<bool> hasSelectedApiSet() async {
+    String? storedUrl = await storage.read(key: 'api');
+    return storedUrl != null;
+  }
 }

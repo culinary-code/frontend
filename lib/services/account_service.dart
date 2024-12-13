@@ -1,11 +1,9 @@
 import 'dart:convert';
-import 'package:flutter_appauth/flutter_appauth.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:frontend/models/accounts/account.dart';
 import 'package:frontend/models/accounts/preferencedto.dart';
 import 'package:frontend/services/api_client.dart';
-import 'package:frontend/state/api_selection_provider.dart';
 
 class AccountService {
   final FlutterSecureStorage storage = FlutterSecureStorage();
@@ -55,7 +53,7 @@ class AccountService {
     return jsonDecode(payload);
   }
 
-  Future<void> updateUsername(String userId, String newUsername) async {
+  Future<void> updateUsername(String newUsername) async {
     try {
       final endpoint = 'api/Account/updateAccount?actionType=updateusername';
 
@@ -73,7 +71,7 @@ class AccountService {
     }
   }
 
-  Future<void> updateFamilySize(String userId, int newFamilySize) async {
+  Future<void> updateFamilySize(int newFamilySize) async {
     try {
       final endpoint = 'api/Account/updateAccount?actionType=updatefamilysize';
 
@@ -91,7 +89,7 @@ class AccountService {
     }
   }
 
-  Future<List<PreferenceDto>> getPreferencesByUserId(String userId) async {
+  Future<List<PreferenceDto>> getPreferencesByUserId() async {
     final endpoint = 'api/Account/getPreferences';
     final apiClient = await ApiClient.create();
     final response = await apiClient.authorizedGet(endpoint);
@@ -104,7 +102,7 @@ class AccountService {
     }
   }
 
-  Future<void> addPreference(String userId, PreferenceDto preference) async {
+  Future<void> addPreference(PreferenceDto preference) async {
     final endpoint = 'api/Account/addPreference';
     final apiClient = await ApiClient.create();
 
