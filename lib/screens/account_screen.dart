@@ -723,6 +723,8 @@ class _GroupOverviewState extends State<GroupOverview> {
   final _invitationService = InvitationService();
   final _accountService = AccountService();
 
+  late Account user;
+
   String _selectedGroup = '';
 
   void _showCreateGroupDialog() {
@@ -767,11 +769,19 @@ class _GroupOverviewState extends State<GroupOverview> {
   Future<void> _initialize() async {
     try {
       _groups = await _groupService.getGroupsByUserId();
+      user = await _accountService.fetchUser();
 
       // After fetching groups, load the group mode state from SharedPreferences
+      // TODO shared preference deel nu overbodig?
       SharedPreferences prefs = await SharedPreferences.getInstance();
       for (var group in _groups) {
         group.isGroupMode = prefs.getBool(group.groupId) ?? false;
+
+        // TODO: test op device, miss moet dit niet
+        if (user.chosenGroupId == group.groupId) {
+          group.isGroupMode = true;
+          prefs.setBool(group.groupId, true);
+        }
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
