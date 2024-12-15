@@ -62,7 +62,7 @@ class _AddToMealPlanner extends State<AddToMealPlanner> {
   Future<void> _initialize() async {
     try {
       Account? user = await _accountService.fetchUser(context);
-      if (user == null) return; // TODO: check if this gives errors
+      if (user == null) return;
 
       int userFamilySize = widget.amountOfPeople;
       if (userFamilySize == 0){

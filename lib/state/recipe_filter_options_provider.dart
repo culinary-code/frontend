@@ -16,12 +16,6 @@ class RecipeFilterOptionsProvider with ChangeNotifier {
   Difficulty _recipeDifficultyFilter = Difficulty.easy;
   String _cookTimeFilter = '';
 
-  // TODO: check if recipes are still being initialized without the constructor
-  // constructor
-  // RecipeFilterOptionsProvider() {
-  //   _recipes = RecipeService().getRecipes();
-  // }
-
   // getters
   List<FilterOption> get filterOptions => _filterOptions;
 

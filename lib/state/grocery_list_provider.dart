@@ -8,12 +8,6 @@ class GroceryListProvider with ChangeNotifier {
   List<Map<String, dynamic>> _ingredientData = [];
   List<Map<String, dynamic>> _data = [];
 
-  //TODO: test if the grocerylist is still being loaded correctly without the constructor
-  // constructor
-  // GroceryListProvider() {
-  //   getGroceryListFromDatabase();
-  // }
-
   // getters
   List<Map<String, dynamic>> get ingredientData => _ingredientData;
   List<Map<String, dynamic>> get data => _data;

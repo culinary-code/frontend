@@ -39,7 +39,7 @@ class DetailScreen extends StatelessWidget {
             return Center(child: Text('Error: ${snapshot.error}'));
           } else {
             final recipe = snapshot.data;
-            if (recipe == null) return Text("Er ging iets mis? Probeer later opnieuw"); // TODO: what doing when recipe fails?
+            if (recipe == null) return Text("Er ging iets mis? Probeer later opnieuw");
             return DetailOverview(recipe: recipe, amountOfPeople: amountOfPeople,);
           }
         },
@@ -151,7 +151,7 @@ class _DetailOverviewState extends State<DetailOverview> {
   Future<void> _initialize() async {
     try {
       Account? user = await _accountService.fetchUser(context);
-      if (user == null) return; //TODO: this might give an error, make sure it doesnt
+      if (user == null) return;
 
       int userFamilySize = widget.amountOfPeople;
       if (userFamilySize == 0){

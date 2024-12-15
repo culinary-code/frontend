@@ -244,7 +244,7 @@ class KeycloakService {
 
   bool _isTokenExpired(BuildContext context, String token) {
     final Map<String, dynamic>? decodedToken = _decodeJwt(context, token);
-    //TODO: check if this is the correct return value when nothing is found.
+
     if (decodedToken == null) return true;
     final exp = decodedToken['exp'];
     final expirationTime =

@@ -83,6 +83,7 @@ class _RecipeOverviewState extends State<RecipeOverview> {
     await favoriteRecipeProvider.loadFavoriteRecipes(context);
 
     final filterProvider = Provider.of<RecipeFilterOptionsProvider>(context, listen: false);
+    filterProvider.onFilterChanged(context);
     final filteredRecipes = await filterProvider.recipes;
 
     // Set the filtered recipes after loading favorites
