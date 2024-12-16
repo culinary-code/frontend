@@ -172,16 +172,18 @@ class AccountService {
       }
   }
 
-  Future<void> updateChosenGroupId(String? chosenGroupId) async {
+  Future<void> updateChosenGroupId(BuildContext context, String? chosenGroupId) async {
     final endpoint = 'api/Account/setChosenGroup';
     final apiClient = await ApiClient.create();
 
-    final response = await apiClient.authorizedPut(endpoint, {
+    final response = await apiClient.authorizedPut(context, endpoint, {
       'ChosenGroupId': chosenGroupId,
     });
 
-    if (response.statusCode != 200) {
-      throw Exception('Failed to update ChosenGroupId: ${response.body}');
+    if (response?.statusCode != 200) {
+      Provider.of<ErrorNotifier>(context, listen: false).showError(
+        "Er is iets mis gegaan met het updaten van uw groep-status. Probeer het later opnieuw."
+      );
     }
   }
 }

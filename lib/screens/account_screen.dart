@@ -724,27 +724,19 @@ class _GroupOverviewState extends State<GroupOverview> {
   final _invitationService = InvitationService();
   final _accountService = AccountService();
 
-  late Account user;
+  late Account? user;
 
   String _selectedGroup = '';
 
-  // Method to load groups
   Future<void> _initialize() async {
     try {
       _groups = await _groupService.getGroupsByUserId(context);
-      user = await _accountService.fetchUser();
+      user = await _accountService.fetchUser(context);
 
       // After fetching groups, load the group mode state from SharedPreferences
-      // TODO shared preference deel nu overbodig?
       SharedPreferences prefs = await SharedPreferences.getInstance();
       for (var group in _groups) {
         group.isGroupMode = prefs.getBool(group.groupId) ?? false;
-
-        // TODO: test op device, miss moet dit niet
-        if (user.chosenGroupId == group.groupId) {
-          group.isGroupMode = true;
-          prefs.setBool(group.groupId, true);
-        }
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -907,7 +899,7 @@ class _GroupOverviewState extends State<GroupOverview> {
             g.isGroupMode = false;
           }
 
-          _accountService.updateChosenGroupId(null);
+          _accountService.updateChosenGroupId(context, null);
           SharedPreferences.getInstance().then((prefs) {
             for (var key in prefs.getKeys()) {
               prefs.setBool(key, false);
@@ -955,7 +947,7 @@ class _GroupOverviewState extends State<GroupOverview> {
       prefs.setBool(group.groupId, group.isGroupMode);
 
       await _accountService
-          .updateChosenGroupId(group.isGroupMode ? group.groupId : null);
+          .updateChosenGroupId(context, group.isGroupMode ? group.groupId : null);
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
