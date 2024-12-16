@@ -2,11 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:frontend/navigation_menu.dart';
 import 'package:frontend/services/invitation_service.dart';
 
+// TODO als je je aan roup wordt toegevoegd, refresh dan de groupen op accountpagina
 class InvitationScreen extends StatelessWidget {
   final String invitationCode;
   final InvitationService _invitationService = InvitationService();
 
   InvitationScreen({super.key, required this.invitationCode});
+
+  Future<void> _checkInvitationAndAccept(BuildContext context) async {
+    final isValid = await _invitationService.checkInvitationValidity(context, invitationCode);
+    if (isValid) {
+      await _invitationService.acceptInvitation(context, invitationCode);
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const NavigationMenu(initialIndex: 4)),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,13 +59,8 @@ class InvitationScreen extends StatelessWidget {
                       backgroundColor: Colors.green,
                     ),
                     onPressed: () {
-                      _invitationService.acceptInvitation(context, invitationCode);
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const NavigationMenu(initialIndex: 4)),
-
-                      );
+                      //_invitationService.acceptInvitation(context, invitationCode);
+                      _checkInvitationAndAccept(context);
                     },
                     child: const Text(
                       "Uitnodiging accepteren",

@@ -781,6 +781,7 @@ class _GroupOverviewState extends State<GroupOverview> {
                   setState(() {
                     _groups.add(Group(groupId: '', groupName: groupName));
                     _groupService.createGroup(context, groupName);
+                    _initialize();
                   });
                   Navigator.pop(context);
                 }

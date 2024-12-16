@@ -37,7 +37,6 @@ class InvitationService {
     return null;
   }
 
-
   Future<void> acceptInvitation(BuildContext context, String token) async {
     final endpoint = 'api/Invitation/acceptInvitation/$token';
     final apiClient = await ApiClient.create();
@@ -52,5 +51,17 @@ class InvitationService {
     } else {
       Provider.of<ErrorNotifier>(context, listen: false).showError("Er ging iets mis met het accepteren van je uitnodiging. Probeer later opnieuw.");
     }
+  }
+
+  Future<bool> checkInvitationValidity(BuildContext context, String token) async {
+    final endpoint = 'api/Invitation/validateInvitation/$token';
+    final apiClient = await ApiClient.create();
+
+    final response = await apiClient.authorizedGet(context, endpoint);
+    if (response == null || response.statusCode != 200) {
+      Provider.of<ErrorNotifier>(context, listen: false).showError("Validatietoken is niet meer geldig!");
+      return false;
+    }
+    return true;
   }
 }
