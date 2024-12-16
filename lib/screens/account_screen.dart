@@ -937,7 +937,6 @@ class _GroupOverviewState extends State<GroupOverview> {
           group.isGroupMode ? group.groupId : ''; // Update selected group
     });
 
-    try {
       // Update SharedPreferences to store the group mode state
       SharedPreferences prefs = await SharedPreferences.getInstance();
       for (var key in prefs.getKeys()) {
@@ -953,12 +952,7 @@ class _GroupOverviewState extends State<GroupOverview> {
             content: Text(
                 '${group.groupName} is ${group.isGroupMode ? 'in groep modus' : 'in gebruiker modus'}')),
       );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Groepmodus kon niet geupdate worden!')),
-      );
     }
-  }
 
   @override
   Widget build(BuildContext context) {
