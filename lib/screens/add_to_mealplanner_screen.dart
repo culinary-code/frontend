@@ -61,7 +61,8 @@ class _AddToMealPlanner extends State<AddToMealPlanner> {
   // Initialization for familySize
   Future<void> _initialize() async {
     try {
-      Account user = await _accountService.fetchUser();
+      Account? user = await _accountService.fetchUser(context);
+      if (user == null) return;
 
       int userFamilySize = widget.amountOfPeople;
       if (userFamilySize == 0){
@@ -201,7 +202,7 @@ class _AddToMealPlanner extends State<AddToMealPlanner> {
             .toList(),
       );
 
-      await PlannedMealsService().createPlannedMeal(plannedMeal);
+      await PlannedMealsService().createPlannedMeal(context, plannedMeal);
 
       if (!mounted) return;
 

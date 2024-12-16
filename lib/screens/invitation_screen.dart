@@ -47,7 +47,7 @@ class InvitationScreen extends StatelessWidget {
                       backgroundColor: Colors.green,
                     ),
                     onPressed: () {
-                      _invitationService.acceptInvitation(invitationCode);
+                      _invitationService.acceptInvitation(context, invitationCode);
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(

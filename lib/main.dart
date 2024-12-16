@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:frontend/ErrorNotifier.dart';
 import 'package:frontend/Services/keycloak_service.dart';
 import 'package:frontend/navigation_menu.dart';
 import 'package:frontend/screens/invitation_screen.dart';
@@ -39,6 +40,7 @@ void main() async {
           ChangeNotifierProvider(create: (context) => ApiSelectionProvider()),
           ChangeNotifierProvider(create: (context) => FavoriteRecipeProvider()),
           ChangeNotifierProvider(create: (context) => GroceryListProvider()),
+          ChangeNotifierProvider(create: (context) => ErrorNotifier()),
         ],
         child: DevicePreview(
           enabled: !kReleaseMode,
@@ -52,6 +54,7 @@ void main() async {
         ChangeNotifierProvider(create: (context) => ApiSelectionProvider()),
         ChangeNotifierProvider(create: (context) => FavoriteRecipeProvider()),
         ChangeNotifierProvider(create: (context) => GroceryListProvider()),
+        ChangeNotifierProvider(create: (context) => ErrorNotifier()),
       ],
       child: MyApp(),
     ));
@@ -101,17 +104,21 @@ class _MainState extends State<Main> {
   String? _pendingInvitationCode;
 
   late StreamSubscription _linkSubscription; // For listening to incoming links
+  bool get _isDevelopmentMode =>
+      dotenv.env['DEVELOPMENT_MODE']?.toLowerCase() == 'true';
 
   @override
   void initState() {
     super.initState();
     _checkLoginStatus();
-    _initDeepLinkListener();
+    if (!_isDevelopmentMode) {
+      _initDeepLinkListener();
+    }
   }
 
   Future<void> _checkLoginStatus() async {
     try {
-      await KeycloakService().getAccessToken();
+      await KeycloakService().getAccessToken(context);
       setState(() {
         _isLoggedIn = true;
       });
@@ -120,13 +127,18 @@ class _MainState extends State<Main> {
         _isLoggedIn = false;
       });
     } finally {
+      // with this method running, it will make it so the login screen shows immediately with a provided api url
+      final apiSelectionProvider =
+          Provider.of<ApiSelectionProvider>(context, listen: false);
+      await apiSelectionProvider.backendUrl;
+
       setState(() {
         _isCheckingLoginStatus = false;
       });
     }
 
     // Once login status is checked, initialize the deep link listener
-    if (!_isCheckingLoginStatus) {
+    if (!_isCheckingLoginStatus && !_isDevelopmentMode) {
       _initDeepLinkListener();
     }
   }
@@ -150,13 +162,16 @@ class _MainState extends State<Main> {
     if (link.host == 'culinarycode.com' &&
         link.path.startsWith('/accept-invitation/')) {
       final invitationCode = link.queryParameters['invitation_code'] ??
-          (link.pathSegments.isNotEmpty ? link.pathSegments.last : 'Uitnodiging is vervallen!');
+          (link.pathSegments.isNotEmpty
+              ? link.pathSegments.last
+              : 'Uitnodiging is vervallen!');
 
       if (_isLoggedIn) {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => InvitationScreen(invitationCode: invitationCode),
+            builder: (context) =>
+                InvitationScreen(invitationCode: invitationCode),
           ),
         );
       } else {
@@ -178,7 +193,10 @@ class _MainState extends State<Main> {
 
   @override
   void dispose() {
-    _linkSubscription.cancel(); // Unsubscribe from the link stream
+    if (!_isDevelopmentMode) {
+      _linkSubscription
+          .cancel(); // Unsubscribe from the link stream only if initialized
+    } // Unsubscribe from the link stream
     super.dispose();
   }
 
@@ -200,7 +218,18 @@ class SplashScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
+        body: Consumer<ErrorNotifier>(builder: (context, errorNotifier, child) {
+      // Display error message if available
+      if (errorNotifier.errorMessage != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(errorNotifier.errorMessage!)),
+          );
+          errorNotifier.clearError(); // Clear the error after displaying
+        });
+      }
+
+      return Center(
           child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -210,7 +239,7 @@ class SplashScreen extends StatelessWidget {
           Text('Culinary Code',
               style: Theme.of(context).textTheme.headlineLarge),
         ],
-      )),
-    );
+      ));
+    }));
   }
 }

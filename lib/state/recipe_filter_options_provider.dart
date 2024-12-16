@@ -16,11 +16,6 @@ class RecipeFilterOptionsProvider with ChangeNotifier {
   Difficulty _recipeDifficultyFilter = Difficulty.easy;
   String _cookTimeFilter = '';
 
-  // constructor
-  RecipeFilterOptionsProvider() {
-    _recipes = RecipeService().getRecipes();
-  }
-
   // getters
   List<FilterOption> get filterOptions => _filterOptions;
 
@@ -84,11 +79,11 @@ class RecipeFilterOptionsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void onFilterChanged() {
+  void onFilterChanged(BuildContext context) {
     if (_recipeName.isNotEmpty || _filterOptions.isNotEmpty) {
-      recipes = RecipeService().getFilteredRecipes(_recipeName, _filterOptions);
+      recipes = RecipeService().getFilteredRecipes(context, _recipeName, _filterOptions);
     } else {
-      recipes = RecipeService().getRecipes();
+      recipes = RecipeService().getRecipes(context);
     }
     notifyListeners();
   }
@@ -98,18 +93,18 @@ class RecipeFilterOptionsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void deleteFilter(FilterOption filter) {
+  void deleteFilter(BuildContext context, FilterOption filter) {
     filterOptions.remove(filter);
-    onFilterChanged();
+    onFilterChanged(context);
   }
 
-  void clearFilters() {
+  void clearFilters(BuildContext context) {
     _recipeName = '';
     _filterOptions.clear();
     _ingredientFilter = '';
     _recipeTypeFilter = RecipeType.snack;
     _recipeDifficultyFilter = Difficulty.easy;
     _cookTimeFilter = '';
-    onFilterChanged();
+    onFilterChanged(context);
   }
 }

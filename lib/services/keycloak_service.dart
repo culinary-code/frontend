@@ -1,11 +1,14 @@
 import 'dart:convert';
 import 'dart:math';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_appauth/flutter_appauth.dart';
+import 'package:frontend/ErrorNotifier.dart';
 import 'package:frontend/services/api_client.dart';
 import 'package:frontend/state/api_selection_provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:provider/provider.dart';
 
 final FlutterAppAuth appAuth = FlutterAppAuth();
 
@@ -25,7 +28,7 @@ class KeycloakService {
 
   final String redirectUrl = "com.culinarycode://login-callback";
 
-  Future<bool> loginSecured() async {
+  Future<bool> loginSecured(BuildContext context) async {
     final idpBaseUrl = await ApiSelectionProvider().keycloakUrl;
     final issuer = "$idpBaseUrl/realms/$realm";
     try {
@@ -47,7 +50,8 @@ class KeycloakService {
 
         // check account exists in backend on login on /KeyCloak/login
         final apiClient = await ApiClient.create();
-        final response = await apiClient.authorizedPost("KeyCloak/login", {});
+        final response = await apiClient.authorizedPost(context, "KeyCloak/login", {});
+        if (response == null) return false;
 
         if (response.statusCode == 200 || response.statusCode == 201) { // separate out if we want to do a special action on 201
           return true;
@@ -59,15 +63,18 @@ class KeycloakService {
 
       return false;
     } catch (e) {
-      print("Error: $e");
+      Provider.of<ErrorNotifier>(context, listen: false).showError("Er ging iets mis met het inloggen. Probeer later opnieuw.");
     }
 
     return false;
   }
 
   // This method may only ever be used in development mode
-  Future<bool> loginDevelopment(String username, String password) async {
-    if (!developmentMode) throw Exception('Development mode is disabled');
+  Future<bool> loginDevelopment(BuildContext context, String username, String password) async {
+    if (!developmentMode) {
+      Provider.of<ErrorNotifier>(context, listen: false).showError("Development modus staat uit. Je kan deze methode nu niet gebruiken");
+      return false;
+    }
 
     final idpBaseUrl = await ApiSelectionProvider().keycloakUrl;
     final response = await http.post(
@@ -90,7 +97,8 @@ class KeycloakService {
           key: 'refresh_token', value: responseBody['refresh_token']);
       return true; // Login successful
     } else {
-      throw FormatException(responseBody['error_description']); // Login failed
+      Provider.of<ErrorNotifier>(context, listen: false).showError("Er ging iets mis met het inloggen. Probeer later opnieuw.");
+      return false;
     }
   }
 
@@ -119,7 +127,7 @@ class KeycloakService {
   }
 
   // only called when development mode is true
-  Future<void> createUserDevelopment({
+  Future<void> createUserDevelopment(BuildContext context,{
     required String username,
     required String password,
   }) async {
@@ -136,31 +144,33 @@ class KeycloakService {
         });
 
     if (response.statusCode != 200) {
-      throw FormatException('gebruiker aanmaken mislukt: ${response.body}');
+      Provider.of<ErrorNotifier>(context, listen: false).showError("Er ging iets mis met het aanmaken van je account. Probeer later opnieuw.");
     }
   }
 
 
-  Future<String?> getAccessToken() async {
+  Future<String?> getAccessToken(BuildContext context) async {
     final accessToken = await storage.read(key: 'access_token');
 
     if (accessToken == null) {
-      throw FormatException('Access token not found');
+      Provider.of<ErrorNotifier>(context, listen: false).showError("Er ging iets mis met het inloggen. Probeer later opnieuw.");
+      return null;
     }
 
-    if (_isTokenExpired(accessToken)) {
-      return refreshAccessToken(); // returns new access token
+    if (_isTokenExpired(context, accessToken)) {
+      return refreshAccessToken(context); // returns new access token
     }
 
     return accessToken;
   }
 
-  Future<String?> refreshAccessToken() async {
+  Future<String?> refreshAccessToken(BuildContext context) async {
     final refreshToken = await storage.read(key: 'refresh_token');
     final idpBaseUrl = await ApiSelectionProvider().keycloakUrl;
 
     if (refreshToken == null) {
-      throw FormatException('Refresh token not found');
+      Provider.of<ErrorNotifier>(context, listen: false).showError("Er ging iets mis met het inloggen. Probeer later opnieuw.");
+      return null;
     }
 
     String newRefreshToken;
@@ -181,7 +191,8 @@ class KeycloakService {
         newRefreshToken = result.refreshToken!;
         newAccessToken = result.accessToken!;
       } catch (e) {
-        throw FormatException('Failed to refresh token');
+        Provider.of<ErrorNotifier>(context, listen: false).showError("Er ging iets mis met het inloggen. Probeer later opnieuw.");
+        return null;
       }
     } else {
       final response = await http.post(
@@ -201,7 +212,8 @@ class KeycloakService {
         newRefreshToken = responseBody['refresh_token'];
         newAccessToken = responseBody['access_token'];
       } else {
-        throw FormatException(responseBody['error_description']);
+        Provider.of<ErrorNotifier>(context, listen: false).showError("Er ging iets mis met het inloggen. Probeer later opnieuw.");
+        return null;
       }
     }
 
@@ -211,10 +223,11 @@ class KeycloakService {
     return newAccessToken;
   }
 
-  Map<String, dynamic> _decodeJwt(String token) {
+  Map<String, dynamic>? _decodeJwt(BuildContext context, String token) {
     final parts = token.split('.');
     if (parts.length != 3) {
-      throw Exception('Invalid JWT token');
+      Provider.of<ErrorNotifier>(context, listen: false).showError("Er ging iets mis met het inloggen. Probeer later opnieuw.");
+      return null;
     }
 
     final payload = _base64Decode(parts[1]);
@@ -229,8 +242,10 @@ class KeycloakService {
     return utf8.decode(base64Url.decode(output));
   }
 
-  bool _isTokenExpired(String token) {
-    final Map<String, dynamic> decodedToken = _decodeJwt(token);
+  bool _isTokenExpired(BuildContext context, String token) {
+    final Map<String, dynamic>? decodedToken = _decodeJwt(context, token);
+
+    if (decodedToken == null) return true;
     final exp = decodedToken['exp'];
     final expirationTime =
         DateTime.fromMillisecondsSinceEpoch(exp * 1000).toUtc();

@@ -60,7 +60,7 @@ class _AccountOverviewState extends State<AccountOverview> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-        child: SingleChildScrollView(
+      child: SingleChildScrollView(
       child: Column(
         children: [
           AccountSettings(key: _accountSettingsKey),
@@ -148,14 +148,17 @@ class _AccountOverviewState extends State<AccountOverview> {
                                 if (usernameController.text ==
                                     _accountSettingsKey
                                         .currentState?._currentUsername) {
+
                                   if (!mounted) return;
                                   final filterprovider =
-                                      Provider.of<RecipeFilterOptionsProvider>(
-                                          context,
-                                          listen: false);
-                                  filterprovider.clearFilters();
+                                  Provider.of<RecipeFilterOptionsProvider>(
+                                      context,
+                                      listen: false
 
-                                  await AccountService().deleteAccount();
+                                  );
+                                  filterprovider.clearFilters(context);
+
+                                  await AccountService().deleteAccount(context);
                                   await KeycloakService().clearTokens();
 
                                   if (!mounted) return;
@@ -243,7 +246,6 @@ class _AccountSettingsState extends State<AccountSettings> {
 
   String _currentUsername = '';
   int _currentFamilySize = 0;
-  late String userId;
 
   final storage = FlutterSecureStorage();
   bool _usernameError = false;
@@ -256,7 +258,8 @@ class _AccountSettingsState extends State<AccountSettings> {
 
   Future<void> _initialize() async {
     try {
-      Account user = await _accountService.fetchUser();
+      Account? user = await _accountService.fetchUser(context);
+      if (user == null) return;
       setState(() {
         _currentUsername = user.username;
         _usernameController.text = _currentUsername;
@@ -289,7 +292,7 @@ class _AccountSettingsState extends State<AccountSettings> {
     }
 
     try {
-      await _accountService.updateUsername(userId, newUsername);
+      await _accountService.updateUsername(context, newUsername);
       setState(() {
         _currentUsername = newUsername;
         _usernameError = false; // Clear error on successful save
@@ -301,7 +304,7 @@ class _AccountSettingsState extends State<AccountSettings> {
 
   Future<void> _saveFamilySize(int newFamilySize) async {
     try {
-      await _accountService.updateFamilySize(userId, newFamilySize);
+      await _accountService.updateFamilySize(context, newFamilySize);
       setState(() {
         _currentFamilySize = newFamilySize;
         _familySizeController.text = newFamilySize.toString();
@@ -472,7 +475,6 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
 
   final _accountService = AccountService();
   final _preferenceService = PreferenceService();
-  var userId = '';
 
   String? selectedValue;
 
@@ -509,7 +511,7 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
 
     // Get current user preferences to avoid duplicates
     List<PreferenceDto> preferencesForDelete =
-        await _accountService.getPreferencesByUserId(userId);
+        await _accountService.getPreferencesByUserId(context);
 
     if (selectedPreferences.isNotEmpty) {
       for (String preference in selectedPreferences) {
@@ -519,7 +521,7 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
         if (!isExistingPreference) {
           // Add custom preference
           _accountService.addPreference(
-            userId,
+            context,
             PreferenceDto(
                 preferenceName: preference,
                 standardPreference: false,
@@ -541,7 +543,7 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
 
         if (preferenceToDelete != null) {
           await _accountService
-              .deletePreference(preferenceToDelete.preferenceId);
+              .deletePreference(context, preferenceToDelete.preferenceId);
         }
       }
     }
@@ -557,7 +559,7 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
     try {
       List<DropdownItem<String>> tempPreferences = [];
 
-      var pref = await _preferenceService.getStandardPreferences();
+      var pref = await _preferenceService.getStandardPreferences(context);
       tempPreferences = pref.map((preference) {
         return DropdownItem(
           label: preference.preferenceName,
@@ -566,9 +568,8 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
         );
       }).toList();
 
-      userId = await _accountService.getUserId();
       List<PreferenceDto> userPreferences =
-          await _accountService.getPreferencesByUserId(userId);
+          await _accountService.getPreferencesByUserId(context);
 
       setState(() {
         // Add userPreferences to tempPreferences if they're not already present
@@ -730,7 +731,7 @@ class _GroupOverviewState extends State<GroupOverview> {
   // Method to load groups
   Future<void> _initialize() async {
     try {
-      _groups = await _groupService.getGroupsByUserId();
+      _groups = await _groupService.getGroupsByUserId(context);
       user = await _accountService.fetchUser();
 
       // After fetching groups, load the group mode state from SharedPreferences
@@ -788,7 +789,7 @@ class _GroupOverviewState extends State<GroupOverview> {
                 if (groupName.isNotEmpty) {
                   setState(() {
                     _groups.add(Group(groupId: '', groupName: groupName));
-                    _groupService.createGroup(groupName);
+                    _groupService.createGroup(context, groupName);
                   });
                   Navigator.pop(context);
                 }
@@ -803,11 +804,12 @@ class _GroupOverviewState extends State<GroupOverview> {
 
   void _inviteUserToGroup(Group group) async {
     final link = await _invitationService.sendInvitation(
+      context,
       group.groupId,
       group.groupName,
     );
 
-    if (link.isNotEmpty && mounted) {
+    if (link != null && link.isNotEmpty && mounted) {
       showDialog(
         context: context,
         builder: (context) {
@@ -895,7 +897,7 @@ class _GroupOverviewState extends State<GroupOverview> {
 
   void _leaveGroup(Group group) async {
     try {
-      await _groupService.removeUserFromGroup(group.groupId);
+      await _groupService.removeUserFromGroup(context, group.groupId);
 
       setState(() {
         _groups.remove(group);

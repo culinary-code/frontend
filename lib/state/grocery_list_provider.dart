@@ -8,11 +8,6 @@ class GroceryListProvider with ChangeNotifier {
   List<Map<String, dynamic>> _ingredientData = [];
   List<Map<String, dynamic>> _data = [];
 
-  // constructor
-  GroceryListProvider() {
-    getGroceryListFromDatabase();
-  }
-
   // getters
   List<Map<String, dynamic>> get ingredientData => _ingredientData;
   List<Map<String, dynamic>> get data => _data;
@@ -101,8 +96,8 @@ class GroceryListProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> getGroceryListFromDatabase() async {
-    var response = await groceryListService.fetchGroceryListByAccountId();
+  Future<void> getGroceryListFromDatabase(BuildContext context) async {
+    var response = await groceryListService.fetchGroceryListByAccountId(context);
 
     if (response != null) {
       var ingredients = response['ingredients'];

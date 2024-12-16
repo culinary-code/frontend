@@ -33,7 +33,7 @@ class _WeekOverviewState extends State<WeekOverview> {
     super.initState();
     _selectedDate = DateTime.now();
     _plannedMealsFuture =
-        PlannedMealsService().getPlannedMealsByDate(_selectedDate);
+        PlannedMealsService().getPlannedMealsByDate(context, _selectedDate);
   }
 
   static const List<String> daysOfWeek = [
@@ -72,7 +72,7 @@ class _WeekOverviewState extends State<WeekOverview> {
       setState(() {
         _selectedDate = selectedDate;
         _plannedMealsFuture =
-            PlannedMealsService().getPlannedMealsByDate(_selectedDate);
+            PlannedMealsService().getPlannedMealsByDate(context, _selectedDate);
       });
     }
   }
@@ -81,7 +81,7 @@ class _WeekOverviewState extends State<WeekOverview> {
     setState(() {
       _selectedDate = _selectedDate.add(Duration(days: daysExtra));
       _plannedMealsFuture =
-          PlannedMealsService().getPlannedMealsByDate(_selectedDate);
+          PlannedMealsService().getPlannedMealsByDate(context, _selectedDate);
     });
   }
 

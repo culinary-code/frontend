@@ -18,27 +18,27 @@ class FavoriteRecipeProvider extends ChangeNotifier {
   }
 
   // Fetch favorite recipes from the backend and update the state
-  Future<void> loadFavoriteRecipes() async {
+  Future<void> loadFavoriteRecipes(BuildContext context) async {
     final List<Recipe> favoriteRecipesList =
-        await _favoriteRecipeService.getFavoriteRecipes();
+        await _favoriteRecipeService.getFavoriteRecipes(context);
 
     _favoriteRecipes = favoriteRecipesList;
     notifyListeners(); // Notify listeners to rebuild the UI
   }
 
   // Toggle the favorite status for a specific recipe
-  Future<void> toggleFavorite(String recipeId) async {
+  Future<void> toggleFavorite(BuildContext context, String recipeId) async {
     bool isCurrentlyFavorited = isFavorited(recipeId);
 
     if (isCurrentlyFavorited) {
       // If already favorited, remove it
-      await _favoriteRecipeService.deleteFavoriteRecipe(recipeId);
+      await _favoriteRecipeService.deleteFavoriteRecipe(context, recipeId);
       _favoriteRecipes.removeWhere((recipe) => recipe.recipeId == recipeId);
     } else {
       // If not favorited, add it
-      bool success = await _favoriteRecipeService.addFavoriteRecipe(recipeId);
+      bool success = await _favoriteRecipeService.addFavoriteRecipe(context, recipeId);
       if (success) {
-        await loadFavoriteRecipes();
+        await loadFavoriteRecipes(context);
       } else {
         throw Exception('Failed to add favorite');
       }

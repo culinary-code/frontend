@@ -19,7 +19,7 @@ class FavoriteToggleButton extends StatelessWidget {
 
         return GestureDetector(
           onTap: () async {
-            await favoriteRecipeProvider.toggleFavorite(recipeId);
+            await favoriteRecipeProvider.toggleFavorite(context, recipeId);
           },
           child: Icon(
             isFavorited ? Icons.favorite : Icons.favorite_border,
