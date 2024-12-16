@@ -727,6 +727,42 @@ class _GroupOverviewState extends State<GroupOverview> {
 
   String _selectedGroup = '';
 
+  // Method to load groups
+  Future<void> _initialize() async {
+    try {
+      _groups = await _groupService.getGroupsByUserId();
+      user = await _accountService.fetchUser();
+
+      // After fetching groups, load the group mode state from SharedPreferences
+      // TODO shared preference deel nu overbodig?
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      for (var group in _groups) {
+        group.isGroupMode = prefs.getBool(group.groupId) ?? false;
+
+        // TODO: test op device, miss moet dit niet
+        if (user.chosenGroupId == group.groupId) {
+          group.isGroupMode = true;
+          prefs.setBool(group.groupId, true);
+        }
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load groups: $e')),
+      );
+    }
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _initialize();
+  }
+
   void _showCreateGroupDialog() {
     final TextEditingController groupNameController = TextEditingController();
 
@@ -763,42 +799,6 @@ class _GroupOverviewState extends State<GroupOverview> {
         );
       },
     );
-  }
-
-  // Method to load groups
-  Future<void> _initialize() async {
-    try {
-      _groups = await _groupService.getGroupsByUserId();
-      user = await _accountService.fetchUser();
-
-      // After fetching groups, load the group mode state from SharedPreferences
-      // TODO shared preference deel nu overbodig?
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      for (var group in _groups) {
-        group.isGroupMode = prefs.getBool(group.groupId) ?? false;
-
-        // TODO: test op device, miss moet dit niet
-        if (user.chosenGroupId == group.groupId) {
-          group.isGroupMode = true;
-          prefs.setBool(group.groupId, true);
-        }
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to load groups: $e')),
-      );
-    }
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _initialize();
   }
 
   void _inviteUserToGroup(Group group) async {
