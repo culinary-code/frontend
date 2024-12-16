@@ -8,6 +8,17 @@ class InvitationScreen extends StatelessWidget {
 
   InvitationScreen({super.key, required this.invitationCode});
 
+  Future<void> _checkInvitationAndAccept(BuildContext context) async {
+    final isValid = await _invitationService.checkInvitationValidity(context, invitationCode);
+    if (isValid) {
+      await _invitationService.acceptInvitation(context, invitationCode);
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const NavigationMenu(initialIndex: 4)),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -47,13 +58,7 @@ class InvitationScreen extends StatelessWidget {
                       backgroundColor: Colors.green,
                     ),
                     onPressed: () {
-                      _invitationService.acceptInvitation(context, invitationCode);
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const NavigationMenu(initialIndex: 4)),
-
-                      );
+                      _checkInvitationAndAccept(context);
                     },
                     child: const Text(
                       "Uitnodiging accepteren",
