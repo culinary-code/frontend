@@ -117,25 +117,24 @@ class _MainState extends State<Main> {
   }
 
   Future<void> _checkLoginStatus() async {
-    try {
-      await KeycloakService().getAccessToken(context);
-      setState(() {
-        _isLoggedIn = true;
-      });
-    } on FormatException catch (e) {
+    var result = await KeycloakService().getAccessToken(context);
+    if (result == null) {
       setState(() {
         _isLoggedIn = false;
       });
-    } finally {
-      // with this method running, it will make it so the login screen shows immediately with a provided api url
-      final apiSelectionProvider =
-          Provider.of<ApiSelectionProvider>(context, listen: false);
-      await apiSelectionProvider.backendUrl;
-
+    } else {
       setState(() {
-        _isCheckingLoginStatus = false;
+        _isLoggedIn = true;
       });
     }
+    // with this method running, it will make it so the login screen shows immediately with a provided api url
+    final apiSelectionProvider =
+        Provider.of<ApiSelectionProvider>(context, listen: false);
+    await apiSelectionProvider.backendUrl;
+
+    setState(() {
+      _isCheckingLoginStatus = false;
+    });
 
     // Once login status is checked, initialize the deep link listener
     if (!_isCheckingLoginStatus && !_isDevelopmentMode) {

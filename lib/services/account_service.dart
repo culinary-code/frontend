@@ -148,8 +148,6 @@ class AccountService {
     }
   }
 
-
-
   String get clientId =>
       dotenv.env['KEYCLOAK_CLIENT_ID'] ??
           (throw Exception('Environment variable KEYCLOAK_CLIENT_ID not found'));
@@ -172,5 +170,20 @@ class AccountService {
         Provider.of<ErrorNotifier>(context, listen: false).showError(
             "Er is iets misgegaan bij het verwijderen van uw account. Probeer het later opnieuw.");
       }
+  }
+
+  Future<void> updateChosenGroupId(BuildContext context, String? chosenGroupId) async {
+    final endpoint = 'api/Account/setChosenGroup';
+    final apiClient = await ApiClient.create();
+
+    final response = await apiClient.authorizedPut(context, endpoint, {
+      'ChosenGroupId': chosenGroupId,
+    });
+
+    if (response?.statusCode != 200) {
+      Provider.of<ErrorNotifier>(context, listen: false).showError(
+        "Er is iets mis gegaan met het updaten van uw groep-status. Probeer het later opnieuw."
+      );
+    }
   }
 }
