@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:frontend/navigation_menu.dart';
 import 'package:frontend/services/invitation_service.dart';
 
-// TODO als je je aan roup wordt toegevoegd, refresh dan de groupen op accountpagina
 class InvitationScreen extends StatelessWidget {
   final String invitationCode;
   final InvitationService _invitationService = InvitationService();
@@ -59,7 +58,6 @@ class InvitationScreen extends StatelessWidget {
                       backgroundColor: Colors.green,
                     ),
                     onPressed: () {
-                      //_invitationService.acceptInvitation(context, invitationCode);
                       _checkInvitationAndAccept(context);
                     },
                     child: const Text(
