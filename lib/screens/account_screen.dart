@@ -709,7 +709,6 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
   }
 }
 
-// TODO: make sure state of switch is remembered when restarting app
 class GroupOverview extends StatefulWidget {
   const GroupOverview({super.key});
 
