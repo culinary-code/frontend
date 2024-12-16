@@ -64,7 +64,7 @@ Future<void> showFilterDialog(BuildContext context, {required ValueChanged<bool>
           ));
 
           // rerender the filteroptions
-          filterProvider.onFilterChanged();
+          filterProvider.onFilterChanged(context);
           onFilterChanged(true);
         },
       );

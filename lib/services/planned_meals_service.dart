@@ -1,4 +1,6 @@
 import 'dart:math';
+import 'package:flutter/cupertino.dart';
+import 'package:frontend/ErrorNotifier.dart';
 import 'package:frontend/models/meal_planning/planned_meal.dart';
 import 'dart:convert';
 import 'package:frontend/models/recipes/difficulty.dart';
@@ -6,6 +8,7 @@ import 'package:frontend/models/recipes/recipe.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:frontend/models/recipes/recipe_type.dart';
 import 'package:frontend/services/api_client.dart';
+import 'package:provider/provider.dart';
 
 class PlannedMealsService {
   String get backendUrl =>
@@ -38,17 +41,18 @@ class PlannedMealsService {
     return plannedMeals;
   }
 
-  Future<String> createPlannedMeal(PlannedMealFull plannedMeal) async {
+  Future<String> createPlannedMeal(BuildContext context, PlannedMealFull plannedMeal) async {
     final apiClient = await ApiClient.create();
-    final response = await apiClient.authorizedPost(
+    final response = await apiClient.authorizedPost( context,
         'api/MealPlanner/PlannedMeal/Create', plannedMeal.toJson());
+    if (response == null) return '';
 
     if (response.statusCode == 400) {
-      return response.body;
+      Provider.of<ErrorNotifier>(context, listen: false).showError("Er ging iets mis met het toevoegen aan je maaltijdplanner. Probeer later opnieuw.");
     }
 
     if (response.statusCode != 200) {
-      throw FormatException('Failed to create planned meal: ${response.body}');
+      Provider.of<ErrorNotifier>(context, listen: false).showError("Er ging iets mis met het toevoegen aan je maaltijdplanner. Probeer later opnieuw.");
     }
 
     if (response.statusCode == 200) {
@@ -58,15 +62,17 @@ class PlannedMealsService {
     return '';
   }
 
-  Future<List<PlannedMealReduced>> getPlannedMealsByDate(
+  Future<List<PlannedMealReduced>> getPlannedMealsByDate( BuildContext context,
       DateTime dateTime) async {
     final apiClient = await ApiClient.create();
-    final response = await apiClient.authorizedGet('api/MealPlanner/$dateTime');
+    final response = await apiClient.authorizedGet(context, 'api/MealPlanner/$dateTime');
+    if (response == null) return [];
 
     if (response.statusCode == 404) {
       return [];
     } else if (response.statusCode != 200) {
-      throw FormatException('Failed to load plannedMeals: ${response.body}');
+      Provider.of<ErrorNotifier>(context, listen: false).showError("Er ging iets mis met het ophalen van je maaltijdplanner. Probeer later opnieuw.");
+      return [];
     }
 
     final List<dynamic> dynamicPlannedMeals = json.decode(response.body);

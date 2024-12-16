@@ -50,7 +50,7 @@ class _GroceryListState extends State<GroceryList> {
     super.initState();
     final groceryListProvider =
     Provider.of<GroceryListProvider>(context, listen: false);
-    groceryListProvider.getGroceryListFromDatabase();
+    groceryListProvider.getGroceryListFromDatabase(context);
   }
 
   void addItem(ItemQuantity newItem) async {
@@ -91,30 +91,30 @@ class _GroceryListState extends State<GroceryList> {
                         groceryListItem: newItem.groceryListItem,
                         isIngredient: existingItem['isIngredient']);
 
-                    await groceryListService.addItemToGroceryList(updatedItem);
-                    await groceryListProvider.getGroceryListFromDatabase();
+                    await groceryListService.addItemToGroceryList(context, updatedItem);
+                    await groceryListProvider.getGroceryListFromDatabase(context);
                   },
                 );
               });
         });
         // if the dialog was already open, make the call
       } else {
-        await groceryListService.addItemToGroceryList(ItemQuantity(
+        await groceryListService.addItemToGroceryList(context, ItemQuantity(
             itemQuantityId: existingItem['ingredientQuantityId'],
             quantity: newItem.quantity,
             groceryListItem: newItem.groceryListItem,
             isIngredient: existingItem['isIngredient']));
-        await groceryListProvider.getGroceryListFromDatabase();
+        await groceryListProvider.getGroceryListFromDatabase(context);
       }
       // if the item was not found, call the function to add it
     } else {
-      await groceryListService.addItemToGroceryList(newItem);
-      await groceryListProvider.getGroceryListFromDatabase();
+      await groceryListService.addItemToGroceryList(context, newItem);
+      await groceryListProvider.getGroceryListFromDatabase(context);
     }
   }
 
   Future<void> deleteItem(ItemQuantity item) async {
-    await groceryListService.deleteItemFromGroceryList(item);
+    await groceryListService.deleteItemFromGroceryList(context, item);
   }
 
   @override
@@ -199,7 +199,7 @@ class _GroceryListState extends State<GroceryList> {
                           ),
                         );
                       }
-                      await groceryListProvider.getGroceryListFromDatabase();
+                      await groceryListProvider.getGroceryListFromDatabase(context);
                     }
                   });
                 },
@@ -282,7 +282,7 @@ class _GroceryListState extends State<GroceryList> {
                                           addItem(updatedItem);
                                         });
                                         await groceryListProvider
-                                            .getGroceryListFromDatabase();
+                                            .getGroceryListFromDatabase(context);
                                       });
                                 }).then((_) {
                               Future.delayed(Duration(milliseconds: 100),
@@ -345,7 +345,7 @@ class _GroceryListState extends State<GroceryList> {
                                         isIngredient: detail['isIngredient']));
                                   }
                                   await groceryListProvider
-                                      .getGroceryListFromDatabase();
+                                      .getGroceryListFromDatabase(context);
                                 });
                           });
                         },

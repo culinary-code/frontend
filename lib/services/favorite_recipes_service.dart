@@ -1,14 +1,18 @@
 import 'dart:convert';
 
+import 'package:flutter/material.dart';
+import 'package:frontend/ErrorNotifier.dart';
 import 'package:frontend/models/recipes/recipe.dart';
+import 'package:provider/provider.dart';
 
 import 'api_client.dart';
 
 class FavoriteRecipeService {
-  Future<List<Recipe>> getFavoriteRecipes() async {
+  Future<List<Recipe>> getFavoriteRecipes(BuildContext context) async {
     final endpoint = 'api/Account/getFavoriteRecipes';
     final apiClient = await ApiClient.create();
-    final response = await apiClient.authorizedGet(endpoint);
+    final response = await apiClient.authorizedGet(context, endpoint);
+    if (response == null) return [];
 
     if (response.statusCode == 200) {
       final List<dynamic> dynamicRecipes = json.decode(response.body);
@@ -18,31 +22,40 @@ class FavoriteRecipeService {
         return mappedRecipe;
       }).toList();
       return favoriteRecipes;
+    } else if (response.statusCode == 404) {
+      Provider.of<ErrorNotifier>(context, listen: false).showError("Geen favoriete recepten gevonden.");
+      return [];
     } else {
+      Provider.of<ErrorNotifier>(context, listen: false).showError("Er ging iets mis met het ophalen van favoriete recepten. Probeer later opnieuw.");
       return [];
     }
+
   }
 
-  Future<bool> addFavoriteRecipe(String recipeId) async {
+  Future<bool> addFavoriteRecipe(BuildContext context, String recipeId) async {
     final endpoint = 'api/Account/addFavoriteRecipe';
     final apiClient = await ApiClient.create();
 
     final Map<String, dynamic> body = {'recipeId': recipeId};
 
-    final response = await apiClient.authorizedPost(endpoint, body);
+    final response = await apiClient.authorizedPost(context, endpoint, body);
+    if (response == null) return false;
 
+    if (response.statusCode == 400) {
+    Provider.of<ErrorNotifier>(context, listen: false).showError("Er ging iets mis met het toevoegen van je favoriete recept. Probeer later opnieuw.");
+    }
     return (response.statusCode == 200);
   }
 
-  Future<void> deleteFavoriteRecipe(String recipeId) async {
+  Future<void> deleteFavoriteRecipe(BuildContext context, String recipeId) async {
     final endpoint = 'api/Account/deleteFavoriteRecipe/$recipeId';
     final apiClient = await ApiClient.create();
 
-    final response = await apiClient.authorizedDelete(endpoint);
+    final response = await apiClient.authorizedDelete(context, endpoint);
+    if (response == null) return;
 
     if (response.statusCode != 200) {
-      throw Exception(
-          'Error deleting favorite recipe: ${response.statusCode}, ${response.body}');
+      Provider.of<ErrorNotifier>(context, listen: false).showError("Er ging iets mis met het verwijderen van je favoriete recept. Probeer later opnieuw.");
     }
   }
 }

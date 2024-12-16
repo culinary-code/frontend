@@ -120,7 +120,7 @@ class FilterOptionsDisplayWidgetState
                   return FilterOptionChip(
                     filter: filter,
                     onDelete: () => setState(() {
-                      filterProvider.deleteFilter(filter);
+                      filterProvider.deleteFilter(context, filter);
                       widget.onDelete();
                     }),
                   );

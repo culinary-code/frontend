@@ -41,7 +41,7 @@ class _FavoriteRecipesState extends State<FavoriteRecipes> {
 
   Future<void> _loadFavoriteRecipes() async {
     await Provider.of<FavoriteRecipeProvider>(context, listen: false)
-        .loadFavoriteRecipes();
+        .loadFavoriteRecipes(context);
   }
 
   @override
