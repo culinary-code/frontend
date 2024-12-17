@@ -373,12 +373,14 @@ class _MyFamilySelectorState extends State<MyFamilySelector> {
   void addFamilyMembers() {
     setState(() {
       numberOfPeople++;
+      widget.onAdd(numberOfPeople);
     });
   }
 
   void removeFamilyMembers() {
     setState(() {
       if (numberOfPeople > 1) numberOfPeople--;
+      widget.onAdd(numberOfPeople);
     });
   }
 
