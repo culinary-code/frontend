@@ -781,6 +781,8 @@ class _GroupOverviewState extends State<GroupOverview> {
                   setState(() {
                     _groups.add(Group(groupId: '', groupName: groupName));
                     _groupService.createGroup(context, groupName);
+                  });
+                  Future.delayed(Duration(milliseconds: 1000), () {
                     _initialize();
                   });
                   Navigator.pop(context);
