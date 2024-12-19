@@ -16,7 +16,7 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Vind jouw recept!")),
+      appBar: AppBar(title: const Text("Vind jouw recept!", style: TextStyle(fontWeight: FontWeight.bold))),
       body: RecipeOverview(),
     );
   }

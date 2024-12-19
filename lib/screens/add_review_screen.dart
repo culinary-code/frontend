@@ -68,8 +68,8 @@ class _AddReviewScreenState extends State<AddReviewScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Voeg uw review aan dit recept toe!',
-          style: TextStyle(fontSize: appBarFontSize),
+          'Voeg review toe aan dit recept!',
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
       body: Padding(

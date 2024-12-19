@@ -12,7 +12,7 @@ class GroceryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Laten we winkelen!")),
+      appBar: AppBar(title: const Text("Laten we winkelen!", style: TextStyle(fontWeight: FontWeight.bold))),
       body: const GroceryHeader(),
     );
   }
