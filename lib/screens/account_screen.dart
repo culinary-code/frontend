@@ -24,7 +24,7 @@ class AccountScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Profiel'), centerTitle: true),
+      appBar: AppBar(title: const Text('Profiel', style: TextStyle(fontWeight: FontWeight.bold)), centerTitle: true),
       body: const AccountOverview(),
     );
   }
