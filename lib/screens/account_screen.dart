@@ -24,9 +24,7 @@ class AccountScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text(
-        'Profiel', style: TextStyle(fontWeight: FontWeight.bold),
-      ), centerTitle: true),
+      appBar: AppBar(title: const Text('Profiel'), centerTitle: true),
       body: const AccountOverview(),
     );
   }
@@ -42,7 +40,7 @@ class AccountOverview extends StatefulWidget {
 class _AccountOverviewState extends State<AccountOverview> {
   final GlobalKey<_AccountSettingsState> _accountSettingsKey = GlobalKey();
   final GlobalKey<_PreferencesSettingsState> _preferenceSettingsKey =
-  GlobalKey();
+      GlobalKey();
 
   final TextEditingController usernameController = TextEditingController();
 
@@ -54,7 +52,7 @@ class _AccountOverviewState extends State<AccountOverview> {
         MaterialPageRoute(
           builder: (context) => const LoginPage(),
         ),
-            (route) => false, // This removes all previous routes
+        (route) => false, // This removes all previous routes
       );
     }
   }
@@ -63,156 +61,146 @@ class _AccountOverviewState extends State<AccountOverview> {
   Widget build(BuildContext context) {
     return SafeArea(
         child: SingleChildScrollView(
-          child: Column(
-            children: [
-              AccountSettings(key: _accountSettingsKey),
-              SizedBox(
-                height: 16,
+      child: Column(
+        children: [
+          AccountSettings(key: _accountSettingsKey),
+          SizedBox(
+            height: 16,
+          ),
+          PreferencesSettings(key: _preferenceSettingsKey),
+          SizedBox(height: 16),
+          ElevatedButton(
+              onPressed: _saveAll,
+              style: ElevatedButton.styleFrom(
+                elevation: 5,
+                padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
               ),
-              PreferencesSettings(key: _preferenceSettingsKey),
-              SizedBox(height: 16),
-              ElevatedButton(
-                  onPressed: _saveAll,
-                  style: ElevatedButton.styleFrom(
-                    elevation: 5,
-                    padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-                  ),
-                  child: Text(
-                    'Opslaan',
-                    style: TextStyle(fontSize: 20),
-                  )),
-              SizedBox(height: 16),
-              Align(
-                alignment: Alignment.bottomLeft,
-                child: GroupOverview(),
-              ),
-              SizedBox(height: 116),
-              ElevatedButton(
-                onPressed: () {
-                  _logout();
-                },
-                style: ElevatedButton.styleFrom(
-                  elevation: 5,
-                  padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-                  backgroundColor: Color(0xFFE72222),
-                ),
-                child: Text(
-                  'Uitloggen',
-                  style: TextStyle(
-                      fontSize: 20, color: Theme
-                      .of(context)
-                      .colorScheme
-                      .onPrimary),
-                ),
-              ),
-              SizedBox(height: 8),
-              ElevatedButton(
-                onPressed: () {
-                  showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        String errorMessage = '';
+              child: Text(
+                'Opslaan',
+                style: TextStyle(fontSize: 20),
+              )),
+          SizedBox(height: 16),
+          Align(
+            alignment: Alignment.bottomLeft,
+            child: GroupOverview(),
+          ),
+          SizedBox(height: 116),
+          ElevatedButton(
+            onPressed: () {
+              _logout();
+            },
+            style: ElevatedButton.styleFrom(
+              elevation: 5,
+              padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+              backgroundColor: Color(0xFFE72222),
+            ),
+            child: Text(
+              'Uitloggen',
+              style: TextStyle(
+                  fontSize: 20, color: Theme.of(context).colorScheme.onPrimary),
+            ),
+          ),
+          SizedBox(height: 8),
+          ElevatedButton(
+            onPressed: () {
+              showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    String errorMessage = '';
 
-                        return StatefulBuilder(
-                          builder: (context, setState) {
-                            return AlertDialog(
-                              title: Text('Account verwijderen'),
-                              content: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                      'Weet je zeker dat je je account wilt verwijderen?'),
-                                  Text('Dit kan niet ongedaan worden gemaakt.'),
-                                  SizedBox(height: 16),
-                                  TextField(
-                                    controller: usernameController,
-                                    onChanged: (value) {
-                                      setState(() {
-                                        errorMessage = '';
-                                      });
-                                    },
-                                    decoration: InputDecoration(
-                                      labelText: 'Bevestig gebruikersnaam',
-                                      border: OutlineInputBorder(),
-                                      errorText: errorMessage.isNotEmpty
-                                          ? errorMessage
-                                          : null,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.pop(context);
-                                  },
-                                  child: Text('Annuleer'),
+                    return StatefulBuilder(
+                      builder: (context, setState) {
+                        return AlertDialog(
+                          title: Text('Account verwijderen'),
+                          content: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                  'Weet je zeker dat je je account wilt verwijderen?'),
+                              Text('Dit kan niet ongedaan worden gemaakt.'),
+                              SizedBox(height: 16),
+                              TextField(
+                                controller: usernameController,
+                                onChanged: (value) {
+                                  setState(() {
+                                    errorMessage = '';
+                                  });
+                                },
+                                decoration: InputDecoration(
+                                  labelText: 'Bevestig gebruikersnaam',
+                                  border: OutlineInputBorder(),
+                                  errorText: errorMessage.isNotEmpty
+                                      ? errorMessage
+                                      : null,
                                 ),
-                                ElevatedButton(
-                                  onPressed: () async {
-                                    if (usernameController.text ==
-                                        _accountSettingsKey
-                                            .currentState?._currentUsername) {
-                                      if (!mounted) return;
-                                      final filterprovider =
+                              ),
+                            ],
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
+                              child: Text('Annuleer'),
+                            ),
+                            ElevatedButton(
+                              onPressed: () async {
+                                if (usernameController.text ==
+                                    _accountSettingsKey
+                                        .currentState?._currentUsername) {
+                                  if (!mounted) return;
+                                  final filterprovider =
                                       Provider.of<RecipeFilterOptionsProvider>(
                                           context,
-                                          listen: false
+                                          listen: false);
+                                  filterprovider.clearFilters(context);
 
-                                      );
-                                      filterprovider.clearFilters(context);
+                                  await AccountService().deleteAccount(context);
+                                  await KeycloakService().clearTokens();
 
-                                      await AccountService().deleteAccount(
-                                          context);
-                                      await KeycloakService().clearTokens();
-
-                                      if (!mounted) return;
-                                      Navigator.pushAndRemoveUntil(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (
-                                              context) => const LoginPage(),
-                                        ),
-                                            (route) =>
+                                  if (!mounted) return;
+                                  Navigator.pushAndRemoveUntil(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const LoginPage(),
+                                    ),
+                                    (route) =>
                                         false, // This removes all previous routes
-                                      );
-                                    } else {
-                                      setState(() {
-                                        errorMessage =
+                                  );
+                                } else {
+                                  setState(() {
+                                    errorMessage =
                                         'Gebruikersnaam komt niet overeen';
-                                      });
-                                    }
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Color(0xFFE72222),
-                                  ),
-                                  child: Text('Verwijder account',
-                                      style: TextStyle(color: Colors.white)),
-                                ),
-                              ],
-                            );
-                          },
+                                  });
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Color(0xFFE72222),
+                              ),
+                              child: Text('Verwijder account',
+                                  style: TextStyle(color: Colors.white)),
+                            ),
+                          ],
                         );
-                      });
-                },
-                style: ElevatedButton.styleFrom(
-                  elevation: 5,
-                  padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-                  backgroundColor: Color(0xFFE72222),
-                ),
-                child: Text(
-                  'Account verwijderen',
-                  style: TextStyle(
-                      fontSize: 20, color: Theme
-                      .of(context)
-                      .colorScheme
-                      .onPrimary),
-                ),
-              ),
-              SizedBox(height: 16),
-            ],
+                      },
+                    );
+                  });
+            },
+            style: ElevatedButton.styleFrom(
+              elevation: 5,
+              padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+              backgroundColor: Color(0xFFE72222),
+            ),
+            child: Text(
+              'Account verwijderen',
+              style: TextStyle(
+                  fontSize: 20, color: Theme.of(context).colorScheme.onPrimary),
+            ),
           ),
-        ));
+          SizedBox(height: 16),
+        ],
+      ),
+    ));
   }
 
   void _saveAll() async {
@@ -482,7 +470,7 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
   final _formKey = GlobalKey<FormState>();
   final controller = MultiSelectController<String>();
   final TextEditingController customPreferenceController =
-  TextEditingController();
+      TextEditingController();
 
   final _accountService = AccountService();
   final _preferenceService = PreferenceService();
@@ -518,16 +506,16 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
 
   Future<void> _savePreferences() async {
     List<String> selectedPreferences =
-    controller.selectedItems.map((item) => item.value).toList();
+        controller.selectedItems.map((item) => item.value).toList();
 
     // Get current user preferences to avoid duplicates
     List<PreferenceDto> preferencesForDelete =
-    await _accountService.getPreferencesByUserId(context);
+        await _accountService.getPreferencesByUserId(context);
 
     if (selectedPreferences.isNotEmpty) {
       for (String preference in selectedPreferences) {
         bool isExistingPreference = preferencesForDelete.any((pref) =>
-        pref.preferenceName.toLowerCase() == preference.toLowerCase());
+            pref.preferenceName.toLowerCase() == preference.toLowerCase());
 
         if (!isExistingPreference) {
           // Add custom preference
@@ -544,17 +532,17 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
 
     // Delete deselected preferences
     List<String> currentPreferences =
-    preferences.map((item) => item.value).toList();
+        preferences.map((item) => item.value).toList();
     for (String currentPreference in currentPreferences) {
       if (!selectedPreferences.contains(currentPreference)) {
         final PreferenceDto? preferenceToDelete =
-        preferencesForDelete.firstWhereOrNull(
-              (pref) => pref.preferenceName == currentPreference,
+            preferencesForDelete.firstWhereOrNull(
+          (pref) => pref.preferenceName == currentPreference,
         );
 
         if (preferenceToDelete != null) {
-          await _accountService
-              .deletePreference(context, preferenceToDelete.preferenceId);
+          await _accountService.deletePreference(
+              context, preferenceToDelete.preferenceId);
         }
       }
     }
@@ -580,13 +568,13 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
       }).toList();
 
       List<PreferenceDto> userPreferences =
-      await _accountService.getPreferencesByUserId(context);
+          await _accountService.getPreferencesByUserId(context);
 
       setState(() {
         // Add userPreferences to tempPreferences if they're not already present
         for (var userPreference in userPreferences) {
           if (!tempPreferences.any((item) =>
-          item.value.toLowerCase() ==
+              item.value.toLowerCase() ==
               userPreference.preferenceName.toLowerCase())) {
             tempPreferences.add(DropdownItem(
               label: userPreference.preferenceName,
@@ -648,7 +636,7 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
                       ),
                       dropdownItemDecoration: const DropdownItemDecoration(
                         selectedIcon:
-                        Icon(Icons.check_box, color: Colors.green),
+                            Icon(Icons.check_box, color: Colors.green),
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -667,8 +655,7 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
                         controller.clearAll();
                       }
                     },
-                    itemBuilder: (context) =>
-                    [
+                    itemBuilder: (context) => [
                       const PopupMenuItem<String>(
                         value: 'select_all',
                         child: Text('Selecteer alles'),
@@ -686,28 +673,27 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
                     onPressed: () {
                       showDialog(
                         context: context,
-                        builder: (context) =>
-                            AlertDialog(
-                              title: const Text('Voeg een eigen voorkeur toe'),
-                              content: TextField(
-                                controller: customPreferenceController,
-                                maxLength: 25,
-                                decoration: const InputDecoration(
-                                    labelText: "Eigen voorkeur"),
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.pop(context);
-                                  },
-                                  child: const Text('Annuleer'),
-                                ),
-                                ElevatedButton(
-                                  onPressed: _addPreferenceToDropdown,
-                                  child: const Text('Voeg toe'),
-                                ),
-                              ],
+                        builder: (context) => AlertDialog(
+                          title: const Text('Voeg een eigen voorkeur toe'),
+                          content: TextField(
+                            controller: customPreferenceController,
+                            maxLength: 25,
+                            decoration: const InputDecoration(
+                                labelText: "Eigen voorkeur"),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
+                              child: const Text('Annuleer'),
                             ),
+                            ElevatedButton(
+                              onPressed: _addPreferenceToDropdown,
+                              child: const Text('Voeg toe'),
+                            ),
+                          ],
+                        ),
                       );
                     },
                     child: const Text('\u{2795} Nieuw'),
@@ -821,15 +807,11 @@ class _GroupOverviewState extends State<GroupOverview> {
         context: context,
         builder: (context) {
           return AlertDialog(
-            backgroundColor: Theme
-                .of(context)
-                .dialogBackgroundColor,
+            backgroundColor: Theme.of(context).dialogBackgroundColor,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12.0),
             ),
-            shadowColor: Theme
-                .of(context)
-                .canvasColor,
+            shadowColor: Theme.of(context).canvasColor,
             title: Row(
               children: [
                 Expanded(
@@ -841,10 +823,7 @@ class _GroupOverviewState extends State<GroupOverview> {
                           '  Deel ${group.groupName}',
                           overflow: TextOverflow.ellipsis,
                           maxLines: 1,
-                          style: Theme
-                              .of(context)
-                              .textTheme
-                              .headlineMedium,
+                          style: Theme.of(context).textTheme.headlineMedium,
                         ),
                       ),
                     ],
@@ -860,27 +839,19 @@ class _GroupOverviewState extends State<GroupOverview> {
             content: Text(
               'Nodig nieuwe groepsleden uit!',
               style: TextStyle(
-                  color: Theme
-                      .of(context)
-                      .textTheme
-                      .bodyMedium
-                      ?.color),
+                  color: Theme.of(context).textTheme.bodyMedium?.color),
             ),
             actionsAlignment: MainAxisAlignment.spaceBetween,
             actions: [
               IconButton(
                 icon: Icon(
                   Icons.ios_share,
-                  color: Theme
-                      .of(context)
-                      .iconTheme
-                      .color,
+                  color: Theme.of(context).iconTheme.color,
                   size: 30,
                 ),
                 onPressed: () async {
                   Share.share(
-                      'Hey, word lid van mijn groep ${group
-                          .groupName} met deze link: $link');
+                      'Hey, word lid van mijn groep ${group.groupName} met deze link: $link');
                   Navigator.pop(context);
                 },
                 tooltip: 'Deel link',
@@ -888,10 +859,7 @@ class _GroupOverviewState extends State<GroupOverview> {
               IconButton(
                 icon: Icon(
                   Icons.copy,
-                  color: Theme
-                      .of(context)
-                      .iconTheme
-                      .color,
+                  color: Theme.of(context).iconTheme.color,
                   size: 30,
                 ),
                 onPressed: () async {
@@ -899,7 +867,7 @@ class _GroupOverviewState extends State<GroupOverview> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content:
-                      Text('Uitnodigingslink gekopieerd naar klembord!'),
+                          Text('Uitnodigingslink gekopieerd naar klembord!'),
                     ),
                   );
                   Navigator.pop(context);
@@ -968,7 +936,7 @@ class _GroupOverviewState extends State<GroupOverview> {
       // Toggle the current group mode
       group.isGroupMode = !group.isGroupMode;
       _selectedGroup =
-      group.isGroupMode ? group.groupId : ''; // Update selected group
+          group.isGroupMode ? group.groupId : ''; // Update selected group
     });
 
     // Update SharedPreferences to store the group mode state
@@ -978,15 +946,13 @@ class _GroupOverviewState extends State<GroupOverview> {
     }
     prefs.setBool(group.groupId, group.isGroupMode);
 
-    await _accountService
-        .updateChosenGroupId(context, group.isGroupMode ? group.groupId : null);
+    await _accountService.updateChosenGroupId(
+        context, group.isGroupMode ? group.groupId : null);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
           content: Text(
-              '${group.groupName} is ${group.isGroupMode
-                  ? 'in groep modus'
-                  : 'in gebruiker modus'}')),
+              '${group.groupName} is ${group.isGroupMode ? 'in groep modus' : 'in gebruiker modus'}')),
     );
   }
 
@@ -995,129 +961,125 @@ class _GroupOverviewState extends State<GroupOverview> {
     return _isLoading
         ? const Center(child: CircularProgressIndicator())
         : Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(
-              horizontal: 16.0, vertical: 16.0),
-          child: const Text(
-            'Jouw Groepen',
-            style: TextStyle(fontSize: 30),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: ElevatedButton(
-            onPressed: _showCreateGroupDialog,
-            child: const Text('\u{2795} Nieuw'),
-          ),
-        ),
-        const SizedBox(height: 8),
-        ListView(
-          shrinkWrap: true,
-          // Ensures the ListView only takes up as much space as needed
-          children: [
-            ..._groups.map((group) {
-              final isSelected = _selectedGroup == group.groupId;
-              return Padding(
-                  padding: const EdgeInsets.symmetric(
-                      vertical: 8.0, horizontal: 16.0),
-                  child: Container(
-                      decoration: BoxDecoration(
-                        color: Theme
-                            .of(context)
-                            .colorScheme
-                            .onPrimary,
-                        borderRadius: BorderRadius.circular(8.0),
-                        boxShadow: [
-                          BoxShadow(
-                              color: Colors.grey.shade200, blurRadius: 6)
-                        ],
-                      ),
-                      child: Row(
-                          mainAxisAlignment:
-                          MainAxisAlignment.spaceBetween,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Text(
-                                group.groupName,
-                                style: TextStyle(
-                                  fontWeight: isSelected
-                                      ? FontWeight.bold
-                                      : FontWeight.normal,
-                                ),
-                              ),
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0, vertical: 16.0),
+                child: const Text(
+                  'Jouw Groepen',
+                  style: TextStyle(fontSize: 30),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: ElevatedButton(
+                  onPressed: _showCreateGroupDialog,
+                  child: const Text('\u{2795} Nieuw'),
+                ),
+              ),
+              const SizedBox(height: 8),
+              ListView(
+                shrinkWrap: true,
+                // Ensures the ListView only takes up as much space as needed
+                children: [
+                  ..._groups.map((group) {
+                    final isSelected = _selectedGroup == group.groupId;
+                    return Padding(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 8.0, horizontal: 16.0),
+                        child: Container(
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.onPrimary,
+                              borderRadius: BorderRadius.circular(8.0),
+                              boxShadow: [
+                                BoxShadow(
+                                    color: Colors.grey.shade200, blurRadius: 6)
+                              ],
                             ),
-                            Switch(
-                              value: group.isGroupMode,
-                              onChanged: (value) =>
-                                  _toggleGroupMode(group),
-                              activeColor: Colors.green,
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Row(
+                            child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
-                                  IconButton(
-                                    icon: const Icon(
-                                      Icons.person_add,
-                                      color: Colors.green,
+                                  Padding(
+                                    padding: const EdgeInsets.all(16.0),
+                                    child: Text(
+                                      group.groupName,
+                                      style: TextStyle(
+                                        fontWeight: isSelected
+                                            ? FontWeight.bold
+                                            : FontWeight.normal,
+                                      ),
                                     ),
-                                    onPressed: () {
-                                      _inviteUserToGroup(group);
-                                    },
                                   ),
-                                  IconButton(
-                                    icon: const Icon(Icons.exit_to_app,
-                                        color: Colors.red),
-                                    onPressed: () {
-                                      showDialog(
-                                        context: context,
-                                        builder: (BuildContext context) {
-                                          return AlertDialog(
-                                            title: const Text(
-                                                'Bevestig Verlaten Groep'),
-                                            content: Text(
-                                                'Weet je zeker dat je ${group
-                                                    .groupName} wilt verlaten?'),
-                                            actions: [
-                                              TextButton(
-                                                onPressed: () {
-                                                  Navigator.of(context)
-                                                      .pop();
-                                                },
-                                                child: const Text(
-                                                    'Annuleren'),
-                                              ),
-                                              TextButton(
-                                                onPressed: () {
-                                                  setState(() {
-                                                    _leaveGroup(group);
-                                                  });
-                                                  Navigator.of(context)
-                                                      .pop();
-                                                },
-                                                child: const Text(
-                                                    'Verlaten',
-                                                    style: TextStyle(
-                                                        color:
-                                                        Colors.red)),
-                                              ),
-                                            ],
-                                          );
-                                        },
-                                      );
-                                    },
-                                  )
-                                ],
-                              ),
-                            ),
-                          ])));
-            })
-          ],
-        ),
-      ],
-    );
+                                  Switch(
+                                    value: group.isGroupMode,
+                                    onChanged: (value) =>
+                                        _toggleGroupMode(group),
+                                    activeColor: Colors.green,
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Row(
+                                      children: [
+                                        IconButton(
+                                          icon: const Icon(
+                                            Icons.person_add,
+                                            color: Colors.green,
+                                          ),
+                                          onPressed: () {
+                                            _inviteUserToGroup(group);
+                                          },
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(Icons.exit_to_app,
+                                              color: Colors.red),
+                                          onPressed: () {
+                                            showDialog(
+                                              context: context,
+                                              builder: (BuildContext context) {
+                                                return AlertDialog(
+                                                  title: const Text(
+                                                      'Bevestig Verlaten Groep'),
+                                                  content: Text(
+                                                      'Weet je zeker dat je ${group.groupName} wilt verlaten?'),
+                                                  actions: [
+                                                    TextButton(
+                                                      onPressed: () {
+                                                        Navigator.of(context)
+                                                            .pop();
+                                                      },
+                                                      child: const Text(
+                                                          'Annuleren'),
+                                                    ),
+                                                    TextButton(
+                                                      onPressed: () {
+                                                        setState(() {
+                                                          _leaveGroup(group);
+                                                        });
+                                                        Navigator.of(context)
+                                                            .pop();
+                                                      },
+                                                      child: const Text(
+                                                          'Verlaten',
+                                                          style: TextStyle(
+                                                              color:
+                                                                  Colors.red)),
+                                                    ),
+                                                  ],
+                                                );
+                                              },
+                                            );
+                                          },
+                                        )
+                                      ],
+                                    ),
+                                  ),
+                                ])));
+                  })
+                ],
+              ),
+            ],
+          );
   }
 }
