@@ -29,7 +29,7 @@ class DetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Laten we koken!")),
+      appBar: AppBar(title: const Text("Laten we koken!", style: TextStyle(fontWeight: FontWeight.bold))),
       body: FutureBuilder<Recipe?>(
         future: RecipeService().getRecipeById(context, recipeId),
         builder: (context, snapshot) {

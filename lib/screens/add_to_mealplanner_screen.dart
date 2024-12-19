@@ -21,7 +21,8 @@ class AddToMealplannerScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Voeg het recept toe!")),
+      appBar: AppBar(title: const Text("Voeg het recept toe!", style: TextStyle(fontWeight: FontWeight.bold),
+      )),
       body: AddToMealPlanner(
         recipe: recipe,
         amountOfPeople: amountOfPeople,

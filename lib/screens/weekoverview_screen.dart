@@ -11,7 +11,7 @@ class WeekoverviewScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Wat eten we deze week?")),
+      appBar: AppBar(title: const Text("Wat eten we deze week?", style: TextStyle(fontWeight: FontWeight.bold))),
       body: WeekOverview(),
     );
   }
