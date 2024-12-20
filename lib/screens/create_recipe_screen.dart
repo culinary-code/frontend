@@ -18,7 +18,7 @@ class CreateRecipeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Nieuw recept aanvragen', style: TextStyle(fontWeight: FontWeight.bold),),
+        title: Text('Nieuw recept aanvragen!', style: TextStyle(fontWeight: FontWeight.bold),),
       ),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
