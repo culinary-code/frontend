@@ -24,7 +24,7 @@ class AccountScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Profiel'), centerTitle: true),
+      appBar: AppBar(title: const Text('Profiel', style: TextStyle(fontWeight: FontWeight.bold)), centerTitle: true),
       body: const AccountOverview(),
     );
   }
@@ -60,7 +60,7 @@ class _AccountOverviewState extends State<AccountOverview> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: SingleChildScrollView(
+        child: SingleChildScrollView(
       child: Column(
         children: [
           AccountSettings(key: _accountSettingsKey),
@@ -148,14 +148,11 @@ class _AccountOverviewState extends State<AccountOverview> {
                                 if (usernameController.text ==
                                     _accountSettingsKey
                                         .currentState?._currentUsername) {
-
                                   if (!mounted) return;
                                   final filterprovider =
-                                  Provider.of<RecipeFilterOptionsProvider>(
-                                      context,
-                                      listen: false
-
-                                  );
+                                      Provider.of<RecipeFilterOptionsProvider>(
+                                          context,
+                                          listen: false);
                                   filterprovider.clearFilters(context);
 
                                   await AccountService().deleteAccount(context);
@@ -544,8 +541,8 @@ class _PreferencesSettingsState extends State<PreferencesSettings> {
         );
 
         if (preferenceToDelete != null) {
-          await _accountService
-              .deletePreference(context, preferenceToDelete.preferenceId);
+          await _accountService.deletePreference(
+              context, preferenceToDelete.preferenceId);
         }
       }
     }
@@ -942,22 +939,22 @@ class _GroupOverviewState extends State<GroupOverview> {
           group.isGroupMode ? group.groupId : ''; // Update selected group
     });
 
-      // Update SharedPreferences to store the group mode state
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      for (var key in prefs.getKeys()) {
-        prefs.setBool(key, false);
-      }
-      prefs.setBool(group.groupId, group.isGroupMode);
-
-      await _accountService
-          .updateChosenGroupId(context, group.isGroupMode ? group.groupId : null);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text(
-                '${group.groupName} is ${group.isGroupMode ? 'in groep modus' : 'in gebruiker modus'}')),
-      );
+    // Update SharedPreferences to store the group mode state
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    for (var key in prefs.getKeys()) {
+      prefs.setBool(key, false);
     }
+    prefs.setBool(group.groupId, group.isGroupMode);
+
+    await _accountService.updateChosenGroupId(
+        context, group.isGroupMode ? group.groupId : null);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+          content: Text(
+              '${group.groupName} is ${group.isGroupMode ? 'in groep modus' : 'in gebruiker modus'}')),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
